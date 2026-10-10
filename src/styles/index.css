@@ -1,0 +1,11 @@
+/* Limit utility detection to this app; backups and review folders are excluded. */
+@import "tailwindcss" source(none);
+@source "../";
+@import "./fonts.css";
+@import "./legacy.css";
+@import "./tokens.css";
+@import "./ui.css";
+@import "./live.css";
+@import "./prep.css";
+@import "./pages.css";
+@import "./public.css";

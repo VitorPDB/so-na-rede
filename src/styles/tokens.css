@@ -1,0 +1,328 @@
+/*
+ * Só na Rede — design tokens.
+ * Uma única fonte de verdade para cor, tipografia, espaço, raio, sombra e movimento.
+ * Temas: "dark" (Preto escuro, padrão), "team" (roxo e dourado) e "light" (claro).
+ * As rampas do tema claro espelham a luminosidade das rampas escuras, para que
+ * qualquer componente escrito com tokens funcione nos três temas.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Neutros: do mais escuro ao mais claro (no tema escuro) */
+  --c-bg: #070708;
+  --c-bg-sunken: #0b0b0e;
+  --c-surface-1: #101014;
+  --c-surface-2: #16161b;
+  --c-surface-3: #1d1d23;
+  --c-surface-4: #25252c;
+  --c-border-subtle: #2a2931;
+  --c-border: #34333d;
+  --c-border-strong: #4a4854;
+  --c-text-faint: #6b6875;
+  --c-text-subtle: #8a8795;
+  --c-text-muted: #aaa8b4;
+  --c-text-2: #d3d0da;
+  --c-text: #f0edf4;
+  --c-text-strong: #ffffff;
+
+  /* Roxo (seleção, foco, marca) */
+  --c-accent-bg: #1a1522;
+  --c-accent-soft: #292332;
+  --c-accent-border: #4b3f5c;
+  --c-accent-muted: #7d6a92;
+  --c-accent: #b6a3cc;
+  --c-accent-strong: #d8cbe7;
+  --c-on-accent: #120d18;
+
+  /* Dourado (destaques) */
+  --c-gold-bg: #1f1a10;
+  --c-gold-border: #4a3f26;
+  --c-gold-muted: #8a7648;
+  --c-gold: #c9b47d;
+  --c-gold-strong: #e6d4a2;
+
+  /* Resultado positivo / Bom / nosso */
+  --c-pos-bg: #131a15;
+  --c-pos-soft: #1b261e;
+  --c-pos-border: #2f4235;
+  --c-pos-muted: #6d8b74;
+  --c-pos: #b6cbbb;
+  --c-pos-vivid: #93b965;
+
+  /* Gafe (ocre) */
+  --c-warn-bg: #1d1710;
+  --c-warn-soft: #2a2116;
+  --c-warn-border: #4d3d24;
+  --c-warn-muted: #8a7145;
+  --c-warn: #d8c08a;
+  --c-warn-vivid: #c2a565;
+
+  /* Ponto deles / erro */
+  --c-neg-bg: #1d1214;
+  --c-neg-soft: #2a191d;
+  --c-neg-border: #4d2e35;
+  --c-neg-muted: #8c5969;
+  --c-neg: #d0afb6;
+  --c-neg-vivid: #ba656c;
+
+  /* Informativo (adversário em gráficos) */
+  --c-info-bg: #151a22;
+  --c-info-border: #34414b;
+  --c-info: #93a0b5;
+
+  /* Superfícies especiais */
+  --c-scrim: rgb(4 4 6 / 0.72);
+  --c-court: #121117;
+  --c-court-line: #4a4854;
+
+  /* Sombras: baixa opacidade, elevação suave */
+  --shadow-color: 0 0% 0%;
+  --shadow-1: 0 1px 2px hsl(var(--shadow-color) / 0.3);
+  --shadow-2:
+    0 2px 6px hsl(var(--shadow-color) / 0.28),
+    0 1px 2px hsl(var(--shadow-color) / 0.2);
+  --shadow-3:
+    0 10px 28px hsl(var(--shadow-color) / 0.38),
+    0 2px 6px hsl(var(--shadow-color) / 0.22);
+  --shadow-4:
+    0 24px 60px hsl(var(--shadow-color) / 0.5),
+    0 4px 12px hsl(var(--shadow-color) / 0.25);
+  --ring: 0 0 0 2px var(--c-bg), 0 0 0 4px var(--c-accent);
+
+  /* Tipografia */
+  --font-sans:
+    "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --fs-2xs: 0.6875rem; /* 11 */
+  --fs-xs: 0.75rem; /* 12 */
+  --fs-sm: 0.8125rem; /* 13 */
+  --fs-md: 0.9375rem; /* 15 */
+  --fs-lg: 1.0625rem; /* 17 */
+  --fs-xl: 1.25rem; /* 20 */
+  --fs-2xl: 1.5rem; /* 24 */
+  --fs-3xl: 1.875rem; /* 30 */
+  --fs-display: clamp(2.75rem, 2rem + 3vw, 4.5rem);
+  --fw-regular: 450;
+  --fw-medium: 550;
+  --fw-semibold: 620;
+  --fw-bold: 720;
+  --fw-black: 820;
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-body: 1.5;
+  --tracking-caps: 0.08em;
+
+  /* Espaço (grade de 4 px) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* Raios */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-full: 999px;
+
+  /* Alvos de toque */
+  --tap: 56px;
+  /* Compact changes typography and padding, never the touch target. */
+  --tap-sm: var(--tap);
+
+  /* Movimento */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --dur-1: 90ms;
+  --dur-2: 150ms;
+  --dur-3: 220ms;
+  --dur-4: 320ms;
+
+  /* Camadas */
+  --z-sticky: 20;
+  --z-nav: 40;
+  --z-fab: 45;
+  --z-overlay: 60;
+  --z-toast: 80;
+}
+
+/* Só na Rede: roxo profundo e dourado discreto */
+:root[data-theme="team"] {
+  --c-bg: #0c0910;
+  --c-bg-sunken: #100c16;
+  --c-surface-1: #15111b;
+  --c-surface-2: #1b1522;
+  --c-surface-3: #231b2c;
+  --c-surface-4: #2c2236;
+  --c-border-subtle: #31273b;
+  --c-border: #41364b;
+  --c-border-strong: #584a67;
+  --c-text-faint: #776b84;
+  --c-text-subtle: #958aa3;
+  --c-text-muted: #b2a6c0;
+  --c-text-2: #dbd2e4;
+  --c-text: #f4eff8;
+
+  --c-accent-bg: #1e1529;
+  --c-accent-soft: #33263f;
+  --c-accent-border: #5c4870;
+  --c-accent-muted: #8d76a6;
+  --c-accent: #c4afd9;
+  --c-accent-strong: #e2d4f0;
+
+  --c-gold-bg: #231c10;
+  --c-gold-border: #5a4a2a;
+  --c-gold-muted: #9a8452;
+  --c-gold: #d0bd95;
+  --c-gold-strong: #ecdcae;
+
+  --c-info: #afa0c3;
+  --c-court: #17111e;
+  --c-court-line: #584a67;
+}
+
+/* Claro: rampas espelhadas, mesma identidade */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --c-bg: #f4f3f6;
+  --c-bg-sunken: #ecebf0;
+  --c-surface-1: #ffffff;
+  --c-surface-2: #f8f7fa;
+  --c-surface-3: #f1eff4;
+  --c-surface-4: #e8e5ed;
+  --c-border-subtle: #e3e0e8;
+  --c-border: #d6d2dd;
+  --c-border-strong: #bab4c4;
+  --c-text-faint: #9b96a5;
+  --c-text-subtle: #77727f;
+  --c-text-muted: #5d5866;
+  --c-text-2: #38343f;
+  --c-text: #1a1720;
+  --c-text-strong: #0d0b10;
+
+  --c-accent-bg: #f6f1fb;
+  --c-accent-soft: #ece4f6;
+  --c-accent-border: #cbbadf;
+  --c-accent-muted: #8e76ab;
+  --c-accent: #6b4c90;
+  --c-accent-strong: #4f3572;
+  --c-on-accent: #ffffff;
+
+  --c-gold-bg: #fbf5e6;
+  --c-gold-border: #e2cf9b;
+  --c-gold-muted: #a8873c;
+  --c-gold: #80611c;
+  --c-gold-strong: #5e4610;
+
+  --c-pos-bg: #eef6f0;
+  --c-pos-soft: #ddece1;
+  --c-pos-border: #a9cbb2;
+  --c-pos-muted: #5a8a66;
+  --c-pos: #2c6a3e;
+  --c-pos-vivid: #4f7f22;
+
+  --c-warn-bg: #fcf5e7;
+  --c-warn-soft: #f5e8cc;
+  --c-warn-border: #e0c58e;
+  --c-warn-muted: #a07a35;
+  --c-warn: #7a5714;
+  --c-warn-vivid: #a3781e;
+
+  --c-neg-bg: #fcf0f2;
+  --c-neg-soft: #f6dfe3;
+  --c-neg-border: #e3b3bb;
+  --c-neg-muted: #b06672;
+  --c-neg: #922e3d;
+  --c-neg-vivid: #b4424f;
+
+  --c-info-bg: #edf0f5;
+  --c-info-border: #c6cedb;
+  --c-info: #4f5d75;
+
+  --c-scrim: rgb(24 20 30 / 0.42);
+  --c-court: #faf9fb;
+  --c-court-line: #bab4c4;
+
+  --shadow-color: 265 20% 30%;
+  --shadow-1: 0 1px 2px hsl(var(--shadow-color) / 0.08);
+  --shadow-2:
+    0 2px 6px hsl(var(--shadow-color) / 0.08),
+    0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-3:
+    0 10px 28px hsl(var(--shadow-color) / 0.12),
+    0 2px 6px hsl(var(--shadow-color) / 0.06);
+  --shadow-4:
+    0 24px 60px hsl(var(--shadow-color) / 0.18),
+    0 4px 12px hsl(var(--shadow-color) / 0.08);
+}
+
+/* Aliases dos nomes antigos, para componentes ainda não migrados */
+:root,
+:root[data-theme] {
+  --brand-accent: var(--c-accent);
+  --brand-gold: var(--c-gold);
+  --surface: var(--c-surface-1);
+  --surface-raised: var(--c-surface-2);
+  --surface-selected: var(--c-accent-soft);
+  --border: var(--c-border);
+  --muted: var(--c-text-muted);
+  --lime: var(--c-accent);
+  --green: var(--c-pos);
+  --red: var(--c-neg);
+  --analysis-ours: var(--c-accent);
+  --analysis-theirs: var(--c-info);
+}
+:root[data-theme="team"] {
+  --lime: var(--c-gold);
+  --analysis-ours: var(--c-gold);
+}
+
+html {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-sans);
+}
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+::selection {
+  background: var(--c-accent-soft);
+  color: var(--c-text-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+    --dur-4: 0ms;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

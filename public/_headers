@@ -1,0 +1,16 @@
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/live-config.json
+  Cache-Control: no-cache
+/app-assets.json
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+/manifest-public.webmanifest
+  Cache-Control: no-cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

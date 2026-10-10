@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.qa/
+.npm-cache/
+review-user-2026-10-10/
+.git/
+*.zip
+*.log
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+/*-preview.jpg
+/modal-simplificado.jpg

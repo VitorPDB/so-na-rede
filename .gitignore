@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.npm-cache/
+*.log
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+.qa/
+review-user-2026-10-10/
+.vercel/
+*.zip
