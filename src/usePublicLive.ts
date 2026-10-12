@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cloud, cloudIssue, teamSlug } from "./cloud";
 import type { PublicMedia, PublicSnapshot } from "./publicSnapshot";
+import { validPublicSnapshot, validPublicMedia } from "./publicValidation";
 
 export type PublicRow = {
   revision: number;
@@ -16,7 +17,7 @@ function cached(): { row: PublicRow | null; media: PublicMedia | null } {
     const value = JSON.parse(localStorage.getItem(cacheKey) ?? "null");
     const s = value?.row?.snapshot;
     if (
-      s?.version === 1 &&
+      validPublicSnapshot(s) &&
       Array.isArray(s.players) &&
       Array.isArray(s.rallies) &&
       Array.isArray(s.rotations) &&
@@ -24,7 +25,10 @@ function cached(): { row: PublicRow | null; media: PublicMedia | null } {
       Array.isArray(s.score) &&
       s.teamStats
     )
-      return { row: value.row, media: value.media ?? null };
+      return {
+        row: value.row,
+        media: validPublicMedia(value.media) ? value.media : null,
+      };
   } catch {
     /* A cache is optional and never changes the commission's data. */
   }
@@ -88,7 +92,7 @@ export function usePublicLive() {
           } catch {}
           return;
         }
-        if (live.data.snapshot?.version !== 1) {
+        if (!validPublicSnapshot(live.data.snapshot)) {
           setStatus("error");
           setMessage("Atualize a página para visualizar esta versão.");
           return;
@@ -109,7 +113,9 @@ export function usePublicLive() {
             .eq("slug", teamSlug)
             .maybeSingle();
           if (active && !assets.error) {
-            setMedia(assets.data?.media ?? null);
+            setMedia(
+              validPublicMedia(assets.data?.media) ? assets.data!.media : null,
+            );
             mediaRevision = next.media_revision;
           }
         }

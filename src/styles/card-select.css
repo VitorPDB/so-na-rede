@@ -6,7 +6,7 @@
   display: none !important;
 }
 .card-select .card-select-panel {
-  border: 1px solid var(--c-border);
+  border: 1px solid var(--c-border-control);
   border-radius: 10px;
   padding: 0 12px;
   background: var(--c-surface-2);
@@ -22,7 +22,7 @@
   min-width: 0;
   flex: 1;
   overflow-wrap: anywhere;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.4;
 }
 .card-select .card-select-panel > summary svg {

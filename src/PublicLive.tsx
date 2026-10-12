@@ -1,3 +1,5 @@
+import { useOpponentColor } from "./opponentColor";
+import { RallyStrip } from "./RallyStrip";
 import { CardSelect } from "./CardSelect";
 import { useEffect, useState } from "react";
 import {
@@ -66,6 +68,7 @@ export function PublicLive() {
   const row = matchId ? history.game : (demo ?? live.row);
   const s = row?.snapshot;
   const media = matchId ? history.game?.media : demo ? null : live.media;
+  useOpponentColor(media?.opponentLogo);
   const period = setFilter
     ? s?.periods?.find((p) => p.set === setFilter)
     : undefined;
@@ -358,6 +361,7 @@ export function PublicLive() {
                 )}
               </span>
             </div>
+            <RallyStrip rallies={s.rallies} set={s.set} />
             <footer className="pub-score-footer">
               <span>
                 {pending ? (

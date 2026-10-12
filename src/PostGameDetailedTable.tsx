@@ -1,3 +1,4 @@
+import { Upload } from "lucide-react";
 import { CardSelect } from "./CardSelect";
 import { postResults } from "./postgame";
 import { useMemo, useRef, useState } from "react";
@@ -163,7 +164,7 @@ export function PostGameDetailed({
             </CardSelect>
           </label>
         </div>
-        <details className="postgame-formation">
+        <details className="postgame-formation postgame-disclosure">
           <summary>Formação inicial · ajustar jogadores e funções</summary>
           <div className="postgame-court">
             <span className="postgame-net">REDE</span>
@@ -226,15 +227,18 @@ export function PostGameDetailed({
           </button>
         </details>
         <div className="postgame-toolbar">
-          <label>
-            Arquivo da ficha
+          <label className="button secondary file-button">
+            <Upload size={16} aria-hidden="true" />
+            Importar ficha JSON
             <input
+              className="sr-only"
               type="file"
               accept=".json,application/json"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
+                  if (file.size > 5 * 1024 * 1024) throw new Error("Ficha muito grande.");
                   const data = JSON.parse(await file.text());
                   if (!validDetailedDraft(data, match))
                     throw new Error("Ficha inválida.");
@@ -792,7 +796,7 @@ export function PostGameDetailed({
         </div>
         <div className="postgame-toolbar">
           <button
-            className="button"
+            className="button primary"
             disabled={draft.rows.length >= 5000}
             onClick={() =>
               save({
@@ -814,7 +818,7 @@ export function PostGameDetailed({
             Adicionar linha
           </button>
           <button
-            className="button secondary"
+            className="button ghost push-end"
             onClick={() => {
               if (
                 window.confirm(
@@ -846,7 +850,7 @@ export function PostGameDetailed({
           </p>
         </section>
         <button
-          className="button"
+          className="button primary"
           disabled={
             Boolean(replay.error) || !state.finished || !draft.opponent.trim()
           }
@@ -889,6 +893,13 @@ export function PostGameDetailed({
             ? "Confirmar e abrir análise"
             : "Salvar partida completa e abrir análise"}
         </button>
+        {!replay.error && (!state.finished || !draft.opponent.trim()) && (
+          <p className="disabled-reason">
+            {!draft.opponent.trim()
+              ? "Informe o adversário para salvar."
+              : "Preencha as linhas até o fim da partida para salvar."}
+          </p>
+        )}
         {confirmSave && (
           <div role="status" className="postgame-preview">
             <p>

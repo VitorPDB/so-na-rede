@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Hourglass, ShieldCheck, Volleyball } from "lucide-react";
 import type { Match, Projection, Side } from "../model";
 import { opponentTeam } from "../OpponentLogos";
+import { RallyStrip } from "../RallyStrip";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -48,11 +49,14 @@ export function Scoreboard({
   const rallyOpen = s.events.some(
     (e) => e.set === s.set && e.rally === s.rally,
   );
+  const started = s.events.length > 0 || s.rallies.length > 0;
   const status = s.finished
     ? "Encerrado"
     : s.setFinished
       ? "Intervalo"
-      : "Ao vivo";
+      : started
+        ? "Ao vivo"
+        : "Pré-jogo";
   const logo = opponentTeam(match)?.logo;
   const setter = s.roles.indexOf("setter") + 1;
 
@@ -92,7 +96,8 @@ export function Scoreboard({
       <div className="sb-meta">
         <span
           className={
-            "sb-status " + (s.finished || s.setFinished ? "is-paused" : "")
+            "sb-status " +
+            (s.finished || s.setFinished || !started ? "is-paused" : "")
           }
         >
           <i aria-hidden="true" />
@@ -163,6 +168,8 @@ export function Scoreboard({
           </span>
         </div>
       </div>
+
+      <RallyStrip rallies={s.rallies} set={s.set} />
 
       <div className="sb-foot">
         {timeout("ours")}

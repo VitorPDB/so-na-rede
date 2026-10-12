@@ -7,10 +7,12 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "tsx --test src/engine.test.ts src/cloud.test.ts src/assessment.test.ts src/publicLive.test.ts src/ratingV2.test.ts src/videos.test.ts src/assessmentV3.test.ts src/assessmentV4.test.ts src/criteriaStats.test.ts src/CardSelect.test.ts"
+    "test": "tsx --test src/engine.test.ts src/cloud.test.ts src/assessment.test.ts src/publicLive.test.ts src/ratingV2.test.ts src/videos.test.ts src/assessmentV3.test.ts src/assessmentV4.test.ts src/criteriaStats.test.ts src/CardSelect.test.ts src/opponentColor.test.ts src/security.test.ts",
+    "security:schema": "tsx scripts/generate-security.ts"
   },
   "dependencies": {
-    "@fontsource-variable/inter": "^5.1.1",
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
+    "@fontsource-variable/big-shoulders-display": "^5.3.0",
     "@supabase/supabase-js": "^2.117.3",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",

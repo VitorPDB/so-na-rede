@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   ArrowRight,
   Check,
-  Download,
   ShieldCheck,
   Trophy,
   Undo2,
@@ -79,6 +78,8 @@ import { ActionPanel } from "./live/ActionPanel";
 import { MatchHistory } from "./MatchHistory";
 import { TeamPulse, RecentActions } from "./live/Insights";
 import { type Theme, THEME_KEY, applyTheme, readTheme } from "./theme";
+import { useOpponentColor } from "./opponentColor";
+import { opponentTeam } from "./OpponentLogos";
 
 const number = (n: number) => String(n).padStart(2, "0");
 function initial() {
@@ -120,6 +121,7 @@ export default function App() {
   const [boot] = useState(initial);
   const [match, setMatch] = useState(boot.match);
   const publication = usePublication(match);
+  useOpponentColor(opponentTeam(match)?.logo);
   const [storageError, setStorageError] = useState(boot.error);
   const [readBlocked, setReadBlocked] = useState(Boolean(boot.error));
   const [page, setPage] = useState<Page>("live");
@@ -633,6 +635,7 @@ export default function App() {
   };
   const importBackup = async (file: File) => {
     try {
+      if (file.size > 25 * 1024 * 1024) throw new Error("Backup excede o limite de 25 MB.");
       const data = parseMatch(await file.text());
       if (
         window.confirm(
@@ -859,19 +862,9 @@ export default function App() {
                   ? "Sem conexão"
                   : offlineReady
                     ? "Offline pronto"
-                    : "Preparando"}
+                    : "Preparando offline"}
               </span>
             </span>
-            <button
-              type="button"
-              className="ui-btn ui-btn--secondary ui-btn--sm appbar-export"
-              aria-label="Exportar JSON"
-              title="Exportar backup JSON"
-              onClick={exportJson}
-            >
-              <Download size={17} aria-hidden="true" />
-              <span>Exportar</span>
-            </button>
           </div>
         </header>
         {storageError && (

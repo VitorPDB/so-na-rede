@@ -10,5 +10,6 @@ review-user-2026-10-10/
 .env
 .env.local
 .env.*.local
+.env*
 /*-preview.jpg
 /modal-simplificado.jpg

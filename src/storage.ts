@@ -567,7 +567,7 @@ export function csv(rows: (string | number | null | undefined)[][]) {
             const text = String(value ?? "");
             return (
               '"' +
-              (/^[=+@\-]/.test(text) ? "'" : "") +
+              (/^[\s\u0000-\u001f]*[=+@\-]/.test(text) ? "'" : "") +
               text.replaceAll('"', '""') +
               '"'
             );

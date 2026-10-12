@@ -43,7 +43,25 @@ export async function initializeCloud() {
       const { createClient } = await import("@supabase/supabase-js");
       cloud = createClient(config.supabaseUrl, config.publishableKey, {
         global: { fetch: fetchWithTimeout },
+        auth: {
+          // Reloads retain the session; closing the tab removes its local tokens.
+          storage: window.sessionStorage,
+          storageKey: "so-na-rede:commission-auth:v2",
+          detectSessionInUrl: false,
+          persistSession:
+            new URLSearchParams(location.search).get("view") === "commission",
+          autoRefreshToken:
+            new URLSearchParams(location.search).get("view") === "commission",
+        },
       });
+      // Remove only this project's legacy persistent auth token, never game data.
+      try {
+        localStorage.removeItem(
+          `sb-${new URL(config.supabaseUrl).hostname.split(".")[0]}-auth-token`,
+        );
+      } catch {
+        /* A blocked legacy store must not prevent cloud initialization. */
+      }
     }
   } catch (error) {
     cloudIssue =

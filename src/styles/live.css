@@ -237,10 +237,14 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-1) var(--sp-3);
-  font-size: var(--fs-xs);
+  gap: var(--sp-1) var(--sp-4);
+  font-size: var(--fs-sm);
   color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
+}
+.sb-sets {
+  font-size: var(--fs-md);
+  color: var(--c-text-muted);
 }
 .sb-facts b {
   margin-left: 3px;
@@ -278,8 +282,11 @@
 .sb-timeout:active:not(:disabled) {
   transform: scale(0.96);
 }
+/* Sem pedido disponível: recua para ghost; disponível: botão normal. */
 .sb-timeout:disabled {
-  opacity: 0.45;
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 .sb-timeout-count {
@@ -748,7 +755,7 @@
   border-radius: 5px;
   background: var(--c-surface-4);
   color: var(--c-text-2);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 .lv-actions .lv-card-head {
   flex-wrap: wrap;
@@ -783,8 +790,12 @@
 }
 .outcome-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  /* coluna vazia separa qualidade (Bom/Gafe) de ponto (Nosso/Deles) */
+  grid-template-columns: 1fr 1fr var(--sp-2) 1fr 1fr;
   gap: var(--sp-2);
+}
+.outcome-buttons > .outcome.ours {
+  grid-column: 4;
 }
 @container (min-width: 440px) {
   .outcome-row {
@@ -832,43 +843,61 @@
   opacity: 0.35;
   cursor: not-allowed;
 }
-.outcome.good {
-  background: var(--c-pos-bg);
-  border-color: var(--c-pos-border);
-  color: var(--c-pos);
+/* Qualidade (Bom/Gafe): contorno sobre fundo neutro. Ponto (nosso/deles): preenchido.
+   A diferença de peso separa "como foi a ação" de "quem marcou". */
+.outcome.good,
+.outcome.gafe {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
-.outcome.good:hover:not(:disabled) {
-  background: var(--c-pos-soft);
+.outcome.good {
+  border-color: var(--c-pos-muted);
+}
+.outcome.good svg {
+  color: var(--c-pos-vivid);
+  opacity: 1;
 }
 .outcome.gafe {
-  background: var(--c-warn-bg);
-  border-color: var(--c-warn-border);
-  color: var(--c-warn);
+  border-color: var(--c-warn-muted);
+}
+.outcome.gafe svg {
+  color: var(--c-warn-vivid);
+  opacity: 1;
+}
+.outcome.good:hover:not(:disabled) {
+  background: var(--c-pos-bg);
+  border-color: var(--c-pos-vivid);
 }
 .outcome.gafe:hover:not(:disabled) {
-  background: var(--c-warn-soft);
+  background: var(--c-warn-bg);
+  border-color: var(--c-warn-vivid);
+}
+.outcome.ours,
+.outcome.theirs {
+  color: var(--c-text-strong);
+  font-weight: var(--fw-bold);
 }
 .outcome.ours {
   background: var(--c-pos-soft);
-  border-color: var(--c-pos-muted);
-  color: var(--c-text-strong);
+  border-color: var(--c-pos-vivid);
 }
 .outcome.ours svg {
-  color: var(--c-pos);
+  color: var(--c-pos-vivid);
+  opacity: 1;
 }
 .outcome.ours:hover:not(:disabled) {
-  border-color: var(--c-pos);
+  background: var(--c-pos-border);
 }
 .outcome.theirs {
   background: var(--c-neg-soft);
-  border-color: var(--c-neg-muted);
-  color: var(--c-text-strong);
+  border-color: var(--c-neg-vivid);
 }
 .outcome.theirs svg {
-  color: var(--c-neg);
+  color: var(--c-neg-vivid);
+  opacity: 1;
 }
 .outcome.theirs:hover:not(:disabled) {
-  border-color: var(--c-neg);
+  background: var(--c-neg-border);
 }
 .outcome.neutral:hover:not(:disabled) {
   background: var(--c-surface-3);
@@ -1177,7 +1206,7 @@
   gap: 9px;
   cursor: pointer;
   color: var(--c-text);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 .assessment-choice > summary::-webkit-details-marker {
   display: none;
@@ -1190,7 +1219,7 @@
   max-width: 45%;
   text-align: right;
   color: var(--c-text-muted);
-  font-size: 11px;
+  font-size: var(--fs-2xs);
 }
 .assessment-choice[open] .assessment-choice-chevron {
   transform: rotate(180deg);
@@ -1200,7 +1229,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 9px;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--c-text-2);
 }
 .assessment-choice-grid {
@@ -1221,7 +1250,7 @@
   border-radius: 9px;
   background: var(--c-surface-2);
   color: var(--c-text);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.35;
 }
 .assessment-choice-grid button svg {
@@ -1245,7 +1274,7 @@
 .assessment-choice-hint {
   margin: 0 0 12px;
   color: var(--c-text-muted);
-  font-size: 12px;
+  font-size: var(--fs-xs);
   line-height: 1.4;
 }
 .foundation-core .assessment-choice-grid {
@@ -1261,7 +1290,7 @@
   gap: 4px;
   padding: 7px 4px;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 .foundation-core .assessment-choice-hint {
   display: none;
@@ -1284,7 +1313,7 @@
   margin-left: auto;
   color: var(--c-text-muted);
   font-weight: 400;
-  font-size: 11px;
+  font-size: var(--fs-2xs);
 }
 .foundation-context[open] {
   padding-bottom: 14px;
@@ -1331,7 +1360,7 @@
 }
 .criteria-fields small {
   color: var(--c-text-muted);
-  font-size: 12px;
+  font-size: var(--fs-xs);
 }
 @media (max-width: 600px) {
   .criteria-fields {
@@ -1557,7 +1586,7 @@
     font-size: var(--fs-sm);
   }
   .shell .chooser-zone button small {
-    font-size: 10px;
+    font-size: var(--fs-2xs);
   }
 }
 

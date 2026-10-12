@@ -1,4 +1,8 @@
-import { useId } from "react";
+/**
+ * Camisa do time, simplificada: corpo roxo, gola V e punhos pretos com filete
+ * dourado, faixa branca da rede no peito e número branco com contorno dourado.
+ * Líbero: branca e vermelha. Mesmas props de antes; só o desenho mudou.
+ */
 export function Jersey({
   number,
   libero = false,
@@ -8,12 +12,9 @@ export function Jersey({
   libero?: boolean;
   children?: React.ReactNode;
 }) {
-  const id = useId();
-  const body = libero ? "#eeece7" : "#864b92";
-  const trim = libero ? "#a14149" : "#19191b";
-  const ink = libero ? "#8e323c" : "#f3e8d1";
-  const shape =
-    "M19 5 L27 2 Q32 10 37 2 L45 5 L62 20 L55 33 L47 28 L47 72 L17 72 L17 28 L9 33 L2 20 Z";
+  const red = "#b3262e";
+  const body = libero ? "#f7f5f2" : "#5e1f99";
+  const trim = libero ? red : "#16121a";
   return (
     <span className={"jersey uniform " + (libero ? "libero" : "")}>
       <svg
@@ -25,62 +26,53 @@ export function Jersey({
         }
         role="img"
       >
-        <defs>
-          <clipPath id={id}>
-            <path d={shape} />
-          </clipPath>
-        </defs>
-        <path d={shape} fill={body} stroke={trim} strokeWidth="1.2" />
-        <g clipPath={"url(#" + id + ")"}>
+        <path
+          d="M21 5 L11 9 L2 21 L10 30 L16 26 V71 H48 V26 L54 30 L62 21 L53 9 L43 5 Z"
+          fill={body}
+          stroke={libero ? red : "var(--c-jersey-line, transparent)"}
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M3 22.2 L10.5 29 M61 22.2 L53.5 29"
+          stroke={trim}
+          strokeWidth="4.5"
+          fill="none"
+        />
+        <path
+          d="M21 5 L32 18 L43 5"
+          stroke={trim}
+          strokeWidth="4"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        {!libero && (
           <path
-            d="M17 5 L25 32 M47 5 L39 32 M18 72 L31 53 M46 72 L33 53"
-            fill="none"
-            stroke={libero ? "#d2c6c6" : "#b085b7"}
-            strokeWidth="1"
-            opacity=".65"
-          />
-          <path d="M2 24 L10 32 M54 32 L62 24" stroke={trim} strokeWidth="5" />
-          <path
-            d="M25 2 Q32 14 39 2"
-            stroke={trim}
-            strokeWidth="4"
+            d="M23.6 6.6 L32 15.6 L40.4 6.6"
+            stroke="#d9a520"
+            strokeWidth="1.2"
             fill="none"
           />
-          <path d="M17 26 H47 M17 39 H47" stroke={ink} strokeWidth=".8" />
-          {[21, 26, 31, 36, 41, 46].map((x) => (
-            <path
-              key={x}
-              d={"M" + x + " 26 V39"}
-              stroke={ink}
-              strokeWidth=".3"
-              opacity=".6"
-            />
-          ))}
-          <text
-            x="32"
-            y="35"
-            textAnchor="middle"
-            fontSize="6.3"
-            fontWeight="900"
-            fill={ink}
-          >
-            SÓ NA REDE
-          </text>
-          <text
-            x="32"
-            y="59"
-            textAnchor="middle"
-            fontSize="22"
-            fontWeight="850"
-            fill={ink}
-            stroke={libero ? "#eeece7" : "#3b253f"}
-            strokeWidth=".7"
-            paintOrder="stroke"
-          >
-            {String(number).padStart(2, "0")}
-          </text>
-          <path d="M17 71 H47" stroke={trim} strokeWidth="2" />
-        </g>
+        )}
+        <path
+          d="M16 31 H48"
+          stroke={libero ? red : "#ffffff"}
+          strokeWidth="1.3"
+        />
+        <text
+          x="32"
+          y="59"
+          textAnchor="middle"
+          fontSize="24"
+          fontWeight="800"
+          fill={libero ? red : "#ffffff"}
+          stroke={libero ? "none" : "#d9a520"}
+          strokeWidth="1.1"
+          paintOrder="stroke"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {String(number).padStart(2, "0")}
+        </text>
       </svg>
       {children}
     </span>

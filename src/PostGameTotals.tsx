@@ -1,3 +1,4 @@
+import { Upload } from "lucide-react";
 import { CardSelect } from "./CardSelect";
 import { useMemo, useState } from "react";
 import {
@@ -631,7 +632,7 @@ export function PostGameTotals({
           penalidade individual.
         </p>
         {message && <p role="status">{message}</p>}
-        <details>
+        <details className="postgame-disclosure">
           <summary>
             Conferência para salvar ({errors.length} pendências)
           </summary>
@@ -641,7 +642,7 @@ export function PostGameTotals({
         </details>
         <div className="postgame-toolbar">
           <button
-            className="button"
+            className="button primary"
             disabled={errors.length > 0}
             onClick={() => {
               try {
@@ -749,15 +750,18 @@ export function PostGameTotals({
           </button>
         </div>
         <div className="postgame-toolbar">
-          <label>
-            Carregar ficha JSON
+          <label className="button secondary file-button">
+            <Upload size={16} aria-hidden="true" />
+            Importar ficha JSON
             <input
+              className="sr-only"
               type="file"
               accept=".json,application/json"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
+                  if (file.size > 5 * 1024 * 1024) throw new Error("Ficha muito grande.");
                   const next = JSON.parse(await file.text());
                   if (postGameErrors(next, match).length) throw new Error();
                   if (
@@ -808,7 +812,7 @@ export function PostGameTotals({
             </CardSelect>
           </label>
           <button
-            className="button secondary"
+            className="button ghost push-end"
             onClick={() => {
               if (
                 window.confirm(

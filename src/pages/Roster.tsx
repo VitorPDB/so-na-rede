@@ -85,11 +85,17 @@ export function Roster({
                     )}
                   </strong>
                   <span className="ro-positions">
-                    {p.positions.map((pos, idx) => (
+                    {/* Uma linha: as duas primeiras posições e "+N" para o resto. */}
+                    {p.positions.slice(0, 2).map((pos, idx) => (
                       <i key={pos} className={idx === 0 ? "is-main" : ""}>
                         {pos}
                       </i>
                     ))}
+                    {p.positions.length > 2 && (
+                      <i title={p.positions.slice(2).join(", ")}>
+                        +{p.positions.length - 2}
+                      </i>
+                    )}
                   </span>
                   <small>
                     {row.count

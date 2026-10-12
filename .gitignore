@@ -6,6 +6,8 @@ dist/
 .env
 .env.local
 .env.*.local
+.env*
+!.env.example
 .qa/
 review-user-2026-10-10/
 .vercel/

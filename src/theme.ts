@@ -3,16 +3,16 @@ export const THEME_KEY = "so-na-rede:theme";
 export const themes: { id: Theme; label: string; hint: string }[] = [
   {
     id: "dark",
-    label: "Preto escuro",
+    label: "Escuro",
     hint: "Contraste alto, ideal para ginásio",
   },
-  { id: "team", label: "Só na Rede", hint: "Roxo profundo e dourado" },
+  { id: "team", label: "Time", hint: "Roxo do uniforme, nós em dourado" },
   { id: "light", label: "Claro", hint: "Para ambientes muito iluminados" },
 ];
 const metaColor: Record<Theme, string> = {
-  dark: "#070708",
-  team: "#0c0910",
-  light: "#f4f3f6",
+  dark: "#0f0e11",
+  team: "#24122a",
+  light: "#ecebef",
 };
 export function readTheme(): Theme {
   try {

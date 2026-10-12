@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { parseCloudConfig } from "./src/cloudConfig";
 let buildDirectory = "dist";
 export default defineConfig({
   plugins: [
@@ -12,6 +13,31 @@ export default defineConfig({
       name: "version-offline-cache",
       configResolved(config) {
         buildDirectory = config.build.outDir;
+        const checkPublic = (directory: string) => {
+          for (const entry of readdirSync(directory, { withFileTypes: true })) {
+            if (
+              /^(\.env|\.git|\.aws|\.codex|\.agents)(?:[.\-]|$)/i.test(
+                entry.name,
+              ) ||
+              /\.(zip|bak|backup|pem|key|p12|pfx)$/i.test(entry.name)
+            )
+              throw new Error(
+                `Arquivo privado no diretório público: ${entry.name}`,
+              );
+            if (entry.isSymbolicLink())
+              throw new Error(
+                "Links simbólicos não são permitidos no diretório público.",
+              );
+            if (entry.isDirectory())
+              checkPublic(resolve(directory, entry.name));
+          }
+        };
+        checkPublic(config.publicDir);
+        parseCloudConfig(
+          JSON.parse(
+            readFileSync(resolve(config.publicDir, "live-config.json"), "utf8"),
+          ),
+        );
       },
       closeBundle() {
         const path = resolve(buildDirectory, "sw.js");
@@ -26,7 +52,17 @@ export default defineConfig({
           resolve(buildDirectory, "live-setup.sql"),
           readFileSync("supabase/live.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/videos.sql", "utf8"),
+            readFileSync("supabase/videos.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/security-schema.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/security.sql", "utf8"),
+        );
+        writeFileSync(
+          resolve(buildDirectory, "security-setup.sql"),
+          readFileSync("supabase/security-schema.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/security.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "ativar-online.md"),

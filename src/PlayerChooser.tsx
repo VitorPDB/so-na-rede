@@ -282,7 +282,7 @@ export function PlayerChooser({
                 `${current.participants?.length} participantes selecionados`}
             </p>
             <button
-              className="button"
+              className="button primary"
               disabled={!!assessmentError(current)}
               onClick={() => onSelect(current.playerId!, current)}
             >

@@ -15,7 +15,7 @@
 ## 1. Criar o banco gratuito
 
 1. Acesse https://supabase.com/dashboard e crie uma conta e um projeto no plano Free. Guarde a senha do banco para você.
-2. Abra SQL Editor e execute o conteúdo de `supabase/live.sql`. Em um projeto existente, execute novamente o SQL atualizado; ele mantém a allowlist e os dados já publicados.
+2. Abra SQL Editor e execute `supabase/live.sql`, `supabase/videos.sql`, `supabase/security-schema.sql` e `supabase/security.sql`, nesta ordem. No projeto existente com live/vídeos já instalados, aplique os dois arquivos de segurança; veja [SEGURANCA.md](SEGURANCA.md). O download `/live-setup.sql` reúne a instalação completa e `/security-setup.sql` reúne somente a atualização de segurança.
 3. Em Authentication → Users, crie o usuário da comissão com e-mail e senha e confirme o e-mail. Copie o UUID desse usuário.
 4. Execute separadamente, substituindo o UUID:
 

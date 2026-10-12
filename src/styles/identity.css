@@ -1,0 +1,415 @@
+/*
+ * Só na Rede — identidade visual (12/10/2026).
+ * Carregado por último: só aparência, nenhuma regra de jogo depende daqui.
+ * Linguagem: placar de ginásio. Roxo do uniforme = nós; cor do escudo = eles.
+ * Fonte de placar (--font-display) para números e títulos; Atkinson no texto.
+ */
+
+/* ---------- Base: menos enfeite ---------- */
+:root,
+:root[data-theme] {
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-xl: 12px;
+  --shadow-1: none;
+  --shadow-2: none;
+}
+.lv-card,
+.ui-card,
+.ro-card,
+.sb {
+  box-shadow: none;
+  animation: none;
+}
+
+/* Títulos na fonte de placar */
+.appbar-title h1,
+.lv-card-head h2,
+.ui-card-head h2,
+.pub-toolbar h2,
+.pub-section h2,
+.sb-team h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+.appbar-title h1 {
+  font-size: 2.125rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.lv-card-head h2,
+.ui-card-head h2,
+.pub-toolbar h2,
+.pub-section h2 {
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+/* Rótulos em caixa normal, sem espaçamento de "eyebrow" */
+.ui-eyebrow,
+.sb-meta,
+.rail-brand,
+.rail-brand small,
+.court-net,
+.ui-table th,
+.an-card-title,
+.an-card-title h2,
+.prep-side strong,
+.prep-side small,
+.pub-brand strong,
+.pub-brand span {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.pub-brand strong {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+
+/* Gráficos de análise: as mesmas cores de nós e eles do placar */
+:root,
+:root[data-theme] {
+  --analysis-ours: var(--c-us-ink);
+  --analysis-theirs: var(--c-them-ink);
+}
+.ui-eyebrow {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+
+/* Números de placar e de camisa */
+.sb-digit,
+.pub-digits b,
+.sb-facts b,
+.an-grade,
+.ro-photo {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Navegação lateral ---------- */
+.rail-item small,
+.rail-brand small {
+  display: none;
+}
+.rail-brand {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+.rail-item::before {
+  content: none;
+}
+.rail-item[aria-current="page"],
+.rail-item[aria-current="page"]:hover {
+  background: var(--c-us);
+  color: var(--c-on-us);
+}
+.rail-item[aria-current="page"] svg {
+  color: var(--c-on-us);
+}
+
+/* ---------- Placar dividido (comissão) ---------- */
+.sb {
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--c-surface-1);
+}
+.sb::before {
+  content: none;
+}
+.sb-meta {
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--c-seam);
+  color: var(--c-on-seam);
+  font-size: var(--fs-sm);
+}
+.sb-meta .sb-set {
+  border-color: color-mix(in srgb, var(--c-on-seam) 35%, transparent);
+  color: var(--c-on-seam);
+}
+.sb-status {
+  color: var(--c-on-seam);
+}
+.sb-main {
+  padding: var(--sp-4) var(--sp-5);
+  background: linear-gradient(
+    90deg,
+    var(--c-us) 0 calc(50% - 3px),
+    var(--c-seam) calc(50% - 3px) calc(50% + 3px),
+    var(--c-them) calc(50% + 3px)
+  );
+}
+.sb-team.ours,
+.sb-team.ours h2,
+.sb-digit.ours {
+  color: var(--c-on-us);
+}
+.sb-team.theirs,
+.sb-team.theirs h2,
+.sb-digit.theirs {
+  color: var(--c-on-them);
+}
+.sb-team h2 {
+  font-size: 1.875rem;
+  font-weight: 800;
+}
+.sb-team.ours .sb-serve {
+  color: color-mix(in srgb, var(--c-on-us) 78%, var(--c-us));
+}
+.sb-team.theirs .sb-serve {
+  color: color-mix(in srgb, var(--c-on-them) 78%, var(--c-them));
+}
+.sb-team.is-serving .sb-serve,
+.sb-team.theirs.is-serving .sb-serve {
+  margin: 4px 0 0;
+  padding: 0;
+  background: transparent;
+  font-weight: var(--fw-bold);
+}
+.sb-team.ours.is-serving .sb-serve {
+  color: var(--c-serve);
+}
+.sb-team.theirs.is-serving .sb-serve {
+  color: var(--c-on-them);
+}
+.sb-digit {
+  font-size: clamp(4.5rem, 2.5rem + 5vw, 8.25rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+@keyframes sb-bump-ours {
+  0% {
+    transform: translateY(6px);
+    opacity: 0.4;
+  }
+}
+.sb-colon {
+  color: var(--c-on-seam);
+  opacity: 0.6;
+}
+.sb-badge.is-empty {
+  background: transparent;
+  border: 2px dashed var(--c-them-muted);
+  color: var(--c-them-muted);
+}
+.sb-foot {
+  background: var(--c-surface-1);
+}
+.sb-facts b {
+  font-size: var(--fs-lg);
+}
+
+/* ---------- Sequência de pontos ---------- */
+.rs {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--c-surface-1);
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.rs-labels,
+.rs-col {
+  display: grid;
+  grid-template-rows: 28px 28px;
+  row-gap: 2px;
+  align-items: center;
+}
+.rs-labels {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+.rs-labels .is-us {
+  color: var(--c-us-ink);
+}
+.rs-labels .is-them {
+  color: var(--c-them-ink);
+}
+.rs-track {
+  display: flex;
+  gap: 2px;
+  min-height: 58px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.rs-col {
+  flex: none;
+}
+.rs-cell {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+/* Número riscado, como na súmula */
+.rs-cell.is-us {
+  color: var(--c-us-ink);
+  background: linear-gradient(
+    to top right,
+    transparent 47%,
+    color-mix(in srgb, var(--c-us-ink) 45%, transparent) 47% 53%,
+    transparent 53%
+  );
+}
+.rs-cell.is-them {
+  color: var(--c-them-ink);
+  background: linear-gradient(
+    to top right,
+    transparent 47%,
+    color-mix(in srgb, var(--c-them-ink) 45%, transparent) 47% 53%,
+    transparent 53%
+  );
+}
+.rs-col.is-last .is-us,
+.rs-col.is-last .is-them {
+  box-shadow: inset 0 -3px 0 var(--c-gold);
+}
+.rs-empty {
+  align-self: center;
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--c-text-subtle);
+}
+
+/* ---------- Registrar lance ---------- */
+.outcome svg {
+  display: none;
+}
+.outcome {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+.outcome.good,
+.outcome.gafe,
+.outcome.neutral {
+  background: var(--c-surface-1);
+  border-color: var(--c-border-control);
+  color: var(--c-text);
+}
+.outcome.good:hover:not(:disabled),
+.outcome.gafe:hover:not(:disabled),
+.outcome.neutral:hover:not(:disabled) {
+  background: var(--c-surface-2);
+  border-color: var(--c-text);
+}
+.outcome.ours {
+  background: var(--c-us);
+  border-color: var(--c-us);
+  color: var(--c-on-us);
+}
+.outcome.ours:hover:not(:disabled) {
+  background: var(--c-us-hover);
+}
+.outcome.theirs {
+  background: var(--c-them);
+  border-color: var(--c-them);
+  color: var(--c-on-them);
+}
+.outcome.theirs:hover:not(:disabled) {
+  background: var(--c-them-hover);
+}
+
+/* ---------- Quadra ---------- */
+.court-net {
+  height: 8px;
+  margin: 0;
+  background: var(--c-us);
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  font-size: 0;
+}
+.court-net::before,
+.court-net::after {
+  content: none;
+}
+.court-grid {
+  border-top: 0;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+}
+.court-grid::after {
+  border-top: 2px solid var(--c-court-line);
+}
+.court-slot strong {
+  font-size: var(--fs-md);
+}
+
+/* ---------- Página pública: mesmo placar ---------- */
+.pub-score {
+  row-gap: 0;
+  border: 0;
+  border-top: 0;
+  background: linear-gradient(
+    90deg,
+    var(--c-us) 0 calc(50% - 3px),
+    var(--c-seam) calc(50% - 3px) calc(50% + 3px),
+    var(--c-them) calc(50% + 3px)
+  );
+}
+.pub-team:first-child strong,
+.pub-team:first-child > span:last-child {
+  color: var(--c-on-us);
+}
+.pub-team:not(:first-child) strong,
+.pub-team:not(:first-child) > span:last-child,
+.pub-opponent {
+  color: var(--c-on-them);
+}
+.pub-team strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.pub-digits b {
+  font-size: clamp(3.5rem, 9vw, 6.5rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+.pub-digits b:first-child {
+  color: var(--c-on-us);
+}
+.pub-digits b:last-child {
+  color: var(--c-on-them);
+}
+/* Textos centrais ficam numa etiqueta escura sobre a divisão */
+.pub-score-center > .ui-eyebrow,
+.pub-score-center > span:last-child,
+.pub-digits > span {
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-xs);
+  background: var(--c-seam);
+  color: var(--c-on-seam);
+}
+.pub-score-center > span:last-child b,
+.pub-score-center i {
+  color: var(--c-on-seam);
+}
+.pub-team,
+.pub-score-center {
+  padding-bottom: var(--sp-4);
+}
+.pub-score > .rs {
+  grid-column: 1 / -1;
+  margin: 0 calc(-1 * var(--sp-6));
+  padding-inline: var(--sp-6);
+}
+.pub-score > .rs + .pub-score-footer {
+  margin-top: 0;
+}
+@media (max-width: 639px) {
+  .pub-score > .rs {
+    margin-inline: calc(-1 * var(--sp-3));
+    padding-inline: var(--sp-3);
+  }
+  .pub-digits b {
+    font-size: 3.25rem;
+  }
+  .pub-team strong {
+    font-size: var(--fs-lg);
+  }
+}

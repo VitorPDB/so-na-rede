@@ -45,12 +45,12 @@
 }
 .pub-history-game small {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--c-text-muted);
   font-weight: 400;
 }
 .pub-history-game > b {
-  font-size: 24px;
+  font-size: var(--fs-2xl);
   text-align: center;
   white-space: nowrap;
 }
@@ -70,7 +70,7 @@
 .pub-history-metrics span {
   display: grid;
   gap: 4px;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--c-text-muted);
 }
 .pub-history-summary {
@@ -89,10 +89,10 @@
   min-width: 0;
 }
 .pub-player-head > strong {
-  font-size: 24px;
+  font-size: var(--fs-2xl);
 }
 .pub-player-head > div > span {
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--c-text-muted);
 }
 .pub-avatar {
@@ -150,7 +150,7 @@
 }
 .pub-brand span {
   color: var(--c-text-subtle);
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   letter-spacing: 0.18em;
   margin-top: 4px;
 }
@@ -169,22 +169,27 @@
   font-size: var(--fs-sm);
   line-height: var(--lh-body);
 }
+/* Estado, não ação: badge compacto sem contorno de botão. */
 .pub-status {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-2);
-  padding: 10px 14px;
-  border: 1px solid var(--c-pos-border);
-  border-radius: var(--r-full);
+  gap: 6px;
+  padding: var(--sp-1) var(--sp-3);
+  border: 0;
+  border-radius: var(--r-sm);
   color: var(--c-pos);
   background: var(--c-pos-bg);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+}
+.pub-status svg {
+  width: 14px;
+  height: 14px;
 }
 .pub-status.is-pending {
   color: var(--c-warn);
   background: var(--c-warn-bg);
-  border-color: var(--c-warn-border);
 }
 .pub-score {
   display: grid;
@@ -590,7 +595,7 @@
     padding: var(--sp-4) var(--sp-3) 0;
   }
   .pub-score-center > .ui-eyebrow {
-    font-size: 10px;
+    font-size: var(--fs-2xs);
   }
   .pub-team img,
   .pub-opponent {
@@ -607,7 +612,7 @@
     font-size: 2.75rem;
   }
   .pub-score-center > span:last-child {
-    font-size: 10px;
+    font-size: var(--fs-2xs);
   }
   .pub-score-center i {
     margin: 0 6px;
@@ -668,7 +673,7 @@
 }
 .video-links small {
   width: 100%;
-  font-size: 12px;
+  font-size: var(--fs-xs);
   color: var(--c-text-muted);
 }
 .video-editor-fields {

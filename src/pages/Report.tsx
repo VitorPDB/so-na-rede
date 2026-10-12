@@ -163,94 +163,103 @@ export function Report({
             </p>
           </div>
         </header>
-        <div className="ui-table-wrap">
-          <table className="ui-table rp-table">
-            <thead>
-              <tr>
-                <th scope="col">Jogador</th>
-                {columns.map(([key, label]) => (
-                  <th
-                    scope="col"
-                    key={key}
-                    className="num"
-                    aria-sort={sort === key ? "descending" : "none"}
-                  >
-                    <button
-                      type="button"
-                      className={"ui-sort" + (sort === key ? " is-active" : "")}
-                      onClick={() => setSort(key)}
+        {events.length === 0 ? (
+          <p className="ui-empty">
+            Registre o primeiro rally para ver o desempenho de cada jogador.
+          </p>
+        ) : (
+          <div className="ui-table-wrap">
+            <table className="ui-table rp-table">
+              <thead>
+                <tr>
+                  <th scope="col">Jogador</th>
+                  {columns.map(([key, label]) => (
+                    <th
+                      scope="col"
+                      key={key}
+                      className="num"
+                      aria-sort={sort === key ? "descending" : "none"}
                     >
-                      {label}
-                    </button>
-                  </th>
-                ))}
-                <th scope="col">Melhor</th>
-                <th scope="col">Pior</th>
-                <th scope="col">Técnica mais usada</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.player.id}>
-                  <td>
-                    <button
-                      type="button"
-                      className="rp-player"
-                      onClick={() => onProfile(row.player.id)}
-                    >
-                      <Photo player={row.player} className="rp-photo" />
-                      <span>
-                        <strong>{row.player.name}</strong>
-                        <small>
-                          {[
-                            ...new Set(
-                              playerEvents(events, row.player.id)
-                                .map((e) => e.role)
-                                .filter(Boolean),
-                            ),
-                          ]
-                            .map((role) => roleLabels[role!])
-                            .join(" · ") || "Sem ações"}
-                        </small>
-                      </span>
-                    </button>
-                  </td>
-                  <td className="num">
-                    <RatingBadge value={row.rating} />
-                    <small className="rp-low">{row.sample}</small>
-                  </td>
-                  <td className="num">
-                    {row.count}
-                    {row.count > 0 && row.count < 5 && (
-                      <small className="rp-low">amostra baixa</small>
-                    )}
-                  </td>
-                  <td className="num">{row.points}</td>
-                  <td className="num">{row.errors}</td>
-                  <td>
-                    <strong>{row.best?.label ?? "—"}</strong>
-                    <small>{row.reason(row.best)}</small>
-                  </td>
-                  <td>
-                    <strong>{row.worst?.label ?? "—"}</strong>
-                    <small>{row.reason(row.worst)}</small>
-                  </td>
-                  <td>
-                    <strong>
-                      {row.technique.leaders.map((r) => r.label).join(" / ") ||
-                        "Sem informação"}
-                    </strong>
-                    <small>
-                      {row.technique.known} informadas · {row.technique.missing}{" "}
-                      sem detalhe
-                      {row.technique.leaders.length > 1 ? " · empate" : ""}
-                    </small>
-                  </td>
+                      <button
+                        type="button"
+                        className={
+                          "ui-sort" + (sort === key ? " is-active" : "")
+                        }
+                        onClick={() => setSort(key)}
+                      >
+                        {label}
+                      </button>
+                    </th>
+                  ))}
+                  <th scope="col">Melhor</th>
+                  <th scope="col">Pior</th>
+                  <th scope="col">Técnica mais usada</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.player.id}>
+                    <td>
+                      <button
+                        type="button"
+                        className="rp-player"
+                        onClick={() => onProfile(row.player.id)}
+                      >
+                        <Photo player={row.player} className="rp-photo" />
+                        <span>
+                          <strong>{row.player.name}</strong>
+                          <small>
+                            {[
+                              ...new Set(
+                                playerEvents(events, row.player.id)
+                                  .map((e) => e.role)
+                                  .filter(Boolean),
+                              ),
+                            ]
+                              .map((role) => roleLabels[role!])
+                              .join(" · ") || "Sem ações"}
+                          </small>
+                        </span>
+                      </button>
+                    </td>
+                    <td className="num">
+                      <RatingBadge value={row.rating} />
+                      <small className="rp-low">{row.sample}</small>
+                    </td>
+                    <td className="num">
+                      {row.count}
+                      {row.count > 0 && row.count < 5 && (
+                        <small className="rp-low">amostra baixa</small>
+                      )}
+                    </td>
+                    <td className="num">{row.points}</td>
+                    <td className="num">{row.errors}</td>
+                    <td>
+                      <strong>{row.best?.label ?? "—"}</strong>
+                      <small>{row.reason(row.best)}</small>
+                    </td>
+                    <td>
+                      <strong>{row.worst?.label ?? "—"}</strong>
+                      <small>{row.reason(row.worst)}</small>
+                    </td>
+                    <td>
+                      <strong>
+                        {row.technique.leaders
+                          .map((r) => r.label)
+                          .join(" / ") || "Sem informação"}
+                      </strong>
+                      <small>
+                        {row.technique.known} informadas ·{" "}
+                        {row.technique.missing} sem detalhe
+                        {row.technique.leaders.length > 1 ? " · empate" : ""}
+                      </small>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <ExecutionSummary events={events} />

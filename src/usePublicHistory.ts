@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { cloud } from "./cloud";
 import type { PublicMedia } from "./publicSnapshot";
 import type { PublicRow } from "./usePublicLive";
+import {
+  validMatchId,
+  validPublicSnapshot,
+  validPublicMedia,
+} from "./publicValidation";
 
 export interface PastMatch {
   match_id: string;
@@ -125,6 +130,8 @@ export function usePublicHistory(
     async function load() {
       try {
         let result: PastPublication;
+        if (!validMatchId(matchId))
+          throw new Error("Identificador de partida inválido.");
         if (demo) {
           const { publicDemoHistory } = await import("./publicDemo");
           const row = publicDemoHistory().find(
@@ -151,6 +158,13 @@ export function usePublicHistory(
             );
           result = { ...data, media_revision: 0 } as PastPublication;
         }
+        if (
+          !validPublicSnapshot(result.snapshot) ||
+          (result.media !== null && !validPublicMedia(result.media))
+        )
+          throw new Error(
+            "Dados de partida inválidos. Mantendo o histórico seguro.",
+          );
         if (generation.current !== current) return;
         setGame(result);
         setGameMessage("");
@@ -161,7 +175,12 @@ export function usePublicHistory(
         const stored = !navigator.onLine
           ? read<PastPublication>(gameKey)
           : null;
-        if (stored?.snapshot?.matchId === matchId && stored.snapshot.finished)
+        if (
+          stored?.snapshot?.matchId === matchId &&
+          validPublicSnapshot(stored.snapshot) &&
+          stored.snapshot.finished &&
+          (stored.media === null || validPublicMedia(stored.media))
+        )
           setGame(stored);
         setGameMessage((error as Error).message);
       }
