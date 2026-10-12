@@ -2,6 +2,19 @@ import { project, stats } from "./engine";
 import { matchAnalysis } from "./analysis";
 import { ratingProfiles, type Match } from "./model";
 import { playerEvents } from "./assessment";
+import { validVideos } from "./videos";
+import { criteriaPublication, type PublicCriteriaData } from "./criteriaStats";
+function technical(
+  events: Parameters<typeof criteriaPublication>[0],
+  match: Match,
+): { technical?: PublicCriteriaData } {
+  return {
+    technical: criteriaPublication(
+      events,
+      match.players.map((p) => p.id),
+    ),
+  };
+}
 
 const summary = (s: ReturnType<typeof stats>) => ({
   rating: s.rating,
@@ -19,6 +32,10 @@ export function publicSnapshot(match: Match) {
     analysis = matchAnalysis(match);
   return {
     version: 1 as const,
+    ...technical(s.events, match),
+    ...(match.videos !== undefined && validVideos(match.videos)
+      ? { videos: match.videos }
+      : {}),
     matchId: match.id,
     playedAt: match.audit[0]?.createdAt ?? null,
     team: match.team,
@@ -73,6 +90,10 @@ export function publicSnapshot(match: Match) {
       const period = matchAnalysis(match, set);
       return {
         set,
+        ...technical(
+          s.events.filter((e) => e.set === set),
+          match,
+        ),
         score: s.completed.find((p) => p.set === set)?.score ?? s.score,
         teamStats: summary(
           stats(

@@ -17,6 +17,7 @@ self.addEventListener("install", (event) => {
           "/icon-512.png",
           "/live-config.json",
           "/live-setup.sql",
+          "/videos-setup.sql",
           "/ativar-online.md",
           "/CLOUDFLARE.md",
           "/VERCEL.md",

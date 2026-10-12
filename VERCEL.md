@@ -16,7 +16,7 @@ Antes de mudar de endereço, exporte o JSON do app atual para preservar jogos, f
 
 1. Acesse https://supabase.com/dashboard e crie um projeto no plano **Free**. Uma região próxima do Brasil é adequada. A senha do banco fica com você.
 2. Aguarde o projeto ficar pronto.
-3. Abra **SQL Editor → New query**, copie todo o conteúdo de `supabase/live.sql` da pasta extraída e execute com **Run**. Este SQL cria a publicação atual, fotos, histórico e permissões. Se o banco já existe, executar novamente preserva os dados.
+3. Abra **SQL Editor → New query** e execute `supabase/live.sql`, `supabase/videos.sql`, `supabase/security-schema.sql` e `supabase/security.sql`, nesta ordem. Para o projeto já configurado com live/vídeos, execute somente os dois arquivos de segurança. O download `/live-setup.sql` reúne a instalação completa; `/security-setup.sql` reúne a atualização de segurança. Veja [SEGURANCA.md](SEGURANCA.md) antes de publicar esta versão.
 4. Abra **Authentication → Users → Add user / Create new user**. Crie o e-mail e a senha que o auxiliar usará para publicar e habilite a confirmação automática do e-mail, se apresentada.
 5. Copie o **UUID** desse usuário, abra outra consulta SQL e execute:
 

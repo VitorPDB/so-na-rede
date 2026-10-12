@@ -1,3 +1,4 @@
+import { Jersey } from "./Jersey";
 import { useState } from "react";
 import {
   Activity,
@@ -510,9 +511,19 @@ export function Analysis({
                     </small>
                   </span>
                 </span>
-                <small className={r.group.length < 5 ? "an-low" : "an-ok"}>
-                  {r.group.length < 5 ? "Amostra baixa" : "Rallies observados"}{" "}
-                  · {r.group.length}
+                {/* Dourado só quando há amostra pequena; sem rallies fica neutro. */}
+                <small
+                  className={
+                    r.group.length === 0
+                      ? ""
+                      : r.group.length < 5
+                        ? "an-low"
+                        : "an-ok"
+                  }
+                >
+                  {r.group.length === 0
+                    ? "Sem rallies"
+                    : `${r.group.length < 5 ? "Amostra baixa" : "Rallies observados"} · ${r.group.length}`}
                 </small>
               </button>
             );
@@ -547,7 +558,7 @@ export function Analysis({
                 return (
                   <div key={z}>
                     <span className="court-zone">Z{z}</span>
-                    <Photo player={p} className="an-court-photo" />
+                    <Jersey number={p.number} libero={p.libero} />
                     <strong>{p.name}</strong>
                     <small>
                       {roleLabels[p.libero ? "libero" : formation.roles[z - 1]]}

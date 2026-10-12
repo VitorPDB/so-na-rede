@@ -16,6 +16,7 @@ import {
 } from "./model";
 import { legacyRoles } from "./formation";
 import { assessed, assessmentError } from "./assessment";
+import { captureRatingContext, ratingV2, sampleLabel } from "./ratingV2";
 
 // Zone-indexed clockwise rotation: 2→1→6→5→4→3→2.
 export function rotate(lineup: string[]) {
@@ -360,6 +361,31 @@ export function validate(
     )
       return "Selecione um atleta que esteja em quadra.";
     if (
+      c.event.skill === "attack" &&
+      c.event.assessment?.tags.some(
+        (t) => t === "attack_pipe" || t === "attack_back_one",
+      ) &&
+      (match.players.find((p) => p.id === c.event.playerId)?.libero ||
+        ![1, 5, 6].includes(state.lineup.indexOf(c.event.playerId!) + 1))
+    )
+      return "Ataque do fundo deve ser atribuído a um jogador do fundo, sem ser o líbero.";
+    for (const item of [
+      { playerId: c.event.playerId, ratingContext: c.event.ratingContext },
+      ...(c.event.participants ?? []),
+    ]) {
+      const context = item.ratingContext;
+      if (
+        context &&
+        (context.rotationZone !==
+          state.lineup.indexOf(item.playerId ?? "") + 1 ||
+          context.role !==
+            (state.libero?.playerId === item.playerId
+              ? "libero"
+              : state.roles[state.lineup.indexOf(item.playerId ?? "")]))
+      )
+        return "Contexto da ação não corresponde à formação daquele rally.";
+    }
+    if (
       c.event.skill === "serve" &&
       (state.server !== "ours" || c.event.playerId !== state.lineup[0])
     )
@@ -414,6 +440,11 @@ export function validate(
   }
 }
 export function append(match: Match, command: Command): Match {
+  if (command.type === "event")
+    command = {
+      ...command,
+      event: captureRatingContext(match, project(match), command.event),
+    };
   const s = project(match);
   const error = validate(match, s, command);
   if (error) throw new Error(error);
@@ -465,6 +496,21 @@ export function correct(
   reason: string,
 ): Match {
   if (!reason.trim()) throw new Error("Descreva o motivo da correção.");
+  const active = project(match).active;
+  const index = active.findIndex((e) => e.id === target);
+  if (index >= 0)
+    event = captureRatingContext(
+      match,
+      project({ ...match, audit: active.slice(0, index) }),
+      {
+        ...event,
+        ratingContext: undefined,
+        participants: event.participants?.map((p) => ({
+          ...p,
+          ratingContext: undefined,
+        })),
+      },
+    );
   if (
     !project(match).active.some(
       (e) => e.id === target && e.command?.type === "event",
@@ -501,6 +547,19 @@ export interface Metric {
   errors: number;
   quality: number;
 }
+export interface StatsResult {
+  rating: number | null;
+  sample: string;
+  provisional: boolean;
+  ratingVersion: "v2" | "v3" | "v4" | "mixed" | "legacy";
+  list: Metric[];
+  best?: Metric;
+  worst?: Metric;
+  reason: (m?: Metric) => string;
+  count: number;
+  errors: number;
+  points: number;
+}
 export function metrics(events: SkillEvent[]): Metric[] {
   return (Object.keys(skills) as Skill[])
     .filter((s) => s !== "opponent")
@@ -523,7 +582,7 @@ export function stats(
   events: (SkillEvent & { role?: Role })[],
   weights: Weights,
   profiles?: Record<Role, RoleWeights>,
-) {
+): StatsResult {
   const observed = events.filter(
     (e) => e.skill !== "opponent" && assessed(e).rated,
   );
@@ -611,6 +670,18 @@ export function stats(
   const ranked = [...available].sort(
     (a, b) => b.quality - a.quality || b.count - a.count,
   );
+  const version2 = observed.filter((e) => (e.assessment?.version ?? 0) >= 2);
+  if (version2.length) {
+    const legacy = observed.filter((e) => (e.assessment?.version ?? 0) < 2);
+    const current = ratingV2(version2, weights, profiles);
+    const old = legacy.length ? stats(legacy, weights, profiles).rating : null;
+    rating =
+      current === null
+        ? old
+        : old === null
+          ? current
+          : (current * version2.length + old * legacy.length) / observed.length;
+  }
   const best = ranked[0];
   const worst = ranked.length > 1 ? ranked[ranked.length - 1] : undefined;
   const reason = (m?: Metric) =>
@@ -619,6 +690,19 @@ export function stats(
       : "Sem dados suficientes";
   return {
     rating,
+    sample: sampleLabel(observed.length),
+    provisional: observed.length > 0 && observed.length < 5,
+    ratingVersion: version2.length
+      ? version2.length === observed.length
+        ? new Set(observed.map((e) => e.assessment?.version)).size > 1
+          ? "mixed"
+          : observed[0].assessment?.version === 4
+            ? "v4"
+            : observed[0].assessment?.version === 3
+              ? "v3"
+              : "v2"
+        : "mixed"
+      : "legacy",
     list,
     best,
     worst,

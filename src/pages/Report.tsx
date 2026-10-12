@@ -12,6 +12,8 @@ import { playerEvents } from "../assessment";
 import { ExecutionSummary } from "../ExecutionSummary";
 import { Photo } from "../PlayerProfile";
 import { RatingBadge } from "../live/Insights";
+import { CriteriaReport } from "../CriteriaReport";
+import { criterionDistribution } from "../criteriaStats";
 
 export function Report({
   match,
@@ -37,6 +39,10 @@ export function Report({
   const rows = match.players
     .map((player) => ({
       player,
+      technique: criterionDistribution(
+        playerEvents(events, player.id),
+        "technique",
+      ),
       ...stats(
         playerEvents(events, player.id),
         match.weights,
@@ -50,7 +56,7 @@ export function Report({
     );
   const ranked = [...rows].sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   const highlight =
-    ranked.find((p) => p.count >= 3) ?? ranked.find((p) => p.count);
+    ranked.find((p) => p.count >= 5) ?? ranked.find((p) => p.count);
   const list = metrics(events);
   const columns = [
     ["rating", "Nota"],
@@ -61,6 +67,15 @@ export function Report({
 
   return (
     <div className="rp">
+      <p className="ui-note">
+        {collective.ratingVersion === "mixed"
+          ? "Avaliação mista: registros antigos mantêm a fórmula anterior; novas ações usam os critérios por fundamento."
+          : ["v3", "v4"].includes(collective.ratingVersion)
+            ? "Notas por fundamento · qualidade e dificuldade separadas. A/B/C não dependem da zona ou de um jogador específico."
+            : collective.ratingVersion === "v2"
+              ? "Notas v2 · médias de qualidade. A amostra aparece separadamente e não reduz a nota."
+              : "Registros anteriores · fórmula original preservada."}
+      </p>
       <div className="an-toolbar">
         <div className="ui-chips" role="radiogroup" aria-label="Recorte">
           {[0, ...Array.from({ length: s.set }, (_, i) => i + 1)].map((n) => (
@@ -99,7 +114,7 @@ export function Report({
         <section className="ui-card rp-kpi gold">
           <span className="ui-eyebrow">
             <Trophy size={13} aria-hidden="true" /> Destaque
-            {highlight && highlight.count < 3 ? " provisório" : " do time"}
+            {highlight && highlight.count < 5 ? " provisório" : " do time"}
           </span>
           {highlight ? (
             <button
@@ -148,84 +163,111 @@ export function Report({
             </p>
           </div>
         </header>
-        <div className="ui-table-wrap">
-          <table className="ui-table rp-table">
-            <thead>
-              <tr>
-                <th scope="col">Jogador</th>
-                {columns.map(([key, label]) => (
-                  <th
-                    scope="col"
-                    key={key}
-                    className="num"
-                    aria-sort={sort === key ? "descending" : "none"}
-                  >
-                    <button
-                      type="button"
-                      className={"ui-sort" + (sort === key ? " is-active" : "")}
-                      onClick={() => setSort(key)}
+        {events.length === 0 ? (
+          <p className="ui-empty">
+            Registre o primeiro rally para ver o desempenho de cada jogador.
+          </p>
+        ) : (
+          <div className="ui-table-wrap">
+            <table className="ui-table rp-table">
+              <thead>
+                <tr>
+                  <th scope="col">Jogador</th>
+                  {columns.map(([key, label]) => (
+                    <th
+                      scope="col"
+                      key={key}
+                      className="num"
+                      aria-sort={sort === key ? "descending" : "none"}
                     >
-                      {label}
-                    </button>
-                  </th>
-                ))}
-                <th scope="col">Melhor</th>
-                <th scope="col">Pior</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.player.id}>
-                  <td>
-                    <button
-                      type="button"
-                      className="rp-player"
-                      onClick={() => onProfile(row.player.id)}
-                    >
-                      <Photo player={row.player} className="rp-photo" />
-                      <span>
-                        <strong>{row.player.name}</strong>
-                        <small>
-                          {[
-                            ...new Set(
-                              playerEvents(events, row.player.id)
-                                .map((e) => e.role)
-                                .filter(Boolean),
-                            ),
-                          ]
-                            .map((role) => roleLabels[role!])
-                            .join(" · ") || "Sem ações"}
-                        </small>
-                      </span>
-                    </button>
-                  </td>
-                  <td className="num">
-                    <RatingBadge value={row.rating} />
-                  </td>
-                  <td className="num">
-                    {row.count}
-                    {row.count > 0 && row.count < 3 && (
-                      <small className="rp-low">amostra baixa</small>
-                    )}
-                  </td>
-                  <td className="num">{row.points}</td>
-                  <td className="num">{row.errors}</td>
-                  <td>
-                    <strong>{row.best?.label ?? "—"}</strong>
-                    <small>{row.reason(row.best)}</small>
-                  </td>
-                  <td>
-                    <strong>{row.worst?.label ?? "—"}</strong>
-                    <small>{row.reason(row.worst)}</small>
-                  </td>
+                      <button
+                        type="button"
+                        className={
+                          "ui-sort" + (sort === key ? " is-active" : "")
+                        }
+                        onClick={() => setSort(key)}
+                      >
+                        {label}
+                      </button>
+                    </th>
+                  ))}
+                  <th scope="col">Melhor</th>
+                  <th scope="col">Pior</th>
+                  <th scope="col">Técnica mais usada</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.player.id}>
+                    <td>
+                      <button
+                        type="button"
+                        className="rp-player"
+                        onClick={() => onProfile(row.player.id)}
+                      >
+                        <Photo player={row.player} className="rp-photo" />
+                        <span>
+                          <strong>{row.player.name}</strong>
+                          <small>
+                            {[
+                              ...new Set(
+                                playerEvents(events, row.player.id)
+                                  .map((e) => e.role)
+                                  .filter(Boolean),
+                              ),
+                            ]
+                              .map((role) => roleLabels[role!])
+                              .join(" · ") || "Sem ações"}
+                          </small>
+                        </span>
+                      </button>
+                    </td>
+                    <td className="num">
+                      <RatingBadge value={row.rating} />
+                      <small className="rp-low">{row.sample}</small>
+                    </td>
+                    <td className="num">
+                      {row.count}
+                      {row.count > 0 && row.count < 5 && (
+                        <small className="rp-low">amostra baixa</small>
+                      )}
+                    </td>
+                    <td className="num">{row.points}</td>
+                    <td className="num">{row.errors}</td>
+                    <td>
+                      <strong>{row.best?.label ?? "—"}</strong>
+                      <small>{row.reason(row.best)}</small>
+                    </td>
+                    <td>
+                      <strong>{row.worst?.label ?? "—"}</strong>
+                      <small>{row.reason(row.worst)}</small>
+                    </td>
+                    <td>
+                      <strong>
+                        {row.technique.leaders
+                          .map((r) => r.label)
+                          .join(" / ") || "Sem informação"}
+                      </strong>
+                      <small>
+                        {row.technique.known} informadas ·{" "}
+                        {row.technique.missing} sem detalhe
+                        {row.technique.leaders.length > 1 ? " · empate" : ""}
+                      </small>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <ExecutionSummary events={events} />
+      <CriteriaReport
+        events={events}
+        players={match.players}
+        period={set ? `Set ${set}` : "Jogo completo"}
+      />
 
       <div className="rp-bottom">
         <section className="ui-card">

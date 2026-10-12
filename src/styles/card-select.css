@@ -1,0 +1,87 @@
+.card-select {
+  min-width: 0;
+  width: 100%;
+}
+.card-select > select[hidden] {
+  display: none !important;
+}
+.card-select .card-select-panel {
+  border: 1px solid var(--c-border-control);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: var(--c-surface-2);
+  min-width: 0;
+}
+.card-select .card-select-panel > summary {
+  min-height: 56px;
+  gap: 10px;
+  width: 100%;
+  white-space: normal;
+}
+.card-select .card-select-panel > summary strong {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.card-select .card-select-panel > summary svg {
+  flex-shrink: 0;
+}
+.card-select .card-select-panel > summary[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.card-select .assessment-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(145px, 100%), 1fr));
+  padding-bottom: 12px;
+  margin-top: 4px;
+}
+.card-select .assessment-choice-grid button {
+  width: 100%;
+  min-height: 56px;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.card-select .assessment-choice-grid button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.card-select-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  margin: 0 0 12px;
+}
+.card-select-search > svg {
+  position: absolute;
+  left: 12px;
+  color: var(--c-text-muted);
+  pointer-events: none;
+}
+.card-select-search input {
+  width: 100%;
+  min-height: 56px;
+  padding-left: 38px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 8px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-size: 14px;
+}
+.card-select-search input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+.card-select-panel[open] {
+  background: var(--c-surface-1);
+}
+.cr-filters .card-select,
+.postgame-fields .card-select {
+  align-self: start;
+}
+.postgame-layout td .card-select {
+  min-width: 150px;
+}

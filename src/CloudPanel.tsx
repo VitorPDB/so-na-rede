@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { Match } from "./model";
 import { cloud, cloudIssue, publicLink, teamSlug } from "./cloud";
 import { publicMedia, publicSnapshot } from "./publicSnapshot";
+import { validPublicSnapshot, validPublicMedia } from "./publicValidation";
 
 const publicationKey = "so-na-rede:publication";
 type Publication = { enabled: boolean; revision: number; matchId: string };
@@ -21,6 +22,7 @@ function loadPublication(): Publication | null {
 }
 export function usePublication(match: Match) {
   const [session, setSession] = useState<Session | null>(null);
+  const [authorized, setAuthorized] = useState(false);
   const [publication, setPublication] = useState(loadPublication);
   const [status, setStatus] = useState("Transmissão desligada");
   const latest = useRef(match),
@@ -42,6 +44,20 @@ export function usePublication(match: Match) {
       data.subscription.unsubscribe();
     };
   }, []);
+  useEffect(() => {
+    let active = true;
+    setAuthorized(false);
+    if (cloud && session)
+      void cloud.rpc("can_publish").then(({ data, error }) => {
+        if (!active) return;
+        setAuthorized(!error && data === true);
+        if (error || data !== true)
+          setStatus("Conta sem permissão ou SQL de segurança pendente.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [session?.user.id]);
   function persist(p: Publication | null) {
     try {
       localStorage.setItem(publicationKey, JSON.stringify(p));
@@ -58,7 +74,7 @@ export function usePublication(match: Match) {
       setStatus("Nova partida: toque em Publicar para iniciar.");
       return;
     }
-    if (!session) {
+    if (!session || !authorized) {
       setStatus("Entre para reenviar as atualizações pendentes.");
       return;
     }
@@ -96,6 +112,16 @@ export function usePublication(match: Match) {
         };
       }
       const request = pending;
+      if (
+        !validPublicSnapshot(request.snapshot) ||
+        (request.media !== null && !validPublicMedia(request.media))
+      ) {
+        conflicted = true;
+        setStatus(
+          "Dados fora dos limites de publicação. A partida local permanece salva.",
+        );
+        return;
+      }
       busy.current = true;
       setStatus("Enviando atualização…");
       try {
@@ -114,6 +140,10 @@ export function usePublication(match: Match) {
           } else if (error.message.includes("not_authorized")) {
             conflicted = true;
             setStatus("Esta conta não está autorizada a publicar.");
+          } else if (error.message.includes("rate_limited")) {
+            setStatus(
+              "Limite de envios atingido. Tentaremos novamente em instantes; ações salvas no tablet.",
+            );
           } else
             setStatus(
               "Envio pendente · confira a conexão e o acesso da comissão",
@@ -148,9 +178,15 @@ export function usePublication(match: Match) {
       clearInterval(timer);
       window.removeEventListener("online", flush);
     };
-  }, [publication?.enabled, publication?.matchId, session?.user.id, match.id]);
+  }, [
+    publication?.enabled,
+    publication?.matchId,
+    session?.user.id,
+    authorized,
+    match.id,
+  ]);
   async function start() {
-    if (!cloud || !session || busy.current) return;
+    if (!cloud || !session || !authorized || busy.current) return;
     const { data, error } = await cloud
       .from("live_public")
       .select("revision")
@@ -171,6 +207,7 @@ export function usePublication(match: Match) {
   }
   return {
     session,
+    authorized,
     status,
     enabled: Boolean(publication?.enabled && publication.matchId === match.id),
     start,
@@ -206,7 +243,7 @@ export function CloudPanel({
             ? "Não configurado"
             : publication.enabled
               ? "Transmitindo"
-              : publication.session
+              : publication.authorized
                 ? "Pronto"
                 : "Desconectado"}
         </span>
@@ -274,6 +311,7 @@ export function CloudPanel({
                     "Sem conexão. Tente novamente quando voltar a internet.",
                   );
                 } finally {
+                  setPassword("");
                   setBusy(false);
                 }
               }}
@@ -283,6 +321,7 @@ export function CloudPanel({
                 <input
                   className="ui-input"
                   type="email"
+                  maxLength={254}
                   autoComplete="username"
                   required
                   value={email}
@@ -294,6 +333,7 @@ export function CloudPanel({
                 <input
                   className="ui-input"
                   type="password"
+                  maxLength={1024}
                   autoComplete="current-password"
                   required
                   value={password}
@@ -316,6 +356,7 @@ export function CloudPanel({
               <div className="st-data">
                 <button
                   className="ui-btn ui-btn--primary"
+                  disabled={!publication.authorized && !publication.enabled}
                   onClick={() => {
                     if (publication.enabled) publication.stop();
                     else void publication.start();

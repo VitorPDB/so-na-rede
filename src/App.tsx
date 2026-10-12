@@ -1,9 +1,10 @@
+import { CardSelect } from "./CardSelect";
+import { initialAssessment } from "./actionQuality";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight,
   ArrowRight,
   Check,
-  Download,
   ShieldCheck,
   Trophy,
   Undo2,
@@ -41,12 +42,18 @@ import { Analysis } from "./AnalysisView";
 import { Photo, PlayerProfile } from "./PlayerProfile";
 import { archiveGame } from "./career";
 import { formationAt, toP1 } from "./formation";
-import { csv, download, loadMatch, parseMatch, saveMatch, recoveryNotice } from "./storage";
+import {
+  csv,
+  download,
+  loadMatch,
+  parseMatch,
+  saveMatch,
+  recoveryNotice,
+} from "./storage";
 import { CloudPanel, usePublication } from "./CloudPanel";
 import { PostGameView } from "./PostGameView";
 import {
   playerEvents,
-  normalAssessment,
   assessmentText,
   difficultyLabels,
   responsibilityLabels,
@@ -71,6 +78,8 @@ import { ActionPanel } from "./live/ActionPanel";
 import { MatchHistory } from "./MatchHistory";
 import { TeamPulse, RecentActions } from "./live/Insights";
 import { type Theme, THEME_KEY, applyTheme, readTheme } from "./theme";
+import { useOpponentColor } from "./opponentColor";
+import { opponentTeam } from "./OpponentLogos";
 
 const number = (n: number) => String(n).padStart(2, "0");
 function initial() {
@@ -112,6 +121,7 @@ export default function App() {
   const [boot] = useState(initial);
   const [match, setMatch] = useState(boot.match);
   const publication = usePublication(match);
+  useOpponentColor(opponentTeam(match)?.logo);
   const [storageError, setStorageError] = useState(boot.error);
   const [readBlocked, setReadBlocked] = useState(Boolean(boot.error));
   const [page, setPage] = useState<Page>("live");
@@ -123,12 +133,15 @@ export default function App() {
     setPanel(undefined);
     window.scrollTo(0, 0);
   }, [page]);
-  const [feedback, setFeedback] = useState<{
-    message: string;
-    side?: Side;
-    undoable?: boolean;
-    id?: number;
-  } | undefined>(recoveryNotice ? { message: recoveryNotice } : undefined);
+  const [feedback, setFeedback] = useState<
+    | {
+        message: string;
+        side?: Side;
+        undoable?: boolean;
+        id?: number;
+      }
+    | undefined
+  >(recoveryNotice ? { message: recoveryNotice } : undefined);
   const scoreRef = useRef<HTMLDivElement>(null);
   const [scoreVisible, setScoreVisible] = useState(true);
   useEffect(() => {
@@ -195,7 +208,7 @@ export default function App() {
     }))
     .sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   const highlight =
-    playerStats.find((p) => p.count >= 3) ??
+    playerStats.find((p) => p.count >= 5) ??
     playerStats.find((p) => p.count > 0);
   const recent = s.active
     .filter((e) => e.command?.type === "event" || e.command?.type === "point")
@@ -293,7 +306,8 @@ export default function App() {
     const event: SkillEvent = {
       skill: key,
       result,
-      assessment: key === "opponent" ? undefined : normalAssessment(),
+      assessment:
+        key === "opponent" ? undefined : initialAssessment(key, result),
     };
 
     if (key === "opponent") {
@@ -621,6 +635,7 @@ export default function App() {
   };
   const importBackup = async (file: File) => {
     try {
+      if (file.size > 25 * 1024 * 1024) throw new Error("Backup excede o limite de 25 MB.");
       const data = parseMatch(await file.text());
       if (
         window.confirm(
@@ -661,6 +676,8 @@ export default function App() {
       defenseMap: match.defenseMap,
       formations: match.formations,
       ratingProfiles: match.ratingProfiles,
+      middleCoverage: match.middleCoverage,
+      middleBackrowWeights: match.middleBackrowWeights,
       weights: match.weights,
       history: archiveGame(match),
       postGameDraft: match.postGameDraft,
@@ -741,6 +758,7 @@ export default function App() {
                 type="button"
                 key={item.id}
                 className="rail-item"
+                aria-label={item.label}
                 aria-current={current ? "page" : undefined}
                 onClick={() => setPage(item.id)}
               >
@@ -844,19 +862,9 @@ export default function App() {
                   ? "Sem conexão"
                   : offlineReady
                     ? "Offline pronto"
-                    : "Preparando"}
+                    : "Preparando offline"}
               </span>
             </span>
-            <button
-              type="button"
-              className="ui-btn ui-btn--secondary ui-btn--sm appbar-export"
-              aria-label="Exportar JSON"
-              title="Exportar backup JSON"
-              onClick={exportJson}
-            >
-              <Download size={17} aria-hidden="true" />
-              <span>Exportar</span>
-            </button>
           </div>
         </header>
         {storageError && (
@@ -1040,7 +1048,9 @@ export default function App() {
             onProfile={showProfile}
           />
         )}
-        {page === "history" && <MatchHistory match={match} />}
+        {page === "history" && (
+          <MatchHistory match={match} onChange={(next) => commit(next)} />
+        )}
         {page === "roster" && (
           <Roster
             match={match}
@@ -1292,7 +1302,7 @@ export default function App() {
                             <div className="correction-form">
                               <label>
                                 JOGADOR
-                                <select
+                                <CardSelect
                                   value={editPlayer}
                                   onChange={(ev) =>
                                     setEditPlayer(ev.target.value)
@@ -1305,15 +1315,33 @@ export default function App() {
                                       {p.name}
                                     </option>
                                   ))}
-                                </select>
+                                </CardSelect>
                               </label>
                               <label>
                                 RESULTADO
-                                <select
+                                <CardSelect
                                   value={editResult}
-                                  onChange={(ev) =>
-                                    setEditResult(ev.target.value)
-                                  }
+                                  onChange={(ev) => {
+                                    setEditResult(ev.target.value);
+                                    if (
+                                      editDetails?.assessment?.version === 4
+                                    ) {
+                                      const criteria = {
+                                        ...editDetails.assessment.criteria,
+                                      };
+                                      delete criteria.passQuality;
+                                      delete criteria.blockQuality;
+                                      setEditDetails({
+                                        ...editDetails,
+                                        result: ev.target.value,
+                                        assessment: {
+                                          ...editDetails.assessment,
+                                          execution: undefined,
+                                          criteria,
+                                        },
+                                      });
+                                    }
+                                  }}
                                 >
                                   {skills[activeEvent!.skill].results.map(
                                     (r) => (
@@ -1322,7 +1350,7 @@ export default function App() {
                                       </option>
                                     ),
                                   )}
-                                </select>
+                                </CardSelect>
                               </label>
                               <label>
                                 MOTIVO

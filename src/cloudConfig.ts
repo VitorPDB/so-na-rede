@@ -3,6 +3,15 @@ export type CloudConfig = { supabaseUrl: string; publishableKey: string };
 export function parseCloudConfig(value: unknown): CloudConfig | null {
   if (!value || typeof value !== "object") return null;
   const input = value as Record<string, unknown>;
+  if (
+    Array.isArray(value) ||
+    Object.keys(input).some(
+      (k) => !["supabaseUrl", "publishableKey"].includes(k),
+    )
+  )
+    throw new Error(
+      "A configuração pública deve conter somente URL e chave pública.",
+    );
   const supabaseUrl =
     typeof input.supabaseUrl === "string" ? input.supabaseUrl.trim() : "";
   const publishableKey =
@@ -16,6 +25,8 @@ export function parseCloudConfig(value: unknown): CloudConfig | null {
   }
   if (
     url.protocol !== "https:" ||
+    !/^[a-z0-9-]+\.supabase\.co$/.test(url.hostname) ||
+    url.port ||
     url.username ||
     url.password ||
     url.search ||
@@ -25,6 +36,7 @@ export function parseCloudConfig(value: unknown): CloudConfig | null {
     throw new Error(
       "Use a URL HTTPS do projeto Supabase, sem caminhos adicionais.",
     );
+  if (publishableKey.length > 4096) throw new Error("Chave pública inválida.");
   let publicKey = /^sb_publishable_[a-zA-Z0-9_-]+$/.test(publishableKey);
   if (!publicKey && publishableKey.split(".").length === 3) {
     try {

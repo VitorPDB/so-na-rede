@@ -1,7 +1,8 @@
 /*
  * Só na Rede — design tokens.
  * Uma única fonte de verdade para cor, tipografia, espaço, raio, sombra e movimento.
- * Temas: "dark" (Preto escuro, padrão), "team" (roxo e dourado) e "light" (claro).
+ * Temas: "dark" (escuro), "team" (roxo do uniforme, nós em dourado) e "light" (claro).
+ * Identidade: roxo do uniforme = nós; cor do escudo adversário = eles.
  * As rampas do tema claro espelham a luminosidade das rampas escuras, para que
  * qualquer componente escrito com tokens funcione nos três temas.
  */
@@ -9,37 +10,39 @@
   color-scheme: dark;
 
   /* Neutros: do mais escuro ao mais claro (no tema escuro) */
-  --c-bg: #070708;
-  --c-bg-sunken: #0b0b0e;
-  --c-surface-1: #101014;
-  --c-surface-2: #16161b;
-  --c-surface-3: #1d1d23;
-  --c-surface-4: #25252c;
-  --c-border-subtle: #2a2931;
-  --c-border: #34333d;
-  --c-border-strong: #4a4854;
-  --c-text-faint: #6b6875;
-  --c-text-subtle: #8a8795;
-  --c-text-muted: #aaa8b4;
+  --c-bg: #0f0e11;
+  --c-bg-sunken: #0b0a0d;
+  --c-surface-1: #18161b;
+  --c-surface-2: #1e1c22;
+  --c-surface-3: #25222a;
+  --c-surface-4: #2d2a33;
+  --c-border-subtle: #2b2830;
+  --c-border: #36333d;
+  --c-border-strong: #4a4652;
+  /* Contorno de controles: ≥3:1 sobre as superfícies (WCAG 1.4.11). */
+  --c-border-control: #6c6977;
+  --c-text-faint: #8a8694; /* ≥4.5:1 em surface-1/2 */
+  --c-text-subtle: #97929f;
+  --c-text-muted: #aaa5b2;
   --c-text-2: #d3d0da;
-  --c-text: #f0edf4;
+  --c-text: #efecf2;
   --c-text-strong: #ffffff;
 
   /* Roxo (seleção, foco, marca) */
-  --c-accent-bg: #1a1522;
-  --c-accent-soft: #292332;
-  --c-accent-border: #4b3f5c;
-  --c-accent-muted: #7d6a92;
-  --c-accent: #b6a3cc;
-  --c-accent-strong: #d8cbe7;
-  --c-on-accent: #120d18;
+  --c-accent-bg: #1f1524;
+  --c-accent-soft: #2c1e33;
+  --c-accent-border: #573766;
+  --c-accent-muted: #8a5e98;
+  --c-accent: #c59bd1;
+  --c-accent-strong: #e2c8ea;
+  --c-on-accent: #17101a;
 
   /* Dourado (destaques) */
-  --c-gold-bg: #1f1a10;
-  --c-gold-border: #4a3f26;
-  --c-gold-muted: #8a7648;
-  --c-gold: #c9b47d;
-  --c-gold-strong: #e6d4a2;
+  --c-gold-bg: #221a0c;
+  --c-gold-border: #5a4520;
+  --c-gold-muted: #9a7a36;
+  --c-gold: #e0a93b;
+  --c-gold-strong: #f0c66a;
 
   /* Resultado positivo / Bom / nosso */
   --c-pos-bg: #131a15;
@@ -72,8 +75,8 @@
 
   /* Superfícies especiais */
   --c-scrim: rgb(4 4 6 / 0.72);
-  --c-court: #121117;
-  --c-court-line: #4a4854;
+  --c-court: #18161b;
+  --c-court-line: #6a6572;
 
   /* Sombras: baixa opacidade, elevação suave */
   --shadow-color: 0 0% 0%;
@@ -91,8 +94,11 @@
 
   /* Tipografia */
   --font-sans:
-    "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
+    "Atkinson Hyperlegible Next Variable", system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+  /* Placar, números de camisa e títulos. */
+  --font-display:
+    "Big Shoulders Display Variable", "Arial Narrow", system-ui, sans-serif;
   --fs-2xs: 0.6875rem; /* 11 */
   --fs-xs: 0.75rem; /* 12 */
   --fs-sm: 0.8125rem; /* 13 */
@@ -152,76 +158,109 @@
   --z-fab: 45;
   --z-overlay: 60;
   --z-toast: 80;
+
+  /* Nós e eles: placar, sequência de pontos e botões de ponto.
+     --c-them* é sobrescrito pela cor do escudo do adversário (opponentColor.ts). */
+  --c-us: #5a2a66;
+  --c-on-us: #f6ebd3;
+  --c-us-hover: #6a3478;
+  --c-us-ink: #c59bd1;
+  --c-us-muted: #9a6fa6;
+  --c-them: #2f4558;
+  --c-on-them: #eef2f5;
+  --c-them-hover: #3a5469;
+  --c-them-ink: #9db6ca;
+  --c-them-muted: #b7c6d2;
+  --c-seam: #000000;
+  --c-on-seam: #f6ebd3;
+  --c-serve: #e0a93b;
+  --c-jersey-line: transparent;
 }
 
 /* Só na Rede: roxo profundo e dourado discreto */
 :root[data-theme="team"] {
-  --c-bg: #0c0910;
-  --c-bg-sunken: #100c16;
-  --c-surface-1: #15111b;
-  --c-surface-2: #1b1522;
-  --c-surface-3: #231b2c;
-  --c-surface-4: #2c2236;
-  --c-border-subtle: #31273b;
-  --c-border: #41364b;
-  --c-border-strong: #584a67;
-  --c-text-faint: #776b84;
-  --c-text-subtle: #958aa3;
-  --c-text-muted: #b2a6c0;
-  --c-text-2: #dbd2e4;
-  --c-text: #f4eff8;
-
-  --c-accent-bg: #1e1529;
-  --c-accent-soft: #33263f;
-  --c-accent-border: #5c4870;
-  --c-accent-muted: #8d76a6;
-  --c-accent: #c4afd9;
-  --c-accent-strong: #e2d4f0;
-
-  --c-gold-bg: #231c10;
-  --c-gold-border: #5a4a2a;
-  --c-gold-muted: #9a8452;
-  --c-gold: #d0bd95;
-  --c-gold-strong: #ecdcae;
-
-  --c-info: #afa0c3;
-  --c-court: #17111e;
-  --c-court-line: #584a67;
+  --c-bg: #24122a;
+  --c-bg-sunken: #1d0e22;
+  --c-surface-1: #2f1936;
+  --c-surface-2: #351d3d;
+  --c-surface-3: #3d2346;
+  --c-surface-4: #472a50;
+  --c-border-subtle: #43284b;
+  --c-border: #4f3058;
+  --c-border-strong: #6b4a74;
+  --c-border-control: #94769d;
+  --c-text-faint: #b49cba;
+  --c-text-subtle: #bea8c4;
+  --c-text-muted: #cdb8d2;
+  --c-text-2: #ece0cc;
+  --c-text: #f6ebd3;
+  --c-text-strong: #fff8ea;
+  --c-accent-bg: #3a2618;
+  --c-accent-soft: #4a321c;
+  --c-accent-border: #8c6420;
+  --c-accent-muted: #b88a35;
+  --c-accent: #e8b85a;
+  --c-accent-strong: #f3d08a;
+  --c-on-accent: #24122a;
+  --c-gold-bg: #3a2618;
+  --c-gold-border: #8c6420;
+  --c-gold-muted: #b88a35;
+  --c-gold: #e8b85a;
+  --c-gold-strong: #f3d08a;
+  --c-info: #a9c0d1;
+  --c-court: #2f1936;
+  --c-court-line: #b49cba;
+  --c-us: #e0a93b;
+  --c-on-us: #24122a;
+  --c-us-hover: #edbb52;
+  --c-us-ink: #e8b85a;
+  --c-us-muted: #8c6420;
+  --c-them: #3b5568;
+  --c-on-them: #eef2f5;
+  --c-them-hover: #476378;
+  --c-them-ink: #a9c0d1;
+  --c-them-muted: #c3d2dd;
+  --c-seam: #12081a;
+  --c-on-seam: #f6ebd3;
+  --c-serve: #24122a;
+  --c-jersey-line: #cdb8d2;
+  --c-scrim: rgb(18 8 26 / 0.72);
 }
 
 /* Claro: rampas espelhadas, mesma identidade */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --c-bg: #f4f3f6;
-  --c-bg-sunken: #ecebf0;
+  --c-bg: #ecebef;
+  --c-bg-sunken: #e4e2e8;
   --c-surface-1: #ffffff;
-  --c-surface-2: #f8f7fa;
-  --c-surface-3: #f1eff4;
-  --c-surface-4: #e8e5ed;
-  --c-border-subtle: #e3e0e8;
-  --c-border: #d6d2dd;
-  --c-border-strong: #bab4c4;
-  --c-text-faint: #9b96a5;
-  --c-text-subtle: #77727f;
-  --c-text-muted: #5d5866;
+  --c-surface-2: #f7f6f9;
+  --c-surface-3: #efedf2;
+  --c-surface-4: #e5e2ea;
+  --c-border-subtle: #e2dfe6;
+  --c-border: #d3d0d8;
+  --c-border-strong: #b9b4c0;
+  --c-border-control: #8a8394;
+  --c-text-faint: #736e7c;
+  --c-text-subtle: #64606d;
+  --c-text-muted: #5b5662;
   --c-text-2: #38343f;
-  --c-text: #1a1720;
+  --c-text: #1c1820;
   --c-text-strong: #0d0b10;
 
-  --c-accent-bg: #f6f1fb;
-  --c-accent-soft: #ece4f6;
-  --c-accent-border: #cbbadf;
-  --c-accent-muted: #8e76ab;
-  --c-accent: #6b4c90;
-  --c-accent-strong: #4f3572;
-  --c-on-accent: #ffffff;
+  --c-accent-bg: #f4eef6;
+  --c-accent-soft: #eadfee;
+  --c-accent-border: #cdb6d4;
+  --c-accent-muted: #8e6a9a;
+  --c-accent: #5a2a66;
+  --c-accent-strong: #3e1a47;
+  --c-on-accent: #f6ebd3;
 
-  --c-gold-bg: #fbf5e6;
-  --c-gold-border: #e2cf9b;
-  --c-gold-muted: #a8873c;
-  --c-gold: #80611c;
-  --c-gold-strong: #5e4610;
+  --c-gold-bg: #fbf4e4;
+  --c-gold-border: #e8cf95;
+  --c-gold-muted: #b08a3a;
+  --c-gold: #8a6212;
+  --c-gold-strong: #6a4a0c;
 
   --c-pos-bg: #eef6f0;
   --c-pos-soft: #ddece1;
@@ -249,8 +288,8 @@
   --c-info: #4f5d75;
 
   --c-scrim: rgb(24 20 30 / 0.42);
-  --c-court: #faf9fb;
-  --c-court-line: #bab4c4;
+  --c-court: #ffffff;
+  --c-court-line: #1c1820;
 
   --shadow-color: 265 20% 30%;
   --shadow-1: 0 1px 2px hsl(var(--shadow-color) / 0.08);
@@ -263,6 +302,20 @@
   --shadow-4:
     0 24px 60px hsl(var(--shadow-color) / 0.18),
     0 4px 12px hsl(var(--shadow-color) / 0.08);
+  --c-us: #5a2a66;
+  --c-on-us: #f6ebd3;
+  --c-us-hover: #4a2154;
+  --c-us-ink: #5a2a66;
+  --c-us-muted: #9a6fa6;
+  --c-them: #2f4558;
+  --c-on-them: #eef2f5;
+  --c-them-hover: #243747;
+  --c-them-ink: #2f4558;
+  --c-them-muted: #b7c6d2;
+  --c-seam: #17141a;
+  --c-on-seam: #f6ebd3;
+  --c-serve: #e0a93b;
+  --c-jersey-line: transparent;
 }
 
 /* Aliases dos nomes antigos, para componentes ainda não migrados */
@@ -290,7 +343,6 @@ html {
   background: var(--c-bg);
   color: var(--c-text);
   font-family: var(--font-sans);
-  font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

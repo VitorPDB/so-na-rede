@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { useState } from "react";
 import type { Match } from "./model";
 
@@ -82,7 +83,7 @@ export function OpponentLogos({
     <div className="opponent-logo-settings">
       <label>
         Adversários cadastrados
-        <select
+        <CardSelect
           aria-label="Adversário cadastrado"
           value={current?.id ?? ""}
           disabled={busy}
@@ -100,7 +101,7 @@ export function OpponentLogos({
               {team.name}
             </option>
           ))}
-        </select>
+        </CardSelect>
       </label>
       <div className="opponent-logo-editor">
         {current?.logo ? (

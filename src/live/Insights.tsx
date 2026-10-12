@@ -14,6 +14,7 @@ import {
   skills,
 } from "../model";
 import { Photo } from "../PlayerProfile";
+import { sampleLabel } from "../ratingV2";
 
 type Stat = {
   rating: number | null;
@@ -69,11 +70,12 @@ export function TeamPulse({
             <i style={{ width: `${(rating ?? 0) * 10}%` }} />
           </div>
           <small>{team.count} ações registradas</small>
+          <small>{sampleLabel(team.count)}</small>
         </div>
         <div className="pulse-highlight">
           <span className="ui-eyebrow">
             <Trophy size={13} aria-hidden="true" /> Destaque
-            {highlight && highlight.count < 3 ? " provisório" : ""}
+            {highlight && highlight.count < 5 ? " provisório" : ""}
           </span>
           {highlight ? (
             <div className="pulse-player">

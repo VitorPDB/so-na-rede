@@ -71,6 +71,69 @@ export const ratingProfiles: Record<Role, RoleWeights> = {
     errors: 10,
   },
 };
+export const ratingProfilesV2: Record<Role, RoleWeights> = {
+  setter: {
+    serve: 15,
+    reception: 5,
+    set: 45,
+    attack: 5,
+    block: 10,
+    defense: 20,
+    errors: 0,
+  },
+  outside: {
+    serve: 10,
+    reception: 25,
+    set: 5,
+    attack: 35,
+    block: 10,
+    defense: 15,
+    errors: 0,
+  },
+  opposite: {
+    serve: 15,
+    reception: 5,
+    set: 5,
+    attack: 45,
+    block: 15,
+    defense: 15,
+    errors: 0,
+  },
+  middle: {
+    serve: 15,
+    reception: 5,
+    set: 5,
+    attack: 35,
+    block: 35,
+    defense: 5,
+    errors: 0,
+  },
+  libero: {
+    serve: 0,
+    reception: 45,
+    set: 10,
+    attack: 0,
+    block: 0,
+    defense: 45,
+    errors: 0,
+  },
+};
+export const middleBackrowWeights: RoleWeights = {
+  serve: 20,
+  reception: 30,
+  set: 10,
+  attack: 5,
+  block: 0,
+  defense: 35,
+  errors: 0,
+};
+export interface RatingContext {
+  role: Role;
+  rotationZone?: Zone;
+  source?: "totals";
+  coverage: "standard" | "middle-backrow" | "middle-no-pass";
+  weights: RoleWeights;
+}
 export type Skill =
   "reception" | "serve" | "attack" | "block" | "defense" | "set" | "opponent";
 export interface Player {
@@ -98,6 +161,7 @@ export interface PlayerGame {
   }[];
 }
 export interface ArchivedGame {
+  videos?: MatchVideo[];
   publicData?: import("./publicSnapshot").PublicSnapshot;
   postGame?: PostGame;
   postGameRevisions?: PostGame[];
@@ -118,18 +182,25 @@ export interface Result {
 }
 export interface SkillEvent {
   assessment?: {
-    version: 1;
+    version: 1 | 2 | 3 | 4;
+    criteria?: AssessmentCriteria;
+    difficultySource?: "manual" | "context";
     difficulty: "easy" | "normal" | "hard" | "emergency";
     tags: string[];
     group?: "combination" | "double" | "triple";
     responsibility?: "correct" | "partial" | "wrong" | "none";
+    execution?:
+      "error" | "poor" | "neutral" | "good" | "excellent" | "point" | "unrated";
   };
+  ratingContext?: RatingContext;
   participants?: {
     playerId: string;
     responsibility: "correct" | "partial" | "wrong" | "none";
     role?: Role;
     skill?: Exclude<Skill, "opponent">;
     difficulty?: "easy" | "normal" | "hard" | "emergency";
+    ratingContext?: RatingContext;
+    criteria?: AssessmentCriteria;
   }[];
   playerId?: string;
   skill: Skill;
@@ -138,6 +209,30 @@ export interface SkillEvent {
   touch?: 1 | 2 | 3;
   videoTimestampMs?: number;
   winner?: Side;
+}
+export interface AssessmentCriteria {
+  blockQuality?:
+    | "error"
+    | "perfect"
+    | "effective"
+    | "simple"
+    | "direction"
+    | "used"
+    | "late"
+    | "absent"
+    | "gap"
+    | "unrated";
+  passQuality?: "A" | "B" | "C" | "error";
+  technique?: "touch" | "bump" | "one-hand" | "emergency";
+  incomingBall?: "strong" | "long" | "tip" | "free" | "deflection";
+  receivedServe?: "underhand" | "float" | "jump";
+  serveType?: "underhand" | "float" | "jump" | "targeted";
+  gameMoment?: "normal" | "decisive" | "after-timeout" | "error-streak";
+  incomingSet?: "A" | "B" | "C";
+  attackType?: "power" | "tip" | "placed" | "tool" | "quick";
+  approach?: "good" | "adjusted" | "poor";
+  incomingPass?: "A" | "B" | "C";
+  setDirection?: "front" | "back" | "middle" | "backrow";
 }
 export type Command =
   | { type: "restartSet" }
@@ -173,6 +268,9 @@ export interface Weights {
   errors: number;
 }
 export interface Match {
+  videos?: MatchVideo[];
+  middleCoverage?: "auto" | "defense-only" | "standard";
+  middleBackrowWeights?: RoleWeights;
   postGameVersions?: {
     savedAt: string;
     initialLineup: string[];
@@ -204,6 +302,14 @@ export interface Match {
   initialAutoLibero?: boolean;
   audit: AuditEntry[];
   weights: Weights;
+}
+export interface MatchVideo {
+  id: string;
+  title: string;
+  youtubeId: string;
+  startSeconds: number;
+  kind: "live" | "replay" | "highlights";
+  set?: number;
 }
 export interface RecordedEvent extends SkillEvent, Context {
   role?: Role;
@@ -392,6 +498,28 @@ for (const skill of [...simpleSkills, "defense" as const]) {
 }
 export function resultOf(event: SkillEvent) {
   return skills[event.skill].results.find((r) => r.id === event.result)!;
+}
+for (const skill of ["reception", "defense"] as const) {
+  skills[skill].results.push(
+    {
+      id: "simple_A",
+      label: "A · perfeita para levantar",
+      quality: 0.9,
+      ...(skill === "reception" ? { reception: 3 as const } : {}),
+    },
+    {
+      id: "simple_B",
+      label: "B · exige ajuste",
+      quality: 0.75,
+      ...(skill === "reception" ? { reception: 2 as const } : {}),
+    },
+    {
+      id: "simple_C",
+      label: "C · bola ruim",
+      quality: 0.3,
+      ...(skill === "reception" ? { reception: 1 as const } : {}),
+    },
+  );
 }
 export function newMatch(): Match {
   const roster: [string, number, string[]][] = [

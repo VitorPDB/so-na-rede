@@ -1,3 +1,4 @@
+import { validCriteriaData } from "./criteriaStats";
 import {
   type Match,
   type Command,
@@ -11,6 +12,7 @@ import { postGameErrors } from "./postgame";
 import { validDetailedDraft } from "./postgameDetailed";
 import { assessmentError } from "./assessment";
 import { mirrorMatch, recoveryCopies } from "./matchBackup";
+import { validVideos } from "./videos";
 const KEY = "so-na-rede:match:v1";
 const BACKUP_KEY = KEY + ":backup";
 export let recoveryNotice = "";
@@ -21,6 +23,7 @@ export function parseMatch(raw: string): Match {
       "Backup ou arquivo local incompatível. Exporte a cópia antes de iniciar outro jogo.",
     );
   };
+  if (!validVideos(data?.videos)) invalid();
   if (
     !data ||
     data.schemaVersion !== 1 ||
@@ -135,6 +138,8 @@ export function parseMatch(raw: string): Match {
       )
         invalid();
       historyIds.add(game.id);
+      if (!validVideos(game.videos) || !validVideos(game.publicData?.videos))
+        invalid();
       if (game.publicData !== undefined) {
         const publication = game.publicData;
         const validSummary = (s: typeof publication.teamStats) =>
@@ -171,6 +176,8 @@ export function parseMatch(raw: string): Match {
         if (
           !publication ||
           publication.version !== 1 ||
+          (publication.technical !== undefined &&
+            !validCriteriaData(publication.technical)) ||
           publication.matchId !== game.id ||
           typeof publication.team !== "string" ||
           typeof publication.opponent !== "string" ||
@@ -180,6 +187,7 @@ export function parseMatch(raw: string): Match {
           publication.periods.some(
             (p) =>
               !p ||
+              (p.technical !== undefined && !validCriteriaData(p.technical)) ||
               !Number.isInteger(p.set) ||
               !validSummary(p.teamStats) ||
               !validPlayers(p.players),
@@ -344,6 +352,20 @@ export function parseMatch(raw: string): Match {
       }
     }
   }
+  if (
+    data.middleCoverage !== undefined &&
+    !["auto", "defense-only", "standard"].includes(data.middleCoverage)
+  )
+    invalid();
+  if (
+    data.middleBackrowWeights !== undefined &&
+    Object.keys(ratingProfiles.middle).some((k) => {
+      const n =
+        data.middleBackrowWeights![k as keyof typeof ratingProfiles.middle];
+      return !Number.isFinite(n) || n < 0 || n > 100;
+    })
+  )
+    invalid();
   const checkCommand = (c: Command) => {
     if (
       !c ||
@@ -471,7 +493,11 @@ export function parseMatch(raw: string): Match {
 export function loadMatch(): Match | undefined {
   const raw = localStorage.getItem(KEY);
   if (raw) {
-    try { return parseMatch(raw); } catch { /* Try the independent checkpoint. */ }
+    try {
+      return parseMatch(raw);
+    } catch {
+      /* Try the independent checkpoint. */
+    }
   }
   const backup = localStorage.getItem(BACKUP_KEY);
   if (backup) {
@@ -485,15 +511,23 @@ export function loadMatch(): Match | undefined {
 export async function initializeMatchStorage() {
   try {
     const match = loadMatch();
-    if (match) { mirrorMatch(JSON.stringify(match)); return; }
-  } catch { /* IndexedDB can recover a damaged local checkpoint. */ }
+    if (match) {
+      mirrorMatch(JSON.stringify(match));
+      return;
+    }
+  } catch {
+    /* IndexedDB can recover a damaged local checkpoint. */
+  }
   for (const raw of await recoveryCopies()) {
     try {
       parseMatch(raw);
       localStorage.setItem(KEY, raw);
-      recoveryNotice = "Partida recuperada do backup automático do dispositivo.";
+      recoveryNotice =
+        "Partida recuperada do backup automático do dispositivo.";
       return;
-    } catch { /* Never replace a damaged file with another invalid copy. */ }
+    } catch {
+      /* Never replace a damaged file with another invalid copy. */
+    }
   }
 }
 export function saveMatch(match: Match, expected?: Match) {
@@ -508,7 +542,11 @@ export function saveMatch(match: Match, expected?: Match) {
     );
   const raw = JSON.stringify(match);
   localStorage.setItem(KEY, raw);
-  try { localStorage.setItem(BACKUP_KEY, raw); } catch { /* IndexedDB remains available. */ }
+  try {
+    localStorage.setItem(BACKUP_KEY, raw);
+  } catch {
+    /* IndexedDB remains available. */
+  }
   mirrorMatch(raw);
 }
 export function download(name: string, content: string, type: string) {
@@ -529,7 +567,7 @@ export function csv(rows: (string | number | null | undefined)[][]) {
             const text = String(value ?? "");
             return (
               '"' +
-              (/^[=+@\-]/.test(text) ? "'" : "") +
+              (/^[\s\u0000-\u001f]*[=+@\-]/.test(text) ? "'" : "") +
               text.replaceAll('"', '""') +
               '"'
             );

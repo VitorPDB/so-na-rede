@@ -13,6 +13,7 @@ import { publicSnapshot } from "./publicSnapshot";
 export function gameSnapshot(match: Match): ArchivedGame {
   const state = project(match);
   return {
+    ...(match.videos !== undefined ? { videos: match.videos } : {}),
     id: match.id,
     date: match.audit.at(-1)?.createdAt ?? new Date().toISOString(),
     opponent: match.opponent,

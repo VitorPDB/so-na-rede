@@ -12,7 +12,7 @@
 .drawer .ui-input,
 .drawer .ui-select {
   background: var(--c-surface-2);
-  border-color: var(--c-border);
+  border-color: var(--c-border-control);
   color: var(--c-text);
 }
 .prep .ui-input:focus,
@@ -492,7 +492,7 @@
   border-radius: 0 0 var(--r-xs) var(--r-xs);
   background: var(--c-accent);
   color: var(--c-on-accent);
-  font-size: 9px;
+  font-size: var(--fs-2xs);
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
@@ -852,7 +852,7 @@
   font-weight: var(--fw-bold);
 }
 .prep-mini-court small {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   color: var(--c-text-subtle);
 }
 

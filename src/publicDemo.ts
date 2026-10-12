@@ -2,6 +2,7 @@ import { newMatch, type Match } from "./model";
 import { append, project } from "./engine";
 import { publicSnapshot } from "./publicSnapshot";
 import type { PublicRow } from "./usePublicLive";
+import { normalAssessment } from "./assessment";
 
 // Isolated demonstration: never reads or writes the commission's match.
 export function publicDemo(): PublicRow {
@@ -10,12 +11,57 @@ export function publicDemo(): PublicRow {
     const state = project(match);
     const winner = i % 5 < 3 ? ("ours" as const) : ("theirs" as const);
     const zone = (i % 3) + 2;
+    if (i % 3 === 0) {
+      match = append(match, {
+        type: "event",
+        event: {
+          skill: "defense",
+          result: "simple_good",
+          playerId: state.lineup[5],
+          assessment: {
+            ...normalAssessment(),
+            criteria: {
+              passQuality: i % 2 ? "A" : "B",
+              technique: i % 2 ? "touch" : "bump",
+              incomingBall: i % 2 ? "tip" : "strong",
+            },
+          },
+        },
+      });
+      match = append(match, {
+        type: "event",
+        event: {
+          skill: "set",
+          result: "simple_good",
+          playerId: state.lineup[state.roles.indexOf("setter")],
+          assessment: {
+            ...normalAssessment(),
+            criteria: {
+              technique: "touch",
+              incomingPass: "B",
+              setDirection: i % 2 ? "back" : "front",
+            },
+          },
+        },
+      });
+    }
     match = append(match, {
       type: "event",
       event: {
         skill: i % 4 === 0 ? "block" : "attack",
         result: winner === "ours" ? "simple_ours" : "simple_theirs",
         playerId: state.lineup[zone - 1],
+        assessment: {
+          ...normalAssessment(),
+          criteria:
+            i % 4 === 0
+              ? { blockQuality: winner === "ours" ? "perfect" : "used" }
+              : {
+                  attackType: i % 2 ? "power" : "tip",
+                  incomingSet: i % 2 ? "A" : "B",
+                  approach: "good",
+                },
+        },
       },
     });
     if (i === 11) match = append(match, { type: "timeout", side: "theirs" });
@@ -57,6 +103,14 @@ export function publicDemoHistory(): PublicRow[] {
           skill: "attack",
           result: winner === "ours" ? "simple_ours" : "simple_theirs",
           playerId: s.lineup[(s.rally + index) % 6],
+          assessment: {
+            ...normalAssessment(),
+            criteria: {
+              attackType: s.rally % 2 ? "power" : "placed",
+              incomingSet: "B",
+              approach: "good",
+            },
+          },
         },
       });
     }

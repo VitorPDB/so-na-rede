@@ -1,3 +1,6 @@
+import { useOpponentColor } from "./opponentColor";
+import { RallyStrip } from "./RallyStrip";
+import { CardSelect } from "./CardSelect";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -15,6 +18,9 @@ import { Photo } from "./PlayerPhoto";
 import { cloud } from "./cloud";
 import { usePublicLive, type PublicRow } from "./usePublicLive";
 import { usePublicHistory } from "./usePublicHistory";
+import { MatchVideoPlayer } from "./MatchVideos";
+import { CriteriaReport } from "./CriteriaReport";
+import { validCriteriaData } from "./criteriaStats";
 
 const grade = (n: number | null) => (n === null ? "—" : n.toFixed(1));
 export function PublicLive() {
@@ -62,10 +68,12 @@ export function PublicLive() {
   const row = matchId ? history.game : (demo ?? live.row);
   const s = row?.snapshot;
   const media = matchId ? history.game?.media : demo ? null : live.media;
+  useOpponentColor(media?.opponentLogo);
   const period = setFilter
     ? s?.periods?.find((p) => p.set === setFilter)
     : undefined;
   const periodAvailable = !setFilter || Boolean(period);
+  const technical = setFilter ? period?.technical : s?.technical;
   const players =
     s?.players.map((p) => ({
       ...p,
@@ -127,11 +135,6 @@ export function PublicLive() {
             <strong>SÓ NA REDE</strong>
             <span>DENTRO DO JOGO</span>
           </div>
-        </a>
-        <a className="ui-btn ui-btn--ghost" href="/?view=commission">
-          <Shield size={17} aria-hidden="true" />
-          Comissão técnica
-          <ArrowRight size={16} aria-hidden="true" />
         </a>
       </header>
       <nav
@@ -358,6 +361,7 @@ export function PublicLive() {
                 )}
               </span>
             </div>
+            <RallyStrip rallies={s.rallies} set={s.set} />
             <footer className="pub-score-footer">
               <span>
                 {pending ? (
@@ -384,6 +388,11 @@ export function PublicLive() {
               )}
             </footer>
           </section>
+          <MatchVideoPlayer
+            key={s.matchId}
+            videos={s.videos}
+            finished={s.finished}
+          />
           {pending && !demo && (
             <p className="ui-note pub-notice" role="status">
               {live.message} Os dados exibidos podem estar desatualizados.
@@ -398,7 +407,7 @@ export function PublicLive() {
             </div>
             <label>
               <span className="ui-eyebrow">Período</span>
-              <select
+              <CardSelect
                 className="ui-select"
                 aria-label="Período das estatísticas"
                 value={setFilter}
@@ -410,7 +419,7 @@ export function PublicLive() {
                     Set {i + 1}
                   </option>
                 ))}
-              </select>
+              </CardSelect>
             </label>
           </div>
           {!periodAvailable && (
@@ -519,6 +528,9 @@ export function PublicLive() {
                       </span>
                     </div>
                     <div className="pub-player-numbers">
+                      {p.stats.count > 0 && p.stats.count < 5 && (
+                        <span>Nota provisória · amostra inicial</span>
+                      )}
                       <span>
                         <b>{p.stats.points}</b> pontos
                       </span>
@@ -562,6 +574,25 @@ export function PublicLive() {
               </p>
             )}
           </section>
+          {validCriteriaData(technical) ? (
+            <CriteriaReport
+              key={s.matchId}
+              players={players}
+              aggregateData={technical}
+              period={scope}
+            />
+          ) : (
+            <section className="ui-card pub-section">
+              <header>
+                <h2>Como o time joga</h2>
+              </header>
+              <p className="ui-note">
+                Esta publicação ainda não inclui técnicas e contexto das ações.
+                Esses detalhes aparecem nas novas publicações feitas com o app
+                atualizado.
+              </p>
+            </section>
+          )}
           <section className="ui-card pub-section">
             <header>
               <div>

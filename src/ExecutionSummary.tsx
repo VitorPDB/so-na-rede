@@ -1,5 +1,6 @@
 import { assessed, difficultyLabels, type Difficulty } from "./assessment";
 import { type SkillEvent } from "./model";
+import { effectiveDifficulty } from "./criteria";
 export function ExecutionSummary({ events }: { events: SkillEvent[] }) {
   const rows = events.filter(
     (e) => e.skill !== "opponent" && e.assessment && assessed(e).rated,
@@ -20,12 +21,14 @@ export function ExecutionSummary({ events }: { events: SkillEvent[] }) {
         {Object.entries(difficultyLabels).map(([key, label]) => {
           const group = rows.filter(
             (e) =>
-              (e.assessment?.tags.includes("save_extreme")
-                ? "emergency"
-                : e.assessment?.tags.includes("save_hard") &&
-                    e.assessment.difficulty !== "emergency"
-                  ? "hard"
-                  : e.assessment?.difficulty) === key,
+              ((e.assessment?.version ?? 0) >= 3
+                ? effectiveDifficulty(e)
+                : e.assessment?.tags.includes("save_extreme")
+                  ? "emergency"
+                  : e.assessment?.tags.includes("save_hard") &&
+                      e.assessment.difficulty !== "emergency"
+                    ? "hard"
+                    : e.assessment?.difficulty) === key,
           );
           const value = group.length
             ? Math.round(
@@ -63,8 +66,8 @@ export function RatingGuide() {
         <div>
           <h2>Como dificuldade e execução entram na nota</h2>
           <p>
-            Normal é o padrão. Valores de uma execução totalmente boa ou errada,
-            antes dos pesos por posição e da suavização por amostra.
+            Critérios por fundamento: avaliação por ação de 0 a 10. Normal é o
+            padrão; a quantidade de ações indica a amostra, sem reduzir a nota.
           </p>
         </div>
       </header>
@@ -73,8 +76,8 @@ export function RatingGuide() {
           <thead>
             <tr>
               <th>Bola</th>
-              <th>Execução boa</th>
-              <th>Execução ruim</th>
+              <th>Boa execução</th>
+              <th>Gafe · continua</th>
             </tr>
           </thead>
           <tbody>
@@ -82,32 +85,30 @@ export function RatingGuide() {
               <tr key={id}>
                 <td>{label}</td>
                 <td>
-                  {Math.round(
+                  {(
                     assessed({
                       skill: "attack",
                       result: "simple_good",
                       assessment: {
-                        version: 1,
+                        version: 4,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
-                    }).quality * 100,
-                  )}
-                  %
+                    }).quality * 10
+                  ).toFixed(1)}
                 </td>
                 <td>
-                  {Math.round(
+                  {(
                     assessed({
                       skill: "attack",
                       result: "simple_gafe",
                       assessment: {
-                        version: 1,
+                        version: 4,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
-                    }).quality * 100,
-                  )}
-                  %
+                    }).quality * 10
+                  ).toFixed(1)}
                 </td>
               </tr>
             ))}
@@ -115,19 +116,24 @@ export function RatingGuide() {
         </table>
       </div>
       <p className="ui-note">
-        50% é a referência neutra. Etiquetas de execução refinam a qualidade.
-        Soluções excepcionais têm bônus de até 8 pontos percentuais, sem
-        acumular bônus. A nota final continua entre 0 e 10.
+        A = perfeita para levantar; B = levantável com ajuste; C = ruim. Erro
+        direto é separado de C. A dificuldade ajusta a execução, com influência
+        maior em defesa/ataque e menor no bloqueio; toque na rede / infração de
+        bloqueio vale 0. Ataque do fundo descreve a jogada, com dificuldade
+        ajustável. Salvadas são descritas pela dificuldade de emergência, sem
+        bônus acumulados.
       </p>
       <p className="ui-note">
-        Jogadas coletivas: cada participante recebe avaliação própria; crédito
-        positivo reduzido a 65%. Sem responsabilidade fica fora da nota. O ponto
-        coletivo e o crédito do finalizador não se multiplicam pelo número de
-        participantes.
+        Jogadas coletivas: cada participante recebe avaliação própria. Sem
+        responsabilidade fica fora da nota. O ponto coletivo e o crédito do
+        finalizador não se multiplicam pelo número de participantes.
       </p>
       <p className="ui-note">
         Registros antigos mantêm a fórmula original. Jogos históricos já
-        resumidos também mantêm suas notas.
+        resumidos também mantêm suas notas. Uma partida com registros das duas
+        versões mostra avaliação mista. Tipo de saque, técnica e direção são
+        informações de análise, sem bônus automático. O passe recebido
+        contextualiza o levantamento; a qualidade entregue é sua base.
       </p>
     </section>
   );

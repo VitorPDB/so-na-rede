@@ -1,3 +1,4 @@
+import { Jersey } from "./Jersey";
 import {
   Activity,
   ArrowRight,
@@ -10,7 +11,6 @@ import {
   Volleyball,
 } from "lucide-react";
 import { type Match, type Projection, type Zone, roleLabels } from "./model";
-import { Photo } from "./PlayerProfile";
 import { formationAt } from "./formation";
 
 export type Page =
@@ -131,7 +131,7 @@ export function FormationCourt({
             <span className="court-zone">Z{zone}</span>
             {p && (
               <>
-                <Photo player={p} className="an-court-photo" />
+                <Jersey number={p.number} libero={p.libero} />
                 <strong>{p.name}</strong>
                 <small>
                   {roleLabels[p.libero ? "libero" : roles[zone - 1]]}

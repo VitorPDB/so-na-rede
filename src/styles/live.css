@@ -237,10 +237,14 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-1) var(--sp-3);
-  font-size: var(--fs-xs);
+  gap: var(--sp-1) var(--sp-4);
+  font-size: var(--fs-sm);
   color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
+}
+.sb-sets {
+  font-size: var(--fs-md);
+  color: var(--c-text-muted);
 }
 .sb-facts b {
   margin-left: 3px;
@@ -278,8 +282,11 @@
 .sb-timeout:active:not(:disabled) {
   transform: scale(0.96);
 }
+/* Sem pedido disponível: recua para ghost; disponível: botão normal. */
 .sb-timeout:disabled {
-  opacity: 0.45;
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 .sb-timeout-count {
@@ -748,7 +755,7 @@
   border-radius: 5px;
   background: var(--c-surface-4);
   color: var(--c-text-2);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 .lv-actions .lv-card-head {
   flex-wrap: wrap;
@@ -783,8 +790,12 @@
 }
 .outcome-buttons {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* coluna vazia separa qualidade (Bom/Gafe) de ponto (Nosso/Deles) */
+  grid-template-columns: 1fr 1fr var(--sp-2) 1fr 1fr;
   gap: var(--sp-2);
+}
+.outcome-buttons > .outcome.ours {
+  grid-column: 4;
 }
 @container (min-width: 440px) {
   .outcome-row {
@@ -832,43 +843,61 @@
   opacity: 0.35;
   cursor: not-allowed;
 }
-.outcome.good {
-  background: var(--c-pos-bg);
-  border-color: var(--c-pos-border);
-  color: var(--c-pos);
+/* Qualidade (Bom/Gafe): contorno sobre fundo neutro. Ponto (nosso/deles): preenchido.
+   A diferença de peso separa "como foi a ação" de "quem marcou". */
+.outcome.good,
+.outcome.gafe {
+  background: var(--c-surface-2);
+  color: var(--c-text);
 }
-.outcome.good:hover:not(:disabled) {
-  background: var(--c-pos-soft);
+.outcome.good {
+  border-color: var(--c-pos-muted);
+}
+.outcome.good svg {
+  color: var(--c-pos-vivid);
+  opacity: 1;
 }
 .outcome.gafe {
-  background: var(--c-warn-bg);
-  border-color: var(--c-warn-border);
-  color: var(--c-warn);
+  border-color: var(--c-warn-muted);
+}
+.outcome.gafe svg {
+  color: var(--c-warn-vivid);
+  opacity: 1;
+}
+.outcome.good:hover:not(:disabled) {
+  background: var(--c-pos-bg);
+  border-color: var(--c-pos-vivid);
 }
 .outcome.gafe:hover:not(:disabled) {
-  background: var(--c-warn-soft);
+  background: var(--c-warn-bg);
+  border-color: var(--c-warn-vivid);
+}
+.outcome.ours,
+.outcome.theirs {
+  color: var(--c-text-strong);
+  font-weight: var(--fw-bold);
 }
 .outcome.ours {
   background: var(--c-pos-soft);
-  border-color: var(--c-pos-muted);
-  color: var(--c-text-strong);
+  border-color: var(--c-pos-vivid);
 }
 .outcome.ours svg {
-  color: var(--c-pos);
+  color: var(--c-pos-vivid);
+  opacity: 1;
 }
 .outcome.ours:hover:not(:disabled) {
-  border-color: var(--c-pos);
+  background: var(--c-pos-border);
 }
 .outcome.theirs {
   background: var(--c-neg-soft);
-  border-color: var(--c-neg-muted);
-  color: var(--c-text-strong);
+  border-color: var(--c-neg-vivid);
 }
 .outcome.theirs svg {
-  color: var(--c-neg);
+  color: var(--c-neg-vivid);
+  opacity: 1;
 }
 .outcome.theirs:hover:not(:disabled) {
-  border-color: var(--c-neg);
+  background: var(--c-neg-border);
 }
 .outcome.neutral:hover:not(:disabled) {
   background: var(--c-surface-3);
@@ -1131,6 +1160,213 @@
 }
 
 /* ---------- Seletor de jogador (modal / bottom sheet) ---------- */
+.shell:has(.chooser-backdrop) .snackbar {
+  display: none;
+}
+@media (min-width: 900px) {
+  .shell .player-chooser .assessment-fields.has-attack-origin,
+  .shell .player-chooser .assessment-fields.has-pass-quality {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-2);
+  }
+  .shell .player-chooser .has-attack-origin .assessment-top,
+  .shell .player-chooser .has-pass-quality .assessment-top,
+  .shell .player-chooser .pass-quality-buttons,
+  .shell .player-chooser .attack-origin-buttons {
+    min-width: 0;
+    margin: 0;
+  }
+  .shell .player-chooser .has-attack-origin .assessment-details {
+    grid-column: 1 / -1;
+  }
+  .shell .player-chooser .has-pass-quality .assessment-details {
+    grid-column: 1 / -1;
+  }
+}
+
+.foundation-assessment {
+  display: grid;
+  gap: 12px;
+}
+.foundation-core {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.assessment-choice {
+  border-bottom: 1px solid var(--c-border-subtle);
+  min-width: 0;
+}
+.assessment-choice > summary {
+  list-style: none;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.assessment-choice > summary::-webkit-details-marker {
+  display: none;
+}
+.assessment-choice > summary strong {
+  font-weight: 600;
+}
+.assessment-choice > summary small {
+  margin-left: auto;
+  max-width: 45%;
+  text-align: right;
+  color: var(--c-text-muted);
+  font-size: var(--fs-2xs);
+}
+.assessment-choice[open] .assessment-choice-chevron {
+  transform: rotate(180deg);
+}
+.assessment-choice-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.assessment-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  padding-bottom: 10px;
+}
+.assessment-choice-grid button {
+  min-height: 56px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 9px;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+.assessment-choice-grid button svg {
+  flex-shrink: 0;
+  color: var(--c-text-2);
+}
+.assessment-choice-grid button:hover {
+  border-color: var(--c-accent-muted);
+  background: var(--c-surface-3);
+}
+.assessment-choice-grid button[aria-pressed="true"] {
+  background: var(--c-accent-soft);
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 1px var(--c-accent-border);
+}
+.assessment-choice-grid button:focus-visible,
+.assessment-choice > summary:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+}
+.assessment-choice-hint {
+  margin: 0 0 12px;
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+.foundation-core .assessment-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  padding-bottom: 0;
+}
+.foundation-core > .assessment-choice-inline .assessment-choice-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.foundation-core > .assessment-choice-inline button {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 4px;
+  text-align: center;
+  font-size: var(--fs-xs);
+}
+.foundation-core .assessment-choice-hint {
+  display: none;
+}
+.foundation-context {
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 0 14px;
+  background: var(--c-surface-1);
+}
+.foundation-context > summary {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.foundation-context > summary small {
+  margin-left: auto;
+  color: var(--c-text-muted);
+  font-weight: 400;
+  font-size: var(--fs-2xs);
+}
+.foundation-context[open] {
+  padding-bottom: 14px;
+}
+.foundation-context > .button {
+  margin: 10px 0;
+}
+.foundation-quality .criteria-fields,
+.foundation-context .criteria-fields,
+.participant-extra .criteria-fields {
+  grid-template-columns: 1fr;
+}
+.foundation-quality .criteria-fields {
+  margin: 0;
+}
+.criterion-field {
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .foundation-core {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .assessment-choice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.criteria-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.shell .player-chooser .pass-quality-buttons {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.criteria-fields label {
+  min-width: 0;
+}
+.criteria-fields label > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.criteria-fields small {
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+}
+@media (max-width: 600px) {
+  .criteria-fields {
+    grid-template-columns: 1fr;
+  }
+}
 .shell .chooser-backdrop {
   position: fixed;
   inset: 0;
@@ -1350,7 +1586,7 @@
     font-size: var(--fs-sm);
   }
   .shell .chooser-zone button small {
-    font-size: 10px;
+    font-size: var(--fs-2xs);
   }
 }
 

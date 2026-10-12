@@ -1,4 +1,6 @@
-import { type Match, type SkillEvent, skills } from "./model";
+import { CardSelect } from "./CardSelect";
+import { FoundationAssessment } from "./FoundationAssessment";
+import { type Match, type SkillEvent, skills, resultOf } from "./model";
 import {
   difficultyLabels,
   responsibilityLabels,
@@ -8,8 +10,12 @@ import {
   type Difficulty,
   type Responsibility,
   assessed,
+  executionLabels,
+  visibleTags,
 } from "./assessment";
 import { Photo } from "./PlayerProfile";
+import { CriteriaFields } from "./CriteriaFields";
+import { effectiveDifficulty, passLabels } from "./criteria";
 import {
   Circle,
   Gauge,
@@ -37,6 +43,7 @@ import {
 } from "lucide-react";
 
 const categories: Record<string, { label: string; icon: LucideIcon }> = {
+  attack_origin: { label: "Origem do ataque", icon: ArrowUp },
   ball: { label: "Bola recebida", icon: Volleyball },
   execution: { label: "Execução", icon: Target },
   opposition: { label: "Bloqueio adversário", icon: Shield },
@@ -107,6 +114,7 @@ export function AssessmentFields({
   );
   const group = a.group;
   const participants = event.participants ?? [];
+  if (onlyParticipants && (!group || hideParticipants)) return null;
   const setGroup = (group: typeof a.group) =>
     onChange({
       ...event,
@@ -117,8 +125,37 @@ export function AssessmentFields({
           : []
         : undefined,
     });
+  if (a.version === 4 && !onlyParticipants)
+    return (
+      <FoundationAssessment
+        event={{ ...event, assessment: a }}
+        onChange={onChange}
+      >
+        <AssessmentFields
+          event={event}
+          onChange={onChange}
+          match={match}
+          eligible={eligible}
+          hideChecklist={hideChecklist}
+          hideParticipants={hideParticipants}
+          onlyParticipants
+          compact={compact}
+        />
+      </FoundationAssessment>
+    );
   return (
-    <section className="assessment-fields" aria-label="Detalhes da execução">
+    <section
+      className={
+        "assessment-fields" +
+        (a.version >= 2 && event.skill === "attack"
+          ? " has-attack-origin"
+          : "") +
+        (a.version >= 3 && ["reception", "defense"].includes(event.skill)
+          ? " has-pass-quality"
+          : "")
+      }
+      aria-label="Detalhes da execução"
+    >
       {!onlyParticipants && (
         <>
           <div className="assessment-top">
@@ -133,8 +170,19 @@ export function AssessmentFields({
                   <button
                     key={id}
                     type="button"
-                    aria-pressed={a.difficulty === id}
-                    onClick={() => change({ difficulty: id as Difficulty })}
+                    aria-pressed={
+                      (a.version >= 3
+                        ? effectiveDifficulty({ ...event, assessment: a })
+                        : a.difficulty) === id
+                    }
+                    onClick={() =>
+                      change({
+                        difficulty: id as Difficulty,
+                        ...(a.version >= 3
+                          ? { difficultySource: "manual" as const }
+                          : {}),
+                      })
+                    }
                   >
                     <Icon size={18} aria-hidden="true" />
                     {label}
@@ -145,7 +193,7 @@ export function AssessmentFields({
             {!compact && event.skill !== "serve" && (
               <label className="group-select">
                 Participação
-                <select
+                <CardSelect
                   value={group ?? ""}
                   onChange={(e) =>
                     setGroup((e.target.value || undefined) as typeof group)
@@ -165,10 +213,80 @@ export function AssessmentFields({
                       </option>
                     </>
                   )}
-                </select>
+                </CardSelect>
               </label>
             )}
           </div>
+          {a.version >= 2 && event.skill === "attack" && (
+            <div
+              className="block-group-buttons attack-origin-buttons"
+              role="group"
+              aria-label="Origem do ataque"
+            >
+              {tagsFor("attack")
+                .filter((t) => t.category === "attack_origin")
+                .map((t) => (
+                  <button
+                    type="button"
+                    key={t.id}
+                    aria-pressed={a.tags.includes(t.id)}
+                    onClick={() => change({ tags: toggleTag(a.tags, t.id) })}
+                  >
+                    <ArrowUp size={18} aria-hidden="true" />
+                    {t.id === "attack_front"
+                      ? "Rede"
+                      : t.id === "attack_pipe"
+                        ? "Fundo · pipe Z6"
+                        : "Fundo · saída Z1"}
+                  </button>
+                ))}
+            </div>
+          )}
+          {a.version >= 3 && ["reception", "defense"].includes(event.skill) && (
+            <div
+              className="block-group-buttons pass-quality-buttons"
+              role="group"
+              aria-label="Qualidade do passe A B C"
+            >
+              {Object.entries(passLabels).map(([id, label]) => {
+                const inferred =
+                  event.result === "simple_A"
+                    ? "A"
+                    : event.result === "simple_B"
+                      ? "B"
+                      : event.result === "simple_C"
+                        ? "C"
+                        : undefined;
+                return (
+                  <button
+                    type="button"
+                    key={id}
+                    aria-label={label}
+                    aria-pressed={(a.criteria?.passQuality ?? inferred) === id}
+                    onClick={() =>
+                      onChange({
+                        ...event,
+                        ...(id === "error"
+                          ? { result: "simple_theirs", winner: undefined }
+                          : {}),
+                        assessment: {
+                          ...a,
+                          execution: undefined,
+                          criteria: {
+                            ...a.criteria,
+                            passQuality: id as "A" | "B" | "C" | "error",
+                          },
+                        },
+                      })
+                    }
+                  >
+                    <Target size={18} aria-hidden="true" />
+                    {id === "error" ? "Erro direto" : id}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {compact && event.skill === "block" && (
             <div
               className="block-group-buttons"
@@ -210,10 +328,89 @@ export function AssessmentFields({
                 ajustar um detalhe.
               </p>
             )}
+            {a.version >= 3 && (
+              <>
+                <CriteriaFields
+                  skill={event.skill}
+                  value={a.criteria}
+                  hidePass
+                  onChange={(criteria) =>
+                    change({
+                      criteria,
+                      ...(criteria.blockQuality !== a.criteria?.blockQuality
+                        ? { execution: undefined }
+                        : {}),
+                    })
+                  }
+                />
+                <p className="ui-note">
+                  Qualidade é a base da nota. O contexto sugere a dificuldade,
+                  sem somar outro bônus pelo mesmo lance. Técnica, tipo e
+                  momento ficam registrados para análise.
+                </p>
+                {a.difficultySource === "manual" && (
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() =>
+                      change({
+                        difficulty: "normal",
+                        difficultySource: "context",
+                      })
+                    }
+                  >
+                    Usar dificuldade sugerida pelo contexto
+                  </button>
+                )}
+              </>
+            )}
+            {a.version >= 2 &&
+              !(
+                a.version >= 3 && ["reception", "defense"].includes(event.skill)
+              ) && (
+                <label>
+                  Execução individual · separada do placar
+                  <CardSelect
+                    value={a.execution ?? ""}
+                    onChange={(e) => {
+                      const criteria = { ...a.criteria };
+                      delete criteria.passQuality;
+                      delete criteria.blockQuality;
+                      onChange({
+                        ...event,
+                        ...(a.version >= 3 && e.target.value === "error"
+                          ? { result: "simple_theirs", winner: undefined }
+                          : {}),
+                        assessment: {
+                          ...a,
+                          execution: (e.target.value ||
+                            undefined) as typeof a.execution,
+                          ...(a.version >= 3 ? { criteria } : {}),
+                        },
+                      });
+                    }}
+                  >
+                    <option value="">Conforme resultado e detalhes</option>
+                    {Object.entries(executionLabels).map(([id, label]) => (
+                      <option
+                        key={id}
+                        value={id}
+                        disabled={
+                          id === "point" &&
+                          event.winner !== "ours" &&
+                          resultOf(event).winner !== "ours"
+                        }
+                      >
+                        {label}
+                      </option>
+                    ))}
+                  </CardSelect>
+                </label>
+              )}
             {!compact && (
               <label>
                 Qualidade / resultado
-                <select
+                <CardSelect
                   value={event.result}
                   onChange={(e) =>
                     onChange({
@@ -229,7 +426,7 @@ export function AssessmentFields({
                       {r.label}
                     </option>
                   ))}
-                </select>
+                </CardSelect>
               </label>
             )}
             {compact && event.skill !== "serve" && (
@@ -238,7 +435,7 @@ export function AssessmentFields({
                   <UsersRound size={18} aria-hidden="true" /> Participação na
                   jogada
                 </span>
-                <select
+                <CardSelect
                   value={group ?? ""}
                   onChange={(e) =>
                     setGroup((e.target.value || undefined) as typeof group)
@@ -254,13 +451,18 @@ export function AssessmentFields({
                       <option value="triple">Bloqueio triplo</option>
                     </>
                   )}
-                </select>
+                </CardSelect>
               </label>
             )}
             {Object.entries(categories).map(
               ([category, { label, icon: CategoryIcon }]) => {
                 const options = tagsFor(event.skill).filter(
-                  (t) => t.category === category,
+                  (t) =>
+                    t.category === category &&
+                    (visibleTags(event.skill, a.version).some(
+                      (v) => v.id === t.id,
+                    ) ||
+                      a.tags.includes(t.id)),
                 );
                 if (!options.length) return null;
                 return (
@@ -283,9 +485,62 @@ export function AssessmentFields({
                             key={t.id}
                             type="button"
                             aria-pressed={a.tags.includes(t.id)}
-                            onClick={() =>
-                              change({ tags: toggleTag(a.tags, t.id) })
-                            }
+                            onClick={() => {
+                              const tags = toggleTag(a.tags, t.id);
+                              if (
+                                a.version >= 2 &&
+                                t.id === "setter_tip" &&
+                                event.skill === "set" &&
+                                tags.includes(t.id)
+                              ) {
+                                const r = resultOf(event);
+                                onChange({
+                                  ...event,
+                                  skill: "attack",
+                                  result: event.result.startsWith("simple_")
+                                    ? event.result
+                                    : r.winner === "theirs"
+                                      ? "error"
+                                      : "simple_good",
+                                  assessment: {
+                                    ...a,
+                                    tags,
+                                    group: undefined,
+                                    ...(a.version >= 3
+                                      ? {
+                                          criteria: {
+                                            attackType: "tip" as const,
+                                          },
+                                          difficulty:
+                                            effectiveDifficulty(event),
+                                          difficultySource: "manual" as const,
+                                        }
+                                      : {}),
+                                  },
+                                  participants: undefined,
+                                });
+                              } else if (
+                                a.version >= 3 &&
+                                tags.includes(t.id) &&
+                                [
+                                  "rule_fault",
+                                  "out_fault",
+                                  "ugly_error",
+                                  "net_fault",
+                                ].includes(t.id)
+                              )
+                                onChange({
+                                  ...event,
+                                  result: "simple_theirs",
+                                  winner: undefined,
+                                  assessment: {
+                                    ...a,
+                                    tags,
+                                    execution: "error",
+                                  },
+                                });
+                              else change({ tags });
+                            }}
                           >
                             <Icon size={20} aria-hidden="true" />
                             <span>{t.label}</span>
@@ -300,7 +555,7 @@ export function AssessmentFields({
             {!group && (
               <label>
                 Responsabilidade individual
-                <select
+                <CardSelect
                   value={a.responsibility ?? ""}
                   disabled={!!group}
                   onChange={(e) =>
@@ -316,13 +571,13 @@ export function AssessmentFields({
                       {label}
                     </option>
                   ))}
-                </select>
+                </CardSelect>
               </label>
             )}
             <p className="assessment-preview">
-              Contribuição desta execução:{" "}
+              Avaliação desta execução:{" "}
               {assessed({ ...event, assessment: a }).rated
-                ? `${Math.round(assessed({ ...event, assessment: a }).quality * 100)}%`
+                ? `${(assessed({ ...event, assessment: a }).quality * 10).toFixed(1)}/10`
                 : "sem nota"}{" "}
               · sem bônus acumulados.
             </p>
@@ -393,7 +648,7 @@ export function AssessmentFields({
                   {group === "combination" && (
                     <label>
                       Fundamento
-                      <select
+                      <CardSelect
                         aria-label={`Fundamento ${player?.name ?? p.playerId}`}
                         value={p.skill ?? event.skill}
                         disabled={
@@ -412,6 +667,7 @@ export function AssessmentFields({
                                       SkillEvent["skill"],
                                       "opponent"
                                     >,
+                                    criteria: undefined,
                                   }
                                 : x,
                             ),
@@ -425,12 +681,12 @@ export function AssessmentFields({
                               {s.label}
                             </option>
                           ))}
-                      </select>
+                      </CardSelect>
                     </label>
                   )}
                   <label>
                     Dificuldade
-                    <select
+                    <CardSelect
                       aria-label={`Dificuldade ${player?.name ?? p.playerId}`}
                       value={p.difficulty ?? ""}
                       onChange={(e) =>
@@ -455,12 +711,26 @@ export function AssessmentFields({
                           {label}
                         </option>
                       ))}
-                    </select>
+                    </CardSelect>
                   </label>
+                  {a.version >= 3 && (
+                    <CriteriaFields
+                      skill={p.skill ?? event.skill}
+                      value={p.criteria}
+                      onChange={(criteria) =>
+                        onChange({
+                          ...event,
+                          participants: participants.map((x) =>
+                            x.playerId === p.playerId ? { ...x, criteria } : x,
+                          ),
+                        })
+                      }
+                    />
+                  )}
                 </details>
                 <label>
                   Execução
-                  <select
+                  <CardSelect
                     aria-label={`Execução ${player?.name ?? p.playerId}`}
                     value={p.responsibility}
                     onChange={(e) =>
@@ -484,14 +754,14 @@ export function AssessmentFields({
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </CardSelect>
                 </label>
               </div>
             );
           })}
           <label>
             Autor principal / finalizador
-            <select
+            <CardSelect
               aria-label="Autor principal da jogada"
               value={event.playerId ?? ""}
               onChange={(e) =>
@@ -521,7 +791,7 @@ export function AssessmentFields({
                   {match.players.find((x) => x.id === p.playerId)?.name}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
           <p className="muted">
             O ponto conta uma vez para o time. Crédito de ponto individual só

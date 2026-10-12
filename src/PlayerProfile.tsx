@@ -11,6 +11,7 @@ import { project, stats } from "./engine";
 import { playerCareer } from "./career";
 import { playerEvents } from "./assessment";
 import { Photo } from "./PlayerPhoto";
+import { CriteriaReport } from "./CriteriaReport";
 export { Photo } from "./PlayerPhoto";
 
 const grade = (value: number | null | undefined) =>
@@ -147,6 +148,9 @@ export function PlayerProfile({
           <span className="ui-eyebrow">Nota atual</span>
           <strong>{grade(current.rating)}</strong>
           <small>vs {match.opponent}</small>
+          <small>
+            {current.sample} · {current.count} ações
+          </small>
         </div>
       </section>
       {busy && <p className="ui-note">Preparando foto…</p>}
@@ -269,6 +273,14 @@ export function PlayerProfile({
         </section>
       </div>
 
+      <CriteriaReport
+        events={playerEvents(project(match).events, player.id).filter(
+          (e) => roleFilter === "all" || e.role === roleFilter,
+        )}
+        players={match.players}
+        fixedPlayer={player.id}
+        title="Técnicas e contexto · partida atual"
+      />
       {player.photo && (
         <details className="ui-card pf-photo-edit">
           <summary>

@@ -25,10 +25,35 @@ export const skillIcons: Record<Skill, LucideIcon> = {
 };
 
 const outcomes = [
-  { id: "simple_good", label: "Bom", tone: "good", icon: ThumbsUp },
-  { id: "simple_gafe", label: "Gafe", tone: "gafe", icon: ThumbsDown },
-  { id: "simple_ours", label: "Ponto nosso", tone: "ours", icon: Plus },
-  { id: "simple_theirs", label: "Ponto deles", tone: "theirs", icon: Minus },
+  {
+    id: "simple_good",
+    label: "Bom",
+    spoken: "bom",
+    tone: "good",
+    icon: ThumbsUp,
+  },
+  {
+    id: "simple_gafe",
+    label: "Gafe",
+    spoken: "gafe",
+    tone: "gafe",
+    icon: ThumbsDown,
+  },
+  // "+1" é a linguagem do placar; a cor do time diz de quem é o ponto.
+  {
+    id: "simple_ours",
+    label: "+1 nós",
+    spoken: "ponto nosso",
+    tone: "ours",
+    icon: Plus,
+  },
+  {
+    id: "simple_theirs",
+    label: "+1 eles",
+    spoken: "ponto deles",
+    tone: "theirs",
+    icon: Minus,
+  },
 ] as const;
 
 export function ActionPanel({
@@ -70,6 +95,7 @@ export function ActionPanel({
           {simpleSkills.map((key, row) => {
             const Icon = skillIcons[key];
             const title = key === "attack" ? "Ataque" : skills[key].label;
+            const options = outcomes;
             return (
               <div
                 className="outcome-row"
@@ -81,13 +107,14 @@ export function ActionPanel({
                   <strong>{title}</strong>
                 </div>
                 <div className="outcome-buttons">
-                  {outcomes.map((o) => (
+                  {options.map((o) => (
                     <button
                       type="button"
                       key={o.id}
                       className={"outcome " + o.tone}
                       disabled={disabled}
-                      aria-label={`${title} ${o.label.toLowerCase()}`}
+                      aria-label={`${title}: ${o.spoken}`}
+                      title={`${title}: ${o.spoken}`}
                       onClick={() => onRecord(key, o.id)}
                     >
                       <o.icon size={16} aria-hidden="true" />
@@ -119,8 +146,7 @@ export function ActionPanel({
             disabled={disabled}
             onClick={() => onPoint("ours")}
           >
-            <Plus size={16} aria-hidden="true" />
-            <span>Ponto nosso</span>
+            <span>+1 nós</span>
           </button>
           <button
             type="button"
@@ -128,8 +154,7 @@ export function ActionPanel({
             disabled={disabled}
             onClick={() => onPoint("theirs")}
           >
-            <Plus size={16} aria-hidden="true" />
-            <span>Ponto deles</span>
+            <span>+1 eles</span>
           </button>
         </div>
       </div>

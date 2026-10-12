@@ -11,6 +11,7 @@ import {
 import { type Match, type Projection, type Zone, roleLabels } from "../model";
 import { OpponentLogos, opponentTeam } from "../OpponentLogos";
 import { Jersey } from "../Jersey";
+import { MatchVideoEditor, MatchVideoPlayer } from "../MatchVideos";
 
 const STEPS = [
   { title: "Partida", hint: "Times e formato" },
@@ -175,6 +176,18 @@ export function Preparation({
           );
         })}
       </ol>
+      <details className="ui-card video-preparation">
+        <summary>Vídeos · transmissão e gravações da partida</summary>
+        <MatchVideoEditor
+          videos={match.videos}
+          onChange={(videos) => onChange({ ...match, videos })}
+        />
+        <MatchVideoPlayer videos={match.videos} finished={state.finished} />
+        <p className="ui-note">
+          Os links acompanham a publicação das estatísticas. Depois do jogo,
+          também ficam no histórico.
+        </p>
+      </details>
 
       {started && (
         <p className="prep-note" role="note">

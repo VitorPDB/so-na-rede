@@ -1,5 +1,14 @@
+import { Upload } from "lucide-react";
+import { CardSelect } from "./CardSelect";
 import { useMemo, useState } from "react";
-import { type Match, type Role, type Skill, roleLabels } from "./model";
+import {
+  type Match,
+  type Role,
+  type Skill,
+  type AssessmentCriteria,
+  roleLabels,
+} from "./model";
+import { CriteriaFields } from "./CriteriaFields";
 import { Photo } from "./PlayerProfile";
 import {
   archivePostGame,
@@ -13,10 +22,16 @@ import {
   postSummary,
   postDate,
   type PostGame,
+  cellAssessment,
 } from "./postgame";
 import { download } from "./storage";
 import { ExecutionSummary } from "./ExecutionSummary";
 import { difficultyLabels, tagsFor, type Difficulty } from "./assessment";
+import { visibleTags } from "./assessment";
+import { criteriaText } from "./criteria";
+import { criteriaForResult } from "./actionQuality";
+import { CriteriaReport } from "./CriteriaReport";
+import { postEvents } from "./postgame";
 
 export function PostGameTotals({
   match,
@@ -39,12 +54,22 @@ export function PostGameTotals({
       : "normal",
   );
   const [situation, setSituation] = useState("");
+  const [criteria, setCriteria] = useState<AssessmentCriteria>({});
+  const [difficultySource, setDifficultySource] = useState<
+    "manual" | "context"
+  >("context");
   const keyFor = (s: Skill, result: string) =>
     countKey(
       s,
       result,
       difficulty === "legacy" ? undefined : difficulty,
       situation,
+      (game.ratingVersion ?? 0) >= 3 && difficulty !== "legacy"
+        ? game.ratingVersion === 4
+          ? criteriaForResult(s, result, criteria)
+          : criteria
+        : undefined,
+      difficultySource,
     );
   const [setIndex, setSetIndex] = useState(0),
     [skill, setSkill] = useState<Skill>("attack"),
@@ -53,10 +78,34 @@ export function PostGameTotals({
     [extraPlayer, setExtraPlayer] = useState(match.players[0].id);
   const index = Math.min(setIndex, game.sets.length - 1),
     set = game.sets[index];
-  const results = postResults(skill, game.mode);
+  const results = postResults(skill, game.mode, game.ratingVersion);
+  if (game.ratingVersion === 4) {
+    for (const result of postResults(skill, "simple", 3)) {
+      if (
+        !results.some((r) => r.id === result.id) &&
+        game.sets.some((s) =>
+          s.rows.some((r) =>
+            Object.keys(r.counts).some(
+              (k) =>
+                k.startsWith(`${skill}:${result.id}:`) ||
+                k === `${skill}:${result.id}`,
+            ),
+          ),
+        )
+      )
+        results.push(result);
+    }
+  }
   const report = useMemo(
     () => postSummary(game, match, reportSet),
-    [game, match.weights, match.ratingProfiles, match.players, reportSet],
+    [
+      game,
+      match.weights,
+      match.ratingProfiles,
+      match.middleBackrowWeights,
+      match.players,
+      reportSet,
+    ],
   );
   const save = (next: PostGame) => {
     const errors = postGameErrors(next, match);
@@ -108,7 +157,7 @@ export function PostGameTotals({
           </label>
           <label>
             Formato
-            <select
+            <CardSelect
               value={game.bestOf}
               onChange={(e) => {
                 const bestOf = Number(e.target.value) as 3 | 5;
@@ -123,21 +172,23 @@ export function PostGameTotals({
             >
               <option value={5}>Melhor de 5</option>
               <option value={3}>Melhor de 3</option>
-            </select>
+            </CardSelect>
           </label>
-          <label>
-            Detalhamento
-            <select
-              disabled={hasCounts}
-              value={game.mode}
-              onChange={(e) =>
-                save({ ...game, mode: e.target.value as PostGame["mode"] })
-              }
-            >
-              <option value="simple">Simples · Bom / Gafe / Ponto</option>
-              <option value="advanced">Avançado · todas as qualidades</option>
-            </select>
-          </label>
+          {(game.ratingVersion ?? 0) < 4 && (
+            <label>
+              Detalhamento
+              <CardSelect
+                disabled={hasCounts}
+                value={game.mode}
+                onChange={(e) =>
+                  save({ ...game, mode: e.target.value as PostGame["mode"] })
+                }
+              >
+                <option value="simple">Simples · Bom / Gafe / Ponto</option>
+                <option value="advanced">Avançado · todas as qualidades</option>
+              </CardSelect>
+            </label>
+          )}
         </div>
         <div className="postgame-toolbar">
           {game.sets.map((_, i) => (
@@ -230,6 +281,8 @@ export function PostGameTotals({
               onClick={() => {
                 setSkill(s);
                 setSituation("");
+                setCriteria({});
+                setDifficultySource("context");
               }}
             >
               {
@@ -253,11 +306,12 @@ export function PostGameTotals({
         <div className="postgame-fields">
           <label>
             Dificuldade das bolas nesta tabela
-            <select
+            <CardSelect
               value={difficulty}
-              onChange={(e) =>
-                setDifficulty(e.target.value as Difficulty | "legacy")
-              }
+              onChange={(e) => {
+                setDifficulty(e.target.value as Difficulty | "legacy");
+                setDifficultySource("manual");
+              }}
             >
               <option value="legacy">
                 Sem contexto · registros anteriores
@@ -267,26 +321,62 @@ export function PostGameTotals({
                   {label}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
-          <label>
-            Situação específica
-            <select
-              value={situation}
-              disabled={difficulty === "legacy"}
-              onChange={(e) => setSituation(e.target.value)}
-            >
-              <option value="">Sem etiqueta</option>
-              {tagsFor(skill).map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {(game.ratingVersion ?? 0) < 4 && (
+            <label>
+              Situação específica
+              <CardSelect
+                value={situation}
+                disabled={difficulty === "legacy"}
+                onChange={(e) => setSituation(e.target.value)}
+              >
+                <option value="">Sem etiqueta</option>
+                {visibleTags(skill, game.ratingVersion ?? 1).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </CardSelect>
+            </label>
+          )}
         </div>
+        {(game.ratingVersion ?? 0) >= 3 && difficulty !== "legacy" && (
+          <details className="assessment-details">
+            <summary>
+              Critérios de{" "}
+              {skill === "set"
+                ? "levantamento"
+                : skill === "attack"
+                  ? "ataque"
+                  : skill === "reception"
+                    ? "recepção"
+                    : skill === "defense"
+                      ? "defesa"
+                      : skill === "serve"
+                        ? "saque"
+                        : "bloqueio"}{" "}
+              · filtro da tabela
+            </summary>
+            <CriteriaFields
+              skill={skill}
+              value={criteria}
+              event={
+                game.ratingVersion === 4 &&
+                ["reception", "defense"].includes(skill)
+                  ? { skill, result: "simple_good" }
+                  : undefined
+              }
+              onChange={setCriteria}
+            />
+            <p className="ui-note">
+              Cada combinação de critérios tem suas próprias quantidades.
+              Alterar o filtro mantém os outros registros.
+            </p>
+          </details>
+        )}
         <p className="muted">
-          Os números abaixo pertencem apenas à dificuldade e situação
+          Os números abaixo pertencem apenas à dificuldade, critérios e situação
           selecionadas. Alterar o filtro mantém os outros dados.{" "}
           {set.rows.reduce(
             (n, r) => n + Object.values(r.counts).reduce((a, b) => a + b, 0),
@@ -323,7 +413,41 @@ export function PostGameTotals({
                       </span>
                     </td>
                     <td>
-                      <select
+                      {(game.ratingVersion ?? 0) >= 2 &&
+                        row.role === "middle" && (
+                          <label>
+                            Contexto
+                            <CardSelect
+                              aria-label={`Contexto ${player.name} linha ${rowIndex + 1}`}
+                              value={row.coverage ?? "standard"}
+                              onChange={(e) =>
+                                changeSet({
+                                  ...set,
+                                  rows: set.rows.map((r, i) =>
+                                    i === rowIndex
+                                      ? {
+                                          ...r,
+                                          coverage: e.target
+                                            .value as typeof r.coverage,
+                                        }
+                                      : r,
+                                  ),
+                                })
+                              }
+                            >
+                              <option value="standard">
+                                Rede / contexto não informado
+                              </option>
+                              <option value="middle-backrow">
+                                Fundo · recepção e defesa
+                              </option>
+                              <option value="middle-no-pass">
+                                Fundo · apenas defesa
+                              </option>
+                            </CardSelect>
+                          </label>
+                        )}
+                      <CardSelect
                         aria-label={`Função ${player.name} linha ${rowIndex + 1}`}
                         value={row.role}
                         onChange={(e) =>
@@ -331,7 +455,11 @@ export function PostGameTotals({
                             ...set,
                             rows: set.rows.map((r, i) =>
                               i === rowIndex
-                                ? { ...r, role: e.target.value as Role }
+                                ? {
+                                    ...r,
+                                    role: e.target.value as Role,
+                                    coverage: undefined,
+                                  }
                                 : r,
                             ),
                           })
@@ -342,7 +470,7 @@ export function PostGameTotals({
                             {label}
                           </option>
                         ))}
-                      </select>
+                      </CardSelect>
                     </td>
                     {results.map((r, columnIndex) => (
                       <td key={r.id}>
@@ -428,7 +556,7 @@ export function PostGameTotals({
         <div className="postgame-toolbar">
           <label>
             Jogador para outra função
-            <select
+            <CardSelect
               value={extraPlayer}
               onChange={(e) => setExtraPlayer(e.target.value)}
             >
@@ -437,7 +565,7 @@ export function PostGameTotals({
                   {p.name}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
           <button
             className="button secondary"
@@ -463,6 +591,40 @@ export function PostGameTotals({
           >
             Adicionar outra função
           </button>
+          {(game.ratingVersion ?? 0) >= 2 && (
+            <button
+              className="button secondary"
+              onClick={() => {
+                if (
+                  set.rows.some(
+                    (r) =>
+                      r.playerId === extraPlayer &&
+                      r.role === "middle" &&
+                      r.coverage === "middle-backrow",
+                  )
+                ) {
+                  setMessage(
+                    "Este jogador já possui uma linha de central no fundo.",
+                  );
+                  return;
+                }
+                changeSet({
+                  ...set,
+                  rows: [
+                    ...set.rows,
+                    {
+                      playerId: extraPlayer,
+                      role: "middle",
+                      coverage: "middle-backrow",
+                      counts: {},
+                    },
+                  ],
+                });
+              }}
+            >
+              Adicionar central no fundo
+            </button>
+          )}
         </div>
         <p className="muted">
           Pontos sem atribuição no set: nossos {coverage[0]} · deles{" "}
@@ -470,7 +632,7 @@ export function PostGameTotals({
           penalidade individual.
         </p>
         {message && <p role="status">{message}</p>}
-        <details>
+        <details className="postgame-disclosure">
           <summary>
             Conferência para salvar ({errors.length} pendências)
           </summary>
@@ -480,7 +642,7 @@ export function PostGameTotals({
         </details>
         <div className="postgame-toolbar">
           <button
-            className="button"
+            className="button primary"
             disabled={errors.length > 0}
             onClick={() => {
               try {
@@ -539,6 +701,7 @@ export function PostGameTotals({
                   "Quantidade",
                   "Dificuldade",
                   "Situação",
+                  "Critérios",
                 ],
               ];
               game.sets.forEach((s, i) => {
@@ -557,6 +720,7 @@ export function PostGameTotals({
                       String(n),
                       difficulty ?? "Sem contexto",
                       situation ?? "",
+                      criteriaText(cellAssessment(game, key)?.criteria),
                     ]);
                   }),
                 );
@@ -569,6 +733,7 @@ export function PostGameTotals({
                   "opponent",
                   "error",
                   String(s.opponentErrors),
+                  "",
                   "",
                   "",
                 ]);
@@ -585,15 +750,18 @@ export function PostGameTotals({
           </button>
         </div>
         <div className="postgame-toolbar">
-          <label>
-            Carregar ficha JSON
+          <label className="button secondary file-button">
+            <Upload size={16} aria-hidden="true" />
+            Importar ficha JSON
             <input
+              className="sr-only"
               type="file"
               accept=".json,application/json"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
+                  if (file.size > 5 * 1024 * 1024) throw new Error("Ficha muito grande.");
                   const next = JSON.parse(await file.text());
                   if (postGameErrors(next, match).length) throw new Error();
                   if (
@@ -616,7 +784,7 @@ export function PostGameTotals({
           </label>
           <label>
             Reabrir pós-jogo salvo
-            <select
+            <CardSelect
               value=""
               onChange={(e) => {
                 const existing = match.history?.find(
@@ -641,10 +809,10 @@ export function PostGameTotals({
                     {g.opponent}
                   </option>
                 ))}
-            </select>
+            </CardSelect>
           </label>
           <button
-            className="button secondary"
+            className="button ghost push-end"
             onClick={() => {
               if (
                 window.confirm(
@@ -666,7 +834,7 @@ export function PostGameTotals({
         <ExecutionSummary events={report.events} />
         <label>
           Resumo
-          <select
+          <CardSelect
             value={reportSet}
             onChange={(e) => setReportSet(Number(e.target.value))}
           >
@@ -676,7 +844,7 @@ export function PostGameTotals({
                 Set {i + 1}
               </option>
             ))}
-          </select>
+          </CardSelect>
         </label>
         <div className="public-overview">
           <article>
@@ -745,6 +913,12 @@ export function PostGameTotals({
           </table>
         </div>
       </section>
+      <CriteriaReport
+        events={postEvents(game, reportSet, match)}
+        players={match.players}
+        title="Técnicas e contexto · pós-jogo"
+        period={reportSet ? `Set ${reportSet}` : "Jogo completo"}
+      />
     </div>
   );
 }
