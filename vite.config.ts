@@ -24,11 +24,17 @@ export default defineConfig({
         );
         writeFileSync(
           resolve(buildDirectory, "live-setup.sql"),
-          readFileSync("supabase/live.sql", "utf8"),
+          readFileSync("supabase/live.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/videos.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "ativar-online.md"),
           readFileSync("ONLINE.md", "utf8"),
+        );
+        writeFileSync(
+          resolve(buildDirectory, "videos-setup.sql"),
+          readFileSync("supabase/videos.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "CLOUDFLARE.md"),

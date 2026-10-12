@@ -161,6 +161,7 @@ export interface PlayerGame {
   }[];
 }
 export interface ArchivedGame {
+  videos?: MatchVideo[];
   publicData?: import("./publicSnapshot").PublicSnapshot;
   postGame?: PostGame;
   postGameRevisions?: PostGame[];
@@ -240,6 +241,7 @@ export interface Weights {
   errors: number;
 }
 export interface Match {
+  videos?: MatchVideo[];
   middleCoverage?: "auto" | "defense-only" | "standard";
   middleBackrowWeights?: RoleWeights;
   postGameVersions?: {
@@ -273,6 +275,14 @@ export interface Match {
   initialAutoLibero?: boolean;
   audit: AuditEntry[];
   weights: Weights;
+}
+export interface MatchVideo {
+  id: string;
+  title: string;
+  youtubeId: string;
+  startSeconds: number;
+  kind: "live" | "replay" | "highlights";
+  set?: number;
 }
 export interface RecordedEvent extends SkillEvent, Context {
   role?: Role;

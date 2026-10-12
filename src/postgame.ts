@@ -293,8 +293,10 @@ export function archivePostGame(game: PostGame, match: Match): ArchivedGame {
   const { events, players } = postSummary(game, match);
   const sets: [number, number] = [0, 0];
   game.sets.forEach((s) => sets[s.score[0] > s.score[1] ? 0 : 1]++);
+  const videos = match.history?.find((g) => g.id === game.id)?.videos;
   return {
     id: game.id,
+    ...(videos !== undefined ? { videos } : {}),
     date: game.date,
     opponent: game.opponent,
     finished: true,

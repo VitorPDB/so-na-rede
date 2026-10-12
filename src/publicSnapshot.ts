@@ -2,6 +2,7 @@ import { project, stats } from "./engine";
 import { matchAnalysis } from "./analysis";
 import { ratingProfiles, type Match } from "./model";
 import { playerEvents } from "./assessment";
+import { validVideos } from "./videos";
 
 const summary = (s: ReturnType<typeof stats>) => ({
   rating: s.rating,
@@ -19,6 +20,9 @@ export function publicSnapshot(match: Match) {
     analysis = matchAnalysis(match);
   return {
     version: 1 as const,
+    ...(match.videos !== undefined && validVideos(match.videos)
+      ? { videos: match.videos }
+      : {}),
     matchId: match.id,
     playedAt: match.audit[0]?.createdAt ?? null,
     team: match.team,

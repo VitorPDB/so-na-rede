@@ -11,6 +11,7 @@ import { postGameErrors } from "./postgame";
 import { validDetailedDraft } from "./postgameDetailed";
 import { assessmentError } from "./assessment";
 import { mirrorMatch, recoveryCopies } from "./matchBackup";
+import { validVideos } from "./videos";
 const KEY = "so-na-rede:match:v1";
 const BACKUP_KEY = KEY + ":backup";
 export let recoveryNotice = "";
@@ -21,6 +22,7 @@ export function parseMatch(raw: string): Match {
       "Backup ou arquivo local incompatível. Exporte a cópia antes de iniciar outro jogo.",
     );
   };
+  if (!validVideos(data?.videos)) invalid();
   if (
     !data ||
     data.schemaVersion !== 1 ||
@@ -135,6 +137,8 @@ export function parseMatch(raw: string): Match {
       )
         invalid();
       historyIds.add(game.id);
+      if (!validVideos(game.videos) || !validVideos(game.publicData?.videos))
+        invalid();
       if (game.publicData !== undefined) {
         const publication = game.publicData;
         const validSummary = (s: typeof publication.teamStats) =>

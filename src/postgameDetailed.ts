@@ -53,6 +53,10 @@ export function replayDetailed(
   let match: Match = {
     ...newMatch(),
     id: draft.id,
+    videos:
+      source.id === draft.id
+        ? source.videos
+        : source.history?.find((g) => g.id === draft.id)?.videos,
     team: source.team,
     opponent: draft.opponent,
     bestOf: draft.bestOf,
@@ -75,6 +79,8 @@ export function replayDetailed(
   if (
     previous &&
     previous.source.players === source.players &&
+    previous.source.history === source.history &&
+    previous.source.videos === source.videos &&
     previous.source.weights === source.weights &&
     previous.source.ratingProfiles === source.ratingProfiles &&
     previous.source.middleCoverage === source.middleCoverage &&

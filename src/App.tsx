@@ -1053,7 +1053,9 @@ export default function App() {
             onProfile={showProfile}
           />
         )}
-        {page === "history" && <MatchHistory match={match} />}
+        {page === "history" && (
+          <MatchHistory match={match} onChange={(next) => commit(next)} />
+        )}
         {page === "roster" && (
           <Roster
             match={match}

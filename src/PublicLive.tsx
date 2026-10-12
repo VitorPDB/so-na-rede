@@ -15,6 +15,7 @@ import { Photo } from "./PlayerPhoto";
 import { cloud } from "./cloud";
 import { usePublicLive, type PublicRow } from "./usePublicLive";
 import { usePublicHistory } from "./usePublicHistory";
+import { MatchVideoPlayer } from "./MatchVideos";
 
 const grade = (n: number | null) => (n === null ? "—" : n.toFixed(1));
 export function PublicLive() {
@@ -127,11 +128,6 @@ export function PublicLive() {
             <strong>SÓ NA REDE</strong>
             <span>DENTRO DO JOGO</span>
           </div>
-        </a>
-        <a className="ui-btn ui-btn--ghost" href="/?view=commission">
-          <Shield size={17} aria-hidden="true" />
-          Comissão técnica
-          <ArrowRight size={16} aria-hidden="true" />
         </a>
       </header>
       <nav
@@ -384,6 +380,11 @@ export function PublicLive() {
               )}
             </footer>
           </section>
+          <MatchVideoPlayer
+            key={s.matchId}
+            videos={s.videos}
+            finished={s.finished}
+          />
           {pending && !demo && (
             <p className="ui-note pub-notice" role="status">
               {live.message} Os dados exibidos podem estar desatualizados.

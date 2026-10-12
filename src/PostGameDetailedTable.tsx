@@ -43,6 +43,8 @@ export function PostGameDetailed({
   }, [
     draft,
     match.players,
+    match.history,
+    match.videos,
     match.weights,
     match.ratingProfiles,
     match.middleCoverage,
