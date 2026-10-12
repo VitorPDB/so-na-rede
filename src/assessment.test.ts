@@ -4,7 +4,7 @@ import {
   assessed,
   assessmentError,
   playerEvents,
-  normalAssessment,
+  normalAssessment as currentAssessment,
   toggleTag,
 } from "./assessment";
 import { newMatch, type SkillEvent } from "./model";
@@ -18,6 +18,11 @@ import {
 } from "./postgameDetailed";
 import { gameSnapshot } from "./career";
 import { publicSnapshot } from "./publicSnapshot";
+// These regression fixtures verify unchanged v1 semantics; v2 has its own tests.
+const normalAssessment = () => ({
+  ...currentAssessment(),
+  version: 1 as const,
+});
 const action = (
   difficulty: "easy" | "normal" | "hard" | "emergency",
   result = "simple_good",

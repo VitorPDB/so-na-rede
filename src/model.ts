@@ -71,6 +71,69 @@ export const ratingProfiles: Record<Role, RoleWeights> = {
     errors: 10,
   },
 };
+export const ratingProfilesV2: Record<Role, RoleWeights> = {
+  setter: {
+    serve: 15,
+    reception: 5,
+    set: 45,
+    attack: 5,
+    block: 10,
+    defense: 20,
+    errors: 0,
+  },
+  outside: {
+    serve: 10,
+    reception: 25,
+    set: 5,
+    attack: 35,
+    block: 10,
+    defense: 15,
+    errors: 0,
+  },
+  opposite: {
+    serve: 15,
+    reception: 5,
+    set: 5,
+    attack: 45,
+    block: 15,
+    defense: 15,
+    errors: 0,
+  },
+  middle: {
+    serve: 15,
+    reception: 5,
+    set: 5,
+    attack: 35,
+    block: 35,
+    defense: 5,
+    errors: 0,
+  },
+  libero: {
+    serve: 0,
+    reception: 45,
+    set: 10,
+    attack: 0,
+    block: 0,
+    defense: 45,
+    errors: 0,
+  },
+};
+export const middleBackrowWeights: RoleWeights = {
+  serve: 20,
+  reception: 30,
+  set: 10,
+  attack: 5,
+  block: 0,
+  defense: 35,
+  errors: 0,
+};
+export interface RatingContext {
+  role: Role;
+  rotationZone?: Zone;
+  source?: "totals";
+  coverage: "standard" | "middle-backrow" | "middle-no-pass";
+  weights: RoleWeights;
+}
 export type Skill =
   "reception" | "serve" | "attack" | "block" | "defense" | "set" | "opponent";
 export interface Player {
@@ -118,18 +181,22 @@ export interface Result {
 }
 export interface SkillEvent {
   assessment?: {
-    version: 1;
+    version: 1 | 2;
     difficulty: "easy" | "normal" | "hard" | "emergency";
     tags: string[];
     group?: "combination" | "double" | "triple";
     responsibility?: "correct" | "partial" | "wrong" | "none";
+    execution?:
+      "error" | "poor" | "neutral" | "good" | "excellent" | "point" | "unrated";
   };
+  ratingContext?: RatingContext;
   participants?: {
     playerId: string;
     responsibility: "correct" | "partial" | "wrong" | "none";
     role?: Role;
     skill?: Exclude<Skill, "opponent">;
     difficulty?: "easy" | "normal" | "hard" | "emergency";
+    ratingContext?: RatingContext;
   }[];
   playerId?: string;
   skill: Skill;
@@ -173,6 +240,8 @@ export interface Weights {
   errors: number;
 }
 export interface Match {
+  middleCoverage?: "auto" | "defense-only" | "standard";
+  middleBackrowWeights?: RoleWeights;
   postGameVersions?: {
     savedAt: string;
     initialLineup: string[];

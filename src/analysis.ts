@@ -25,7 +25,7 @@ export function matchAnalysis(match: Match, set = 0) {
     .filter((p) => p.rating !== null)
     .sort((a, b) => b.rating! - a.rating!);
   // Never compare a single action with a player who has a useful sample.
-  const eligible = players.filter((p) => p.count >= 3);
+  const eligible = players.filter((p) => p.count >= 5);
   const candidates = eligible.length ? eligible : players;
   const rotations = ([1, 2, 3, 4, 5, 6] as Zone[]).map((p) => {
     const group = rallies.filter((r) => r.p === p);

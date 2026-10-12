@@ -1,7 +1,9 @@
 import { project, stats } from "./engine";
 import { assessmentError, type Difficulty } from "./assessment";
+import { effectiveProfiles } from "./ratingV2";
 import {
   ratingProfiles,
+  middleBackrowWeights,
   resultOf,
   roleLabels,
   skills,
@@ -28,6 +30,7 @@ export const postDate = (iso: string) =>
     day: "2-digit",
   }).format(new Date(iso));
 export interface PostRow {
+  coverage?: "standard" | "middle-backrow" | "middle-no-pass";
   playerId: string;
   role: Role;
   counts: Record<string, number>;
@@ -38,6 +41,7 @@ export interface PostSet {
   rows: PostRow[];
 }
 export interface PostGame {
+  ratingVersion?: 1 | 2;
   id: string;
   date: string;
   opponent: string;
@@ -96,6 +100,7 @@ export function emptyPostSet(match: Match): PostSet {
 }
 export function newPostGame(match: Match): PostGame {
   return {
+    ratingVersion: 2,
     id: crypto.randomUUID(),
     date: new Date().toISOString(),
     opponent: "",
@@ -110,6 +115,8 @@ export function postGameErrors(
   final = false,
 ): string[] {
   const errors: string[] = [];
+  if (game?.ratingVersion !== undefined && ![1, 2].includes(game.ratingVersion))
+    return ["Versão de notas inválida."];
   if (
     !game ||
     typeof game.id !== "string" ||
@@ -137,14 +144,14 @@ export function postGameErrors(
       set.opponentErrors < 0 ||
       set.opponentErrors > 200 ||
       !Array.isArray(set.rows) ||
-      set.rows.length > match.players.length * 5
+      set.rows.length > match.players.length * 7
     )
       return ["Placar ou linhas inválidos."];
     const ids = new Set<string>();
     let ours = set.opponentErrors,
       theirs = 0;
     for (const row of set.rows) {
-      const id = `${row?.playerId}:${row?.role}`;
+      const id = `${row?.playerId}:${row?.role}:${row?.coverage ?? "standard"}`;
       if (
         !row ||
         !match.players.some((p) => p.id === row.playerId) ||
@@ -152,7 +159,13 @@ export function postGameErrors(
         ids.has(id) ||
         !row.counts ||
         typeof row.counts !== "object" ||
-        Array.isArray(row.counts)
+        Array.isArray(row.counts) ||
+        (row.coverage !== undefined &&
+          (!game.ratingVersion ||
+            !["standard", "middle-backrow", "middle-no-pass"].includes(
+              row.coverage,
+            ) ||
+            (row.coverage !== "standard" && row.role !== "middle")))
       )
         return ["Jogador/função inválido ou duplicado."];
       ids.add(id);
@@ -169,7 +182,7 @@ export function postGameErrors(
               skill: skill as Skill,
               result,
               assessment: {
-                version: 1,
+                version: game.ratingVersion ?? 1,
                 difficulty: difficulty as Difficulty,
                 tags: tag ? [tag] : [],
               },
@@ -208,7 +221,7 @@ export function postGameErrors(
     errors.push(`Informe todos os sets até um time vencer ${targetWins}.`);
   return errors;
 }
-export function postEvents(game: PostGame, set = 0) {
+export function postEvents(game: PostGame, set = 0, match?: Match) {
   const events: (SkillEvent & { role: Role })[] = [];
   game.sets.forEach((s, index) => {
     if (set && index + 1 !== set) return;
@@ -221,13 +234,30 @@ export function postEvents(game: PostGame, set = 0) {
             role: row.role,
             skill: skill as Skill,
             result,
-            assessment: difficulty
-              ? {
-                  version: 1,
-                  difficulty: difficulty as Difficulty,
-                  tags: tag ? [tag] : [],
-                }
-              : undefined,
+            ratingContext:
+              game.ratingVersion === 2 && match
+                ? {
+                    source: "totals",
+                    role: row.role,
+                    coverage: row.coverage ?? "standard",
+                    weights: {
+                      ...(row.coverage && row.coverage !== "standard"
+                        ? (match.middleBackrowWeights ?? middleBackrowWeights)
+                        : effectiveProfiles(match)[row.role]),
+                      ...(row.coverage === "middle-no-pass"
+                        ? { reception: 0 }
+                        : {}),
+                    },
+                  }
+                : undefined,
+            assessment:
+              difficulty || game.ratingVersion === 2
+                ? {
+                    version: game.ratingVersion ?? 1,
+                    difficulty: (difficulty ?? "normal") as Difficulty,
+                    tags: tag ? [tag] : [],
+                  }
+                : undefined,
           });
       }),
     );
@@ -235,7 +265,7 @@ export function postEvents(game: PostGame, set = 0) {
   return events;
 }
 export function postSummary(game: PostGame, match: Match, set = 0) {
-  const events = postEvents(game, set);
+  const events = postEvents(game, set, match);
   const players = match.players.map((player) => ({
     player,
     ...stats(
@@ -244,7 +274,7 @@ export function postSummary(game: PostGame, match: Match, set = 0) {
       match.ratingProfiles ?? ratingProfiles,
     ),
   }));
-  const eligible = players.filter((p) => p.count >= 3 && p.rating !== null);
+  const eligible = players.filter((p) => p.count >= 5 && p.rating !== null);
   const ranked = (
     eligible.length ? eligible : players.filter((p) => p.rating !== null)
   ).sort((a, b) => b.rating! - a.rating!);

@@ -50,7 +50,7 @@ export function Report({
     );
   const ranked = [...rows].sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   const highlight =
-    ranked.find((p) => p.count >= 3) ?? ranked.find((p) => p.count);
+    ranked.find((p) => p.count >= 5) ?? ranked.find((p) => p.count);
   const list = metrics(events);
   const columns = [
     ["rating", "Nota"],
@@ -61,6 +61,13 @@ export function Report({
 
   return (
     <div className="rp">
+      <p className="ui-note">
+        {collective.ratingVersion === "mixed"
+          ? "Avaliação mista: registros antigos mantêm a fórmula anterior; novas ações usam notas v2."
+          : collective.ratingVersion === "v2"
+            ? "Notas v2 · médias de qualidade. A amostra aparece separadamente e não reduz a nota."
+            : "Registros anteriores · fórmula original preservada."}
+      </p>
       <div className="an-toolbar">
         <div className="ui-chips" role="radiogroup" aria-label="Recorte">
           {[0, ...Array.from({ length: s.set }, (_, i) => i + 1)].map((n) => (
@@ -99,7 +106,7 @@ export function Report({
         <section className="ui-card rp-kpi gold">
           <span className="ui-eyebrow">
             <Trophy size={13} aria-hidden="true" /> Destaque
-            {highlight && highlight.count < 3 ? " provisório" : " do time"}
+            {highlight && highlight.count < 5 ? " provisório" : " do time"}
           </span>
           {highlight ? (
             <button
@@ -201,10 +208,11 @@ export function Report({
                   </td>
                   <td className="num">
                     <RatingBadge value={row.rating} />
+                    <small className="rp-low">{row.sample}</small>
                   </td>
                   <td className="num">
                     {row.count}
-                    {row.count > 0 && row.count < 3 && (
+                    {row.count > 0 && row.count < 5 && (
                       <small className="rp-low">amostra baixa</small>
                     )}
                   </td>

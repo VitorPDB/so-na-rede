@@ -63,8 +63,8 @@ export function RatingGuide() {
         <div>
           <h2>Como dificuldade e execução entram na nota</h2>
           <p>
-            Normal é o padrão. Valores de uma execução totalmente boa ou errada,
-            antes dos pesos por posição e da suavização por amostra.
+            Versão 2: avaliação por ação de 0 a 10. Normal é o padrão; a
+            quantidade de ações indica a amostra, sem reduzir a nota.
           </p>
         </div>
       </header>
@@ -73,8 +73,8 @@ export function RatingGuide() {
           <thead>
             <tr>
               <th>Bola</th>
-              <th>Execução boa</th>
-              <th>Execução ruim</th>
+              <th>Boa execução</th>
+              <th>Gafe · continua</th>
             </tr>
           </thead>
           <tbody>
@@ -82,32 +82,30 @@ export function RatingGuide() {
               <tr key={id}>
                 <td>{label}</td>
                 <td>
-                  {Math.round(
+                  {(
                     assessed({
                       skill: "attack",
                       result: "simple_good",
                       assessment: {
-                        version: 1,
+                        version: 2,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
-                    }).quality * 100,
-                  )}
-                  %
+                    }).quality * 10
+                  ).toFixed(1)}
                 </td>
                 <td>
-                  {Math.round(
+                  {(
                     assessed({
                       skill: "attack",
                       result: "simple_gafe",
                       assessment: {
-                        version: 1,
+                        version: 2,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
-                    }).quality * 100,
-                  )}
-                  %
+                    }).quality * 10
+                  ).toFixed(1)}
                 </td>
               </tr>
             ))}
@@ -115,19 +113,20 @@ export function RatingGuide() {
         </table>
       </div>
       <p className="ui-note">
-        50% é a referência neutra. Etiquetas de execução refinam a qualidade.
-        Soluções excepcionais têm bônus de até 8 pontos percentuais, sem
-        acumular bônus. A nota final continua entre 0 e 10.
+        Continuidade neutra vale 5. Erro direto vale 0 / 1 / 2 / 3 conforme
+        dificuldade; infração confirmada vale 0. Ataque do fundo descreve a
+        jogada, com dificuldade ajustável. Salvadas e “tirou da cartola” não
+        acumulam bônus.
       </p>
       <p className="ui-note">
-        Jogadas coletivas: cada participante recebe avaliação própria; crédito
-        positivo reduzido a 65%. Sem responsabilidade fica fora da nota. O ponto
-        coletivo e o crédito do finalizador não se multiplicam pelo número de
-        participantes.
+        Jogadas coletivas: cada participante recebe avaliação própria. Sem
+        responsabilidade fica fora da nota. O ponto coletivo e o crédito do
+        finalizador não se multiplicam pelo número de participantes.
       </p>
       <p className="ui-note">
         Registros antigos mantêm a fórmula original. Jogos históricos já
-        resumidos também mantêm suas notas.
+        resumidos também mantêm suas notas. Uma partida com registros das duas
+        versões mostra avaliação mista.
       </p>
     </section>
   );

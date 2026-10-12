@@ -344,6 +344,20 @@ export function parseMatch(raw: string): Match {
       }
     }
   }
+  if (
+    data.middleCoverage !== undefined &&
+    !["auto", "defense-only", "standard"].includes(data.middleCoverage)
+  )
+    invalid();
+  if (
+    data.middleBackrowWeights !== undefined &&
+    Object.keys(ratingProfiles.middle).some((k) => {
+      const n =
+        data.middleBackrowWeights![k as keyof typeof ratingProfiles.middle];
+      return !Number.isFinite(n) || n < 0 || n > 100;
+    })
+  )
+    invalid();
   const checkCommand = (c: Command) => {
     if (
       !c ||
@@ -471,7 +485,11 @@ export function parseMatch(raw: string): Match {
 export function loadMatch(): Match | undefined {
   const raw = localStorage.getItem(KEY);
   if (raw) {
-    try { return parseMatch(raw); } catch { /* Try the independent checkpoint. */ }
+    try {
+      return parseMatch(raw);
+    } catch {
+      /* Try the independent checkpoint. */
+    }
   }
   const backup = localStorage.getItem(BACKUP_KEY);
   if (backup) {
@@ -485,15 +503,23 @@ export function loadMatch(): Match | undefined {
 export async function initializeMatchStorage() {
   try {
     const match = loadMatch();
-    if (match) { mirrorMatch(JSON.stringify(match)); return; }
-  } catch { /* IndexedDB can recover a damaged local checkpoint. */ }
+    if (match) {
+      mirrorMatch(JSON.stringify(match));
+      return;
+    }
+  } catch {
+    /* IndexedDB can recover a damaged local checkpoint. */
+  }
   for (const raw of await recoveryCopies()) {
     try {
       parseMatch(raw);
       localStorage.setItem(KEY, raw);
-      recoveryNotice = "Partida recuperada do backup automático do dispositivo.";
+      recoveryNotice =
+        "Partida recuperada do backup automático do dispositivo.";
       return;
-    } catch { /* Never replace a damaged file with another invalid copy. */ }
+    } catch {
+      /* Never replace a damaged file with another invalid copy. */
+    }
   }
 }
 export function saveMatch(match: Match, expected?: Match) {
@@ -508,7 +534,11 @@ export function saveMatch(match: Match, expected?: Match) {
     );
   const raw = JSON.stringify(match);
   localStorage.setItem(KEY, raw);
-  try { localStorage.setItem(BACKUP_KEY, raw); } catch { /* IndexedDB remains available. */ }
+  try {
+    localStorage.setItem(BACKUP_KEY, raw);
+  } catch {
+    /* IndexedDB remains available. */
+  }
   mirrorMatch(raw);
 }
 export function download(name: string, content: string, type: string) {

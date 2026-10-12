@@ -112,7 +112,7 @@ export function PlayerChooser({
               {correction ? "CORRIGIR ATRIBUIÇÃO" : "QUEM FEZ?"}
             </span>
             <h2 id="chooser-title">
-              {skills[event.skill].label} · {resultOf(event).label}
+              {skills[current.skill].label} · {resultOf(current).label}
             </h2>
           </div>
           <button
@@ -181,21 +181,28 @@ export function PlayerChooser({
                 .filter((p) => p.displayZone === z)
                 .map(({ p, role, rotationZone }) => {
                   const serveOK =
-                    event.skill !== "serve" ||
+                    current.skill !== "serve" ||
                     (rotationZone === 1 && state.server === "ours");
                   const blockOK =
-                    event.skill !== "block" ||
+                    current.skill !== "block" ||
                     (resultOf(current).error &&
                       !["double", "triple"].includes(
                         current.assessment?.group ?? "",
                       )) ||
                     (!p.libero && [2, 3, 4].includes(rotationZone));
+                  const attackOK =
+                    current.skill !== "attack" ||
+                    !current.assessment?.tags.some(
+                      (t) => t === "attack_pipe" || t === "attack_back_one",
+                    ) ||
+                    (!p.libero && [1, 5, 6].includes(rotationZone));
                   return (
                     <button
                       key={p.id}
                       disabled={
                         !serveOK ||
                         !blockOK ||
+                        !attackOK ||
                         (!!current.assessment?.group &&
                           !current.participants?.some(
                             (x) => x.playerId === p.id,

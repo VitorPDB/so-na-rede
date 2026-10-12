@@ -147,6 +147,9 @@ export function PlayerProfile({
           <span className="ui-eyebrow">Nota atual</span>
           <strong>{grade(current.rating)}</strong>
           <small>vs {match.opponent}</small>
+          <small>
+            {current.sample} · {current.count} ações
+          </small>
         </div>
       </section>
       {busy && <p className="ui-note">Preparando foto…</p>}

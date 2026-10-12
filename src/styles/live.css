@@ -1131,6 +1131,24 @@
 }
 
 /* ---------- Seletor de jogador (modal / bottom sheet) ---------- */
+.shell:has(.chooser-backdrop) .snackbar {
+  display: none;
+}
+@media (min-width: 900px) {
+  .shell .player-chooser .assessment-fields.has-attack-origin {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-2);
+  }
+  .shell .player-chooser .has-attack-origin .assessment-top,
+  .shell .player-chooser .attack-origin-buttons {
+    min-width: 0;
+    margin: 0;
+  }
+  .shell .player-chooser .has-attack-origin .assessment-details {
+    grid-column: 1 / -1;
+  }
+}
 .shell .chooser-backdrop {
   position: fixed;
   inset: 0;

@@ -1,4 +1,4 @@
-import { type Match, type SkillEvent, skills } from "./model";
+import { type Match, type SkillEvent, skills, resultOf } from "./model";
 import {
   difficultyLabels,
   responsibilityLabels,
@@ -8,6 +8,7 @@ import {
   type Difficulty,
   type Responsibility,
   assessed,
+  executionLabels,
 } from "./assessment";
 import { Photo } from "./PlayerProfile";
 import {
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 
 const categories: Record<string, { label: string; icon: LucideIcon }> = {
+  attack_origin: { label: "Origem do ataque", icon: ArrowUp },
   ball: { label: "Bola recebida", icon: Volleyball },
   execution: { label: "Execução", icon: Target },
   opposition: { label: "Bloqueio adversário", icon: Shield },
@@ -118,7 +120,15 @@ export function AssessmentFields({
         : undefined,
     });
   return (
-    <section className="assessment-fields" aria-label="Detalhes da execução">
+    <section
+      className={
+        "assessment-fields" +
+        (a.version === 2 && event.skill === "attack"
+          ? " has-attack-origin"
+          : "")
+      }
+      aria-label="Detalhes da execução"
+    >
       {!onlyParticipants && (
         <>
           <div className="assessment-top">
@@ -169,6 +179,31 @@ export function AssessmentFields({
               </label>
             )}
           </div>
+          {a.version === 2 && event.skill === "attack" && (
+            <div
+              className="block-group-buttons attack-origin-buttons"
+              role="group"
+              aria-label="Origem do ataque"
+            >
+              {tagsFor("attack")
+                .filter((t) => t.category === "attack_origin")
+                .map((t) => (
+                  <button
+                    type="button"
+                    key={t.id}
+                    aria-pressed={a.tags.includes(t.id)}
+                    onClick={() => change({ tags: toggleTag(a.tags, t.id) })}
+                  >
+                    <ArrowUp size={18} aria-hidden="true" />
+                    {t.id === "attack_front"
+                      ? "Rede"
+                      : t.id === "attack_pipe"
+                        ? "Fundo · pipe Z6"
+                        : "Fundo · saída Z1"}
+                  </button>
+                ))}
+            </div>
+          )}
           {compact && event.skill === "block" && (
             <div
               className="block-group-buttons"
@@ -209,6 +244,35 @@ export function AssessmentFields({
                 Registro anterior. O cálculo original será mantido até você
                 ajustar um detalhe.
               </p>
+            )}
+            {a.version === 2 && (
+              <label>
+                Execução individual · separada do placar
+                <select
+                  value={a.execution ?? ""}
+                  onChange={(e) =>
+                    change({
+                      execution: (e.target.value ||
+                        undefined) as typeof a.execution,
+                    })
+                  }
+                >
+                  <option value="">Conforme resultado e detalhes</option>
+                  {Object.entries(executionLabels).map(([id, label]) => (
+                    <option
+                      key={id}
+                      value={id}
+                      disabled={
+                        id === "point" &&
+                        event.winner !== "ours" &&
+                        resultOf(event).winner !== "ours"
+                      }
+                    >
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
             {!compact && (
               <label>
@@ -283,9 +347,28 @@ export function AssessmentFields({
                             key={t.id}
                             type="button"
                             aria-pressed={a.tags.includes(t.id)}
-                            onClick={() =>
-                              change({ tags: toggleTag(a.tags, t.id) })
-                            }
+                            onClick={() => {
+                              const tags = toggleTag(a.tags, t.id);
+                              if (
+                                a.version === 2 &&
+                                t.id === "setter_tip" &&
+                                event.skill === "set" &&
+                                tags.includes(t.id)
+                              ) {
+                                const r = resultOf(event);
+                                onChange({
+                                  ...event,
+                                  skill: "attack",
+                                  result: event.result.startsWith("simple_")
+                                    ? event.result
+                                    : r.winner === "theirs"
+                                      ? "error"
+                                      : "simple_good",
+                                  assessment: { ...a, tags, group: undefined },
+                                  participants: undefined,
+                                });
+                              } else change({ tags });
+                            }}
                           >
                             <Icon size={20} aria-hidden="true" />
                             <span>{t.label}</span>
@@ -320,9 +403,9 @@ export function AssessmentFields({
               </label>
             )}
             <p className="assessment-preview">
-              Contribuição desta execução:{" "}
+              Avaliação desta execução:{" "}
               {assessed({ ...event, assessment: a }).rated
-                ? `${Math.round(assessed({ ...event, assessment: a }).quality * 100)}%`
+                ? `${(assessed({ ...event, assessment: a }).quality * 10).toFixed(1)}/10`
                 : "sem nota"}{" "}
               · sem bônus acumulados.
             </p>

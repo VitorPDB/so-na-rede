@@ -19,6 +19,7 @@ import {
   type RoleWeights,
   type Weights,
   ratingProfiles,
+  middleBackrowWeights,
   roleLabels,
   skills,
 } from "../model";
@@ -26,6 +27,7 @@ import { OpponentLogos } from "../OpponentLogos";
 import { defaultDefenseMap } from "../PlayerChooser";
 import { RatingGuide } from "../ExecutionSummary";
 import { type Theme, themes } from "../theme";
+import { effectiveProfiles } from "../ratingV2";
 
 const sections = [
   { id: "settings-match", label: "Partida", icon: Swords },
@@ -141,7 +143,7 @@ export function Settings({
   onRestartSet: () => void;
 }) {
   const [role, setRole] = useState<Role>("setter");
-  const profiles = match.ratingProfiles ?? ratingProfiles;
+  const profiles = effectiveProfiles(match);
   const defense = match.defenseMap ?? defaultDefenseMap;
   const formatLocked = match.audit.length > 0;
   const roleTotal = Object.entries(profiles[role])
@@ -276,6 +278,66 @@ export function Settings({
           title="Notas por função"
           description="A função vem da formação, não do cadastro. Fundamentos sem ações não entram na nota."
         >
+          <p className="ui-note">
+            Versão 2: média de qualidade, sem ações fictícias puxando a nota
+            para 5. Pesos e contexto ficam gravados em cada nova ação; registros
+            antigos mantêm sua avaliação.
+          </p>
+          <label className="ui-field">
+            Central que permanece no fundo
+            <select
+              value={match.middleCoverage ?? "auto"}
+              onChange={(e) =>
+                onChange({
+                  ...match,
+                  middleCoverage: e.target.value as Match["middleCoverage"],
+                })
+              }
+            >
+              <option value="auto">
+                Automático · recepção e defesa sem líbero
+              </option>
+              <option value="defense-only">
+                Defende, mas fica fora da linha de passe
+              </option>
+              <option value="standard">
+                Manter pesos de central em todas as zonas
+              </option>
+            </select>
+          </label>
+          <p className="ui-note">
+            A zona de rotação define rede/fundo. A troca automática de líbero
+            continua independente. Na rede, usa os pesos de central; no fundo,
+            usa o perfil abaixo.
+          </p>
+          <details className="assessment-details">
+            <summary>Pesos do central no fundo · ajustáveis</summary>
+            {(
+              Object.entries(
+                match.middleBackrowWeights ?? middleBackrowWeights,
+              ) as [keyof RoleWeights, number][]
+            )
+              .filter(([key]) => key !== "errors")
+              .map(([key, value]) => (
+                <WeightRow
+                  key={key}
+                  label={
+                    skills[key as Exclude<keyof RoleWeights, "errors">].label
+                  }
+                  ariaLabel={"Peso central no fundo " + key}
+                  value={value}
+                  onChange={(n) =>
+                    onChange({
+                      ...match,
+                      middleBackrowWeights: {
+                        ...(match.middleBackrowWeights ?? middleBackrowWeights),
+                        [key]: n,
+                      },
+                    })
+                  }
+                />
+              ))}
+          </details>
           <div
             className="ui-chips st-roles"
             role="radiogroup"
@@ -353,8 +415,9 @@ export function Settings({
             )}
           </div>
           <p className="ui-note">
-            Amostras pequenas usam 3 ações neutras como referência. A nota apoia
-            a análise técnica; não substitui a avaliação do treinador.
+            Novos registros usam média de qualidade. A quantidade de ações
+            indica a amostra e não reduz a nota. Registros anteriores mantêm o
+            cálculo original.
           </p>
         </Section>
 

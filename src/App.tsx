@@ -41,7 +41,14 @@ import { Analysis } from "./AnalysisView";
 import { Photo, PlayerProfile } from "./PlayerProfile";
 import { archiveGame } from "./career";
 import { formationAt, toP1 } from "./formation";
-import { csv, download, loadMatch, parseMatch, saveMatch, recoveryNotice } from "./storage";
+import {
+  csv,
+  download,
+  loadMatch,
+  parseMatch,
+  saveMatch,
+  recoveryNotice,
+} from "./storage";
 import { CloudPanel, usePublication } from "./CloudPanel";
 import { PostGameView } from "./PostGameView";
 import {
@@ -123,12 +130,15 @@ export default function App() {
     setPanel(undefined);
     window.scrollTo(0, 0);
   }, [page]);
-  const [feedback, setFeedback] = useState<{
-    message: string;
-    side?: Side;
-    undoable?: boolean;
-    id?: number;
-  } | undefined>(recoveryNotice ? { message: recoveryNotice } : undefined);
+  const [feedback, setFeedback] = useState<
+    | {
+        message: string;
+        side?: Side;
+        undoable?: boolean;
+        id?: number;
+      }
+    | undefined
+  >(recoveryNotice ? { message: recoveryNotice } : undefined);
   const scoreRef = useRef<HTMLDivElement>(null);
   const [scoreVisible, setScoreVisible] = useState(true);
   useEffect(() => {
@@ -195,7 +205,7 @@ export default function App() {
     }))
     .sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   const highlight =
-    playerStats.find((p) => p.count >= 3) ??
+    playerStats.find((p) => p.count >= 5) ??
     playerStats.find((p) => p.count > 0);
   const recent = s.active
     .filter((e) => e.command?.type === "event" || e.command?.type === "point")
@@ -661,6 +671,8 @@ export default function App() {
       defenseMap: match.defenseMap,
       formations: match.formations,
       ratingProfiles: match.ratingProfiles,
+      middleCoverage: match.middleCoverage,
+      middleBackrowWeights: match.middleBackrowWeights,
       weights: match.weights,
       history: archiveGame(match),
       postGameDraft: match.postGameDraft,
@@ -741,6 +753,7 @@ export default function App() {
                 type="button"
                 key={item.id}
                 className="rail-item"
+                aria-label={item.label}
                 aria-current={current ? "page" : undefined}
                 onClick={() => setPage(item.id)}
               >

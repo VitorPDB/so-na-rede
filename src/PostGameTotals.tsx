@@ -56,7 +56,14 @@ export function PostGameTotals({
   const results = postResults(skill, game.mode);
   const report = useMemo(
     () => postSummary(game, match, reportSet),
-    [game, match.weights, match.ratingProfiles, match.players, reportSet],
+    [
+      game,
+      match.weights,
+      match.ratingProfiles,
+      match.middleBackrowWeights,
+      match.players,
+      reportSet,
+    ],
   );
   const save = (next: PostGame) => {
     const errors = postGameErrors(next, match);
@@ -323,6 +330,39 @@ export function PostGameTotals({
                       </span>
                     </td>
                     <td>
+                      {game.ratingVersion === 2 && row.role === "middle" && (
+                        <label>
+                          Contexto
+                          <select
+                            aria-label={`Contexto ${player.name} linha ${rowIndex + 1}`}
+                            value={row.coverage ?? "standard"}
+                            onChange={(e) =>
+                              changeSet({
+                                ...set,
+                                rows: set.rows.map((r, i) =>
+                                  i === rowIndex
+                                    ? {
+                                        ...r,
+                                        coverage: e.target
+                                          .value as typeof r.coverage,
+                                      }
+                                    : r,
+                                ),
+                              })
+                            }
+                          >
+                            <option value="standard">
+                              Rede / contexto não informado
+                            </option>
+                            <option value="middle-backrow">
+                              Fundo · recepção e defesa
+                            </option>
+                            <option value="middle-no-pass">
+                              Fundo · apenas defesa
+                            </option>
+                          </select>
+                        </label>
+                      )}
                       <select
                         aria-label={`Função ${player.name} linha ${rowIndex + 1}`}
                         value={row.role}
@@ -331,7 +371,11 @@ export function PostGameTotals({
                             ...set,
                             rows: set.rows.map((r, i) =>
                               i === rowIndex
-                                ? { ...r, role: e.target.value as Role }
+                                ? {
+                                    ...r,
+                                    role: e.target.value as Role,
+                                    coverage: undefined,
+                                  }
                                 : r,
                             ),
                           })
@@ -463,6 +507,40 @@ export function PostGameTotals({
           >
             Adicionar outra função
           </button>
+          {game.ratingVersion === 2 && (
+            <button
+              className="button secondary"
+              onClick={() => {
+                if (
+                  set.rows.some(
+                    (r) =>
+                      r.playerId === extraPlayer &&
+                      r.role === "middle" &&
+                      r.coverage === "middle-backrow",
+                  )
+                ) {
+                  setMessage(
+                    "Este jogador já possui uma linha de central no fundo.",
+                  );
+                  return;
+                }
+                changeSet({
+                  ...set,
+                  rows: [
+                    ...set.rows,
+                    {
+                      playerId: extraPlayer,
+                      role: "middle",
+                      coverage: "middle-backrow",
+                      counts: {},
+                    },
+                  ],
+                });
+              }}
+            >
+              Adicionar central no fundo
+            </button>
+          )}
         </div>
         <p className="muted">
           Pontos sem atribuição no set: nossos {coverage[0]} · deles{" "}

@@ -1,4 +1,5 @@
 import { resultOf, type SkillEvent, type Skill, type Role } from "./model";
+import { contextError } from "./ratingV2";
 export const difficultyLabels = {
   easy: "Fácil",
   normal: "Normal",
@@ -22,6 +23,52 @@ export interface Situation {
   adjustment?: number;
 }
 export const situations: Situation[] = [
+  {
+    id: "attack_front",
+    label: "Ataque da rede",
+    skills: ["attack"],
+    category: "attack_origin",
+  },
+  {
+    id: "attack_pipe",
+    label: "Ataque do fundo · pipe / zona 6",
+    skills: ["attack"],
+    category: "attack_origin",
+  },
+  {
+    id: "attack_back_one",
+    label: "Ataque do fundo · saída / zona 1",
+    skills: ["attack"],
+    category: "attack_origin",
+  },
+  {
+    id: "rule_fault",
+    label: "Infração · invasão / toque ilegal",
+    skills: ["serve", "attack", "block", "set", "defense", "reception"],
+    category: "execution",
+    quality: 0,
+  },
+  {
+    id: "good_pass",
+    label: "Boa · ataque organizado",
+    skills: ["reception"],
+    category: "execution",
+    quality: 0.75,
+  },
+  {
+    id: "pressured_attack",
+    label: "Pressionou a defesa",
+    skills: ["attack"],
+    category: "execution",
+    quality: 0.75,
+  },
+  {
+    id: "neutral_attack",
+    label: "Continuidade sem vantagem",
+    skills: ["attack"],
+    category: "execution",
+    quality: 0.5,
+  },
   {
     id: "net_fault",
     label: "Erro de rede / invasão",
@@ -348,7 +395,7 @@ export const situations: Situation[] = [
   {
     id: "setter_tip",
     label: "Largadinha do levantador",
-    skills: ["set"],
+    skills: ["set", "attack"],
     category: "technique",
   },
   {
@@ -440,7 +487,7 @@ export function toggleTag(tags: string[], id: string) {
   ];
 }
 export const normalAssessment = (): NonNullable<SkillEvent["assessment"]> => ({
-  version: 1,
+  version: 2,
   difficulty: "normal",
   tags: [],
 });
@@ -448,16 +495,42 @@ export function assessmentError(
   event: SkillEvent,
   allowIncomplete = false,
 ): string | undefined {
+  const invalidContext =
+    contextError(event.ratingContext) ??
+    event.participants?.map((p) => contextError(p.ratingContext)).find(Boolean);
+  if (invalidContext) return invalidContext;
+  if (event.ratingContext && event.assessment?.version !== 2)
+    return "Contexto de nota exige avaliação v2.";
   const a = event.assessment;
   if (a !== undefined) {
     if (
       !a ||
-      a.version !== 1 ||
+      ![1, 2].includes(a.version) ||
       !Object.hasOwn(difficultyLabels, a.difficulty) ||
       !Array.isArray(a.tags) ||
       a.tags.length > 6
     )
       return "Dificuldade/contexto inválido.";
+    if (
+      a.execution !== undefined &&
+      (a.version !== 2 ||
+        ![
+          "error",
+          "poor",
+          "neutral",
+          "good",
+          "excellent",
+          "point",
+          "unrated",
+        ].includes(a.execution))
+    )
+      return "Avaliação da execução inválida.";
+    if (
+      a.execution === "point" &&
+      event.winner !== "ours" &&
+      resultOf(event)?.winner !== "ours"
+    )
+      return "Ponto bem executado exige ponto nosso no placar.";
     const categories = new Set<string>();
     for (const id of a.tags) {
       const t = tagsFor(event.skill).find((t) => t.id === id);
@@ -542,6 +615,7 @@ export function assessmentError(
     return "Erro adversário não recebe nota individual.";
 }
 export function assessed(event: SkillEvent) {
+  if (event.assessment?.version === 2) return assessedV2(event);
   const r = resultOf(event),
     a = event.assessment;
   if (!a)
@@ -614,6 +688,150 @@ export function assessed(event: SkillEvent) {
     rated: true,
   };
 }
+export const executionLabels = {
+  error: "Erro direto",
+  poor: "Gafe · bola continua",
+  neutral: "Continuidade neutra",
+  good: "Boa execução",
+  excellent: "Excelente execução",
+  point: "Ponto bem executado",
+  unrated: "Sem possibilidade real / não avaliável",
+} as const;
+export function assessedV2(event: SkillEvent) {
+  const a = event.assessment!,
+    r = resultOf(event);
+  const empty = {
+    quality: 0.5,
+    error: false,
+    penalty: 0,
+    point: false,
+    rated: false,
+  };
+  if (
+    a.responsibility === "none" ||
+    a.execution === "unrated" ||
+    event.skill === "opponent"
+  )
+    return empty;
+  const tags = a.tags.map((id) => situations.find((s) => s.id === id));
+  const detail = tags.find((t) => t?.quality !== undefined);
+  let execution: keyof typeof executionLabels =
+    a.execution ??
+    (a.responsibility === "partial"
+      ? "neutral"
+      : a.responsibility === "wrong"
+        ? r.winner === "theirs"
+          ? "error"
+          : "poor"
+        : a.responsibility === "correct"
+          ? r.winner === "ours"
+            ? "point"
+            : "good"
+          : event.result === "simple_gafe" ||
+              event.result === "bad" ||
+              event.result === "-"
+            ? "poor"
+            : r.error
+              ? "error"
+              : r.winner === "ours"
+                ? "point"
+                : event.result === "#"
+                  ? "excellent"
+                  : event.result === "!" || r.quality === 0.5
+                    ? "neutral"
+                    : r.quality >= 0.7
+                      ? "good"
+                      : "poor");
+  if (!a.execution && !a.responsibility && detail && execution !== "error") {
+    const q = detail.quality!;
+    execution =
+      q >= 0.95
+        ? "excellent"
+        : q >= 0.7
+          ? "good"
+          : q >= 0.45
+            ? "neutral"
+            : q > 0
+              ? "poor"
+              : "error";
+    if (r.winner === "ours" && q >= 0.7) execution = "point";
+  }
+  let difficulty = a.difficulty;
+  if (
+    a.tags.includes("save_extreme") ||
+    (a.tags.includes("magic") &&
+      ["good", "excellent", "point"].includes(execution))
+  )
+    difficulty = "emergency";
+  else if (a.tags.includes("save_hard") && difficulty !== "emergency")
+    difficulty = "hard";
+  const table = {
+    error: [0, 1, 2, 3],
+    poor: [2, 3, 4, 5],
+    neutral: [5, 5, 5, 5],
+    good: [6.5, 7.5, 8.5, 9],
+    excellent: [8, 9, 9.5, 10],
+    point: [9, 9, 9.5, 10],
+  };
+  const index = ["easy", "normal", "hard", "emergency"].indexOf(difficulty);
+  let value = table[execution][index];
+  if (!a.execution && !a.responsibility && event.skill === "block") {
+    if (
+      a.tags.includes("touch_effective") ||
+      a.tags.includes("perfect_block")
+    ) {
+      execution = r.winner === "ours" ? "point" : "excellent";
+      value = table[execution][index];
+      if (a.tags.includes("perfect_block") && execution !== "point")
+        value = Math.min(10, value + 0.5);
+    }
+    if (a.tags.includes("block_used") && execution === "poor")
+      value = Math.min(5, value + 1);
+    if (a.tags.includes("late") || a.tags.includes("wrong_jump"))
+      value = Math.max(0, value - 1);
+  }
+  if (event.skill === "serve")
+    value = {
+      error: 0,
+      poor: 3.5,
+      neutral: 5,
+      good: 7,
+      excellent: 8.5,
+      point: 9,
+      unrated: 5,
+    }[execution];
+  if (
+    event.skill === "serve" &&
+    a.tags.includes("out_of_system") &&
+    execution !== "error"
+  )
+    value = 8.5;
+  if (a.tags.includes("rule_fault")) {
+    value = 0;
+    execution = "error";
+  }
+  if (a.tags.includes("ugly_error")) {
+    value = 0;
+    execution = "error";
+  }
+  // Special-play tags describe difficulty; they never stack a second reward.
+  if (!a.responsibility && execution !== "error") {
+    value += Math.max(
+      -0.5,
+      Math.min(0, ...tags.map((t) => (t?.adjustment ?? 0) * 10)),
+    );
+  }
+  return {
+    quality: Math.max(0, Math.min(10, value)) / 10,
+    error: execution === "error",
+    penalty: 0,
+    point:
+      r.winner === "ours" &&
+      a.responsibility !== "wrong" &&
+      a.responsibility !== "partial",
+    rated: true,
+  };
+}
 export function playerEvents<T extends SkillEvent & { role?: Role }>(
   events: T[],
   playerId: string,
@@ -630,12 +848,14 @@ export function playerEvents<T extends SkillEvent & { role?: Role }>(
         playerId,
         skill,
         role: p.role ?? e.role,
+        ratingContext: p.ratingContext ?? e.ratingContext,
         participants: undefined,
         assessment: {
           ...e.assessment!,
           difficulty: p.difficulty ?? e.assessment!.difficulty,
           tags: primary ? e.assessment!.tags : [],
           responsibility: p.responsibility,
+          execution: primary ? e.assessment!.execution : undefined,
         },
         ...(!primary
           ? {
@@ -651,6 +871,9 @@ export function playerEvents<T extends SkillEvent & { role?: Role }>(
 export function assessmentText(e: SkillEvent) {
   if (!e.assessment) return "Registro anterior · sem contexto";
   return [
+    e.assessment.execution
+      ? executionLabels[e.assessment.execution]
+      : undefined,
     difficultyLabels[e.assessment.difficulty],
     e.assessment.responsibility
       ? responsibilityLabels[e.assessment.responsibility]

@@ -519,6 +519,9 @@ export function PublicLive() {
                       </span>
                     </div>
                     <div className="pub-player-numbers">
+                      {p.stats.count > 0 && p.stats.count < 5 && (
+                        <span>Nota provisória · amostra inicial</span>
+                      )}
                       <span>
                         <b>{p.stats.points}</b> pontos
                       </span>

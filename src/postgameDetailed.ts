@@ -59,6 +59,8 @@ export function replayDetailed(
     players: source.players,
     weights: source.weights,
     ratingProfiles: source.ratingProfiles,
+    middleCoverage: source.middleCoverage,
+    middleBackrowWeights: source.middleBackrowWeights,
     initialLineup: draft.lineup,
     initialRoles: draft.roles,
     initialServer: draft.server,
@@ -75,6 +77,8 @@ export function replayDetailed(
     previous.source.players === source.players &&
     previous.source.weights === source.weights &&
     previous.source.ratingProfiles === source.ratingProfiles &&
+    previous.source.middleCoverage === source.middleCoverage &&
+    previous.source.middleBackrowWeights === source.middleBackrowWeights &&
     previous.source.initialAutoLibero === source.initialAutoLibero &&
     previous.draft.id === draft.id &&
     previous.draft.date === draft.date &&

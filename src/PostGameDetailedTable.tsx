@@ -45,6 +45,8 @@ export function PostGameDetailed({
     match.players,
     match.weights,
     match.ratingProfiles,
+    match.middleCoverage,
+    match.middleBackrowWeights,
     match.initialAutoLibero,
   ]);
   const state = project(replay.match);
