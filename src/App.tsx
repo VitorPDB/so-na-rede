@@ -41,7 +41,7 @@ import { Analysis } from "./AnalysisView";
 import { Photo, PlayerProfile } from "./PlayerProfile";
 import { archiveGame } from "./career";
 import { formationAt, toP1 } from "./formation";
-import { csv, download, loadMatch, parseMatch, saveMatch } from "./storage";
+import { csv, download, loadMatch, parseMatch, saveMatch, recoveryNotice } from "./storage";
 import { CloudPanel, usePublication } from "./CloudPanel";
 import { PostGameView } from "./PostGameView";
 import {
@@ -74,13 +74,15 @@ import { type Theme, THEME_KEY, applyTheme, readTheme } from "./theme";
 
 const number = (n: number) => String(n).padStart(2, "0");
 function initial() {
+  let recovered: Match | undefined;
   try {
     const saved = loadMatch();
     const match = saved ? openingRoleMigration(saved) : newMatch();
-    if (saved && match !== saved) saveMatch(match, saved);
+    recovered = match;
+    saveMatch(match, saved);
     return { match, error: "" };
   } catch (e) {
-    return { match: newMatch(), error: String(e) };
+    return { match: recovered ?? newMatch(), error: String(e) };
   }
 }
 function Avatar({
@@ -126,7 +128,7 @@ export default function App() {
     side?: Side;
     undoable?: boolean;
     id?: number;
-  }>();
+  } | undefined>(recoveryNotice ? { message: recoveryNotice } : undefined);
   const scoreRef = useRef<HTMLDivElement>(null);
   const [scoreVisible, setScoreVisible] = useState(true);
   useEffect(() => {
@@ -234,6 +236,7 @@ export default function App() {
     }
     try {
       saveMatch(next, replace ? undefined : match);
+      void navigator.storage?.persist?.().catch(() => {});
       setMatch(next);
       setStorageError("");
       setReadBlocked(false);

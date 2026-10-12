@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { cloud, initializeCloud } from "./cloud";
 import { applyStoredTheme } from "./theme";
+import { initializeMatchStorage } from "./storage";
 applyStoredTheme();
 import "./styles/index.css";
 const root = createRoot(document.getElementById("root")!);
@@ -16,7 +17,7 @@ const loading = (
   </div>
 );
 root.render(loading);
-void initializeCloud().then(() => {
+void Promise.all([initializeCloud(), initializeMatchStorage()]).then(() => {
   const view = new URLSearchParams(location.search).get("view");
   const publicView =
     view === "public" || Boolean(cloud && view !== "commission");

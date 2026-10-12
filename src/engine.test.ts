@@ -9,7 +9,7 @@ import {
   type Zone,
 } from "./model";
 import { assignToZone } from "./engine";
-import { parseMatch, saveMatch } from "./storage";
+import { parseMatch, saveMatch, loadMatch } from "./storage";
 import { formationAt, toP1 } from "./formation";
 import { publicMedia, publicSnapshot } from "./publicSnapshot";
 import {
@@ -24,6 +24,55 @@ import {
   replayDetailed,
   validDetailedDraft,
 } from "./postgameDetailed";
+
+test("recarregar recupera todas as ações sem transmissão e restaura cópia ausente ou corrompida", () => {
+  const values = new Map<string, string>();
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => values.set(key, value),
+  }});
+  try {
+    let match = makeNewMatch();
+    for (let n = 0; n < 12; n++) {
+      const next = append(match, {type:"point", winner:n % 2 ? "theirs" : "ours"});
+      saveMatch(next, n ? match : undefined);
+      match = next;
+    }
+    assert.deepEqual(loadMatch(), match);
+    values.set("so-na-rede:match:v1", "{broken");
+    assert.deepEqual(loadMatch(), match);
+    values.delete("so-na-rede:match:v1");
+    assert.deepEqual(loadMatch(), match);
+    assert.deepEqual(project(loadMatch()!).score, [6,6]);
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
+});
+
+test("falha na cópia redundante não perde salvamento principal; dados ilegíveis permanecem intactos", () => {
+  const values = new Map<string, string>();
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      if (key.endsWith(":backup")) throw new Error("quota");
+      values.set(key, value);
+    },
+  }});
+  try {
+    const match = makeNewMatch();
+    saveMatch(match);
+    assert.deepEqual(loadMatch(), match);
+    values.set("so-na-rede:match:v1", "{broken");
+    assert.throws(() => loadMatch());
+    assert.equal(values.get("so-na-rede:match:v1"), "{broken");
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
+});
 
 test("totais pós-jogo calculam notas por função/set e entram no histórico sem alterar o jogo ao vivo", () => {
   const live = makeNewMatch();

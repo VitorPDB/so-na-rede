@@ -10,7 +10,10 @@ import { activeEntries, project, validate } from "./engine";
 import { postGameErrors } from "./postgame";
 import { validDetailedDraft } from "./postgameDetailed";
 import { assessmentError } from "./assessment";
+import { mirrorMatch, recoveryCopies } from "./matchBackup";
 const KEY = "so-na-rede:match:v1";
+const BACKUP_KEY = KEY + ":backup";
+export let recoveryNotice = "";
 export function parseMatch(raw: string): Match {
   const data = JSON.parse(raw) as Match;
   const invalid = () => {
@@ -467,8 +470,31 @@ export function parseMatch(raw: string): Match {
 }
 export function loadMatch(): Match | undefined {
   const raw = localStorage.getItem(KEY);
-  if (!raw) return;
-  return parseMatch(raw);
+  if (raw) {
+    try { return parseMatch(raw); } catch { /* Try the independent checkpoint. */ }
+  }
+  const backup = localStorage.getItem(BACKUP_KEY);
+  if (backup) {
+    const match = parseMatch(backup);
+    localStorage.setItem(KEY, backup);
+    recoveryNotice = "Partida recuperada da cópia automática local.";
+    return match;
+  }
+  if (raw) return parseMatch(raw); // Preserve the original and block edits on invalid data.
+}
+export async function initializeMatchStorage() {
+  try {
+    const match = loadMatch();
+    if (match) { mirrorMatch(JSON.stringify(match)); return; }
+  } catch { /* IndexedDB can recover a damaged local checkpoint. */ }
+  for (const raw of await recoveryCopies()) {
+    try {
+      parseMatch(raw);
+      localStorage.setItem(KEY, raw);
+      recoveryNotice = "Partida recuperada do backup automático do dispositivo.";
+      return;
+    } catch { /* Never replace a damaged file with another invalid copy. */ }
+  }
 }
 export function saveMatch(match: Match, expected?: Match) {
   const current = localStorage.getItem(KEY);
@@ -480,7 +506,10 @@ export function saveMatch(match: Match, expected?: Match) {
     throw new Error(
       "O jogo foi alterado em outra aba. Recarregue esta aba antes de continuar.",
     );
-  localStorage.setItem(KEY, JSON.stringify(match));
+  const raw = JSON.stringify(match);
+  localStorage.setItem(KEY, raw);
+  try { localStorage.setItem(BACKUP_KEY, raw); } catch { /* IndexedDB remains available. */ }
+  mirrorMatch(raw);
 }
 export function download(name: string, content: string, type: string) {
   const url = URL.createObjectURL(new Blob([content], { type }));

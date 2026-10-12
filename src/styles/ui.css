@@ -997,7 +997,13 @@
 .shell > .cloud-status {
   position: fixed;
   top: var(--sp-2);
+  bottom: auto;
   left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--sp-3));
+  height: auto;
+  overflow-wrap: anywhere;
+  pointer-events: none;
   z-index: var(--z-toast);
   transform: translateX(-50%);
   padding: 6px var(--sp-3);
