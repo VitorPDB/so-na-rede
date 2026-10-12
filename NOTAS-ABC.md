@@ -1,37 +1,36 @@
-# Critérios por fundamento — 12/10/2026
+# Avaliação por fundamento — substituição do modelo anterior
 
-Branch: `codex/notas-abc-fundamentos`, criada a partir de `codex/notas-contextuais-v2`. Inclui as notas por função, central sem líbero e vídeos das versões anteriores.
+Branch: `codex/notas-abc-fundamentos`. Novas ações e fichas de pós-jogo usam a versão 4. Eventos das versões 1–3 mantêm seus cálculos anteriores; o histórico não é recalculado silenciosamente.
 
-## Marcação
+## Interface
 
-Recepção e defesa têm botões A/B/C no registro rápido. A ação continua sendo escolhida antes do jogador; A/B/C comuns exigem dois toques. No seletor há A/B/C e Erro direto, dificuldade e Detalhar opcional. A = bola perfeita para levantar; B = levantável com ajuste; C = ruim. Nenhuma classificação exige zona ou jogador específico. C não encerra o rally; Erro direto encerra com ponto deles.
+A ação continua sendo escolhida antes do jogador. Qualidade e dificuldade ficam à vista; os outros critérios estão no dropdown “Contexto do lance”. Foram retirados da ficha nova o catálogo de etiquetas, o seletor duplicado de resultado/execução e a responsabilidade individual genérica. Bloqueios simples, duplos e triplos e a responsabilidade de cada participante continuam disponíveis.
 
-| Fundamento | Base | Contexto / detalhes |
+Os seletores têm fundo escuro, borda discreta, indicador de abertura, foco visível e alvo mínimo de 56 px. A lista de opções usa o seletor nativo do dispositivo, permitindo uso por teclado e leitor de tela.
+
+| Fundamento | Qualidade principal | Contexto |
 |---|---|---|
-| Defesa | Passe A/B/C ou erro direto | Dificuldade; forte, longa, largada, bola de graça ou desvio; toque/manchete/recurso |
-| Recepção | Passe A/B/C ou erro direto | Dificuldade; saque por baixo, flutuante ou viagem; toque/manchete/recurso |
-| Saque | Qualidade e resultado | Dificuldade descritiva; tipo; momento normal, decisivo, após tempo ou sequência de erros |
-| Ataque | Qualidade do ataque | Levantamento recebido A/B/C; dificuldade; potência, largada, colocado, explorar bloqueio ou rápida; passada boa, adaptada ou ruim; rede/fundo |
-| Levantamento | Qualidade entregue | Passe recebido A/B/C; dificuldade; direção; técnica |
-| Bloqueio | Qualidade/precisão individual | Dificuldade; simples, duplo ou triplo; perfeito, toque efetivo, simples, direção correta, usado, atrasado, ausência evitável ou sem oportunidade real |
+| Defesa | A/B/C ou erro direto | Dificuldade, bola forte/longa/largada/de graça/desvio e técnica |
+| Recepção | A/B/C ou erro direto | Dificuldade, saque recebido e técnica |
+| Saque | Boa/excelente/normal/gafe/erro/ponto | Dificuldade, tipo de saque e momento |
+| Ataque | Boa/excelente/normal/gafe/erro/ponto | Dificuldade, levantamento recebido A/B/C, tipo, passada e rede/fundo |
+| Levantamento | Qualidade da bola entregue | Dificuldade, passe recebido A/B/C, direção e técnica |
+| Bloqueio | Perfeito/efetivo/simples/direção/usado/atrasado/ausência/buraco/infração | Dificuldade, simples/duplo/triplo e participação individual |
 
-Nos bloqueios coletivos, cada participante pode ter precisão própria em “Detalhar participação”. Não há multiplicação do ponto pelo número de participantes. O grupo e a responsabilidade individual foram mantidos.
+A = bola perfeita para levantar; B = levantável com ajuste; C = ruim. Nenhuma classificação exige zona ou jogador específico. C e gafe continuam o rally; erro direto encerra com ponto deles. “Sem oportunidade real” fica fora da média. Na jogada coletiva, apenas o finalizador recebe crédito do ponto, e o time soma um ponto.
 
-## Cálculo
+## Fórmula independente
 
-1. Qualidade é a base da ação. Em bola normal, A vale 9; B, 7,5; C, 3. Erro direto é separado, sem penalidade extra duplicada.
-2. Ajuste de dificuldade em relação à bola normal: influência 1 em defesa/ataque, 0,75 em recepção/levantamento e 0,5 em bloqueio. São coeficientes iniciais de calibração, não percentuais somados à nota atual.
-3. Tipo de bola/passe pode sugerir dificuldade quando o contexto é usado: passe/levantamento C sugere difícil; A sugere fácil; defesa forte/longa sugere difícil; desvio inesperado, emergência. Saque recebido por baixo sugere fácil; viagem, difícil. São sugestões que podem ser corrigidas manualmente; tipo não garante a dificuldade real de toda bola.
-4. Escolher dificuldade manualmente prevalece sobre as sugestões. O tipo da bola não dá outro bônus pela mesma dificuldade. Salvadas não acumulam recompensas adicionais.
-5. Técnica, direção, tipo de saque e momento são dados de análise, sem bônus/punição automáticos. Saque mantém nota pela qualidade. Passada ruim tem desconto máximo de 0,25 na ação positiva; não soma novo desconto a uma execução já ruim. Passada adaptada não é erro.
-6. Médias por fundamento, função e cobertura permanecem sem três ações fictícias de nota 5. Quantidade de registros indica amostra, não um desconto da nota.
+A versão 4 não chama as fórmulas antigas nem interpreta etiquetas antigas como bônus ou penalidades.
 
-Pesos por posição, central sem líbero e contexto de rede/fundo continuam ativos. Um central permanecendo no fundo pode usar perfil de recepção/defesa ou defesa sem linha de passe.
+Base em bola normal: boa 7,5; excelente 9; normal 5; gafe 3; erro direto 1; ponto bem executado 9,5. A/B/C usam respectivamente 9/7,5/3.
 
-## Persistência e compatibilidade
+Bloqueio: perfeito 9,5; toque efetivo 8,5; simples 5,5; direção fechada 7,5; usado 4; atrasado 2; ausência evitável 1; buraco 2,5. Infração de bloqueio, como toque na rede, vale 0, sem atenuação por dificuldade.
 
-Novas ações usam avaliação v3. Eventos v1/v2 e históricos resumidos conservam suas fórmulas. Relatórios com versões diferentes avisam que a avaliação é mista. Contexto, detalhes e responsabilidade são preservados no backup e nas correções.
+Nota da ação = base + ajuste da dificuldade, limitada a 0–10. Normal recebe ajuste zero. Fácil recebe −1 × influência; difícil +1 × influência; emergência +1,5 × influência. Influência: defesa/ataque 1; recepção/levantamento 0,75; bloqueio 0,5; saque 0,25. Execução neutra permanece 5. Esses valores são calibração inicial do time, não um padrão oficial.
 
-Pós-jogo completo usa os mesmos seletores. Fichas novas por totais aceitam critérios como filtro da tabela: cada combinação possui quantidades próprias, sem apagar outros filtros. Exportações JSON e CSV incluem os critérios. Momento automático do saque só é inferido no registro com sequência conhecida; em totais ele é informado pela comissão.
+Assim, gafe de levantamento fácil vale 2,25; normal 3; difícil 3,75. Boa execução difícil ganha mais; gafe difícil recebe desconto menor. Uma gafe não ultrapassa 4,9 apenas pela dificuldade. Passada ruim tira até 0,25 apenas de ataque positivo, sem duplicar a penalização de uma gafe.
 
-Para testar apenas os novos critérios, use uma partida de teste. A calibração ainda deve ser confrontada com observações do time; os rótulos de amostra não são uma probabilidade de certeza estatística.
+Tipo/técnica/direção e momento de saque são informações de análise, sem bônus por estilo. Passe recebido, levantamento recebido e bola recebida podem sugerir dificuldade; o auxiliar pode escolher manualmente. O contexto é considerado uma única vez. Origem do ataque no fundo não torna a bola automaticamente difícil.
+
+A nota por fundamento é a média das ações avaliáveis. A nota final usa os pesos da função exercida e do contexto registrado, incluindo central no fundo sem líbero. O volume determina a amostra, não uma penalização na nota. Totais de pós-jogo não inventam ordem dos rallies nem rotação. Seus critérios e dificuldades ficam preservados nos filtros, no JSON e na exportação CSV.

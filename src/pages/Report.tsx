@@ -64,7 +64,7 @@ export function Report({
       <p className="ui-note">
         {collective.ratingVersion === "mixed"
           ? "Avaliação mista: registros antigos mantêm a fórmula anterior; novas ações usam os critérios por fundamento."
-          : collective.ratingVersion === "v3"
+          : ["v3", "v4"].includes(collective.ratingVersion)
             ? "Notas por fundamento · qualidade e dificuldade separadas. A/B/C não dependem da zona ou de um jogador específico."
             : collective.ratingVersion === "v2"
               ? "Notas v2 · médias de qualidade. A amostra aparece separadamente e não reduz a nota."

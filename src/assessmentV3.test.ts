@@ -4,7 +4,7 @@ import { newMatch, type SkillEvent, type AssessmentCriteria } from "./model";
 import {
   assessed,
   assessmentError,
-  normalAssessment,
+  normalAssessment as latestAssessment,
   playerEvents,
   assessmentText,
 } from "./assessment";
@@ -20,6 +20,7 @@ import {
 } from "./postgame";
 import { publicSnapshot } from "./publicSnapshot";
 import { effectiveProfiles } from "./ratingV2";
+const normalAssessment = () => ({ ...latestAssessment(), version: 3 as const });
 const event = (
   skill: SkillEvent["skill"] = "defense",
   criteria: AssessmentCriteria = {},

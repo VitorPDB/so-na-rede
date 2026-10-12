@@ -42,7 +42,7 @@ export interface PostSet {
   rows: PostRow[];
 }
 export interface PostGame {
-  ratingVersion?: 1 | 2 | 3;
+  ratingVersion?: 1 | 2 | 3 | 4;
   id: string;
   date: string;
   opponent: string;
@@ -90,7 +90,7 @@ export function cellAssessment(
   const [, , difficulty, tag, payload, extra] = key.split(":");
   if (
     extra !== undefined ||
-    (payload !== undefined && game.ratingVersion !== 3)
+    (payload !== undefined && (game.ratingVersion ?? 0) < 3)
   )
     throw new Error("Critérios da célula inválidos.");
   let detail: {
@@ -118,9 +118,29 @@ export function cellAssessment(
       }
     : undefined;
 }
-export const postResults = (skill: Skill, mode: PostGame["mode"]) =>
-  skills[skill].results.filter(
-    (r) => r.id.startsWith("simple_") === (mode === "simple"),
+export const postResults = (
+  skill: Skill,
+  mode: PostGame["mode"],
+  version = 1,
+) =>
+  skills[skill].results.filter((r) =>
+    version >= 4
+      ? skill === "opponent" ||
+        (["reception", "defense"].includes(skill)
+          ? [
+              "simple_A",
+              "simple_B",
+              "simple_C",
+              "simple_ours",
+              "simple_theirs",
+            ].includes(r.id)
+          : [
+              "simple_good",
+              "simple_gafe",
+              "simple_ours",
+              "simple_theirs",
+            ].includes(r.id))
+      : r.id.startsWith("simple_") === (mode === "simple"),
   );
 export function emptyPostSet(match: Match): PostSet {
   const formation = [...project(match).active]
@@ -162,7 +182,7 @@ export function emptyPostSet(match: Match): PostSet {
 }
 export function newPostGame(match: Match): PostGame {
   return {
-    ratingVersion: 3,
+    ratingVersion: 4,
     id: crypto.randomUUID(),
     date: new Date().toISOString(),
     opponent: "",
@@ -179,7 +199,7 @@ export function postGameErrors(
   const errors: string[] = [];
   if (
     game?.ratingVersion !== undefined &&
-    ![1, 2, 3].includes(game.ratingVersion)
+    ![1, 2, 3, 4].includes(game.ratingVersion)
   )
     return ["Versão de notas inválida."];
   if (

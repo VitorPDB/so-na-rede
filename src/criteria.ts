@@ -24,6 +24,7 @@ export const criteriaFields: {
     skills: ["block"],
     options: {
       perfect: "Perfeito",
+      error: "Erro direto · toque na rede / infração",
       effective: "Toque efetivo · facilita defesa",
       simple: "Toque simples",
       direction: "Fechou a direção, sem toque",

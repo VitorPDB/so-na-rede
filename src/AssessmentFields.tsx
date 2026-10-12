@@ -1,3 +1,4 @@
+import { FoundationAssessment } from "./FoundationAssessment";
 import { type Match, type SkillEvent, skills, resultOf } from "./model";
 import {
   difficultyLabels,
@@ -112,6 +113,7 @@ export function AssessmentFields({
   );
   const group = a.group;
   const participants = event.participants ?? [];
+  if (onlyParticipants && (!group || hideParticipants)) return null;
   const setGroup = (group: typeof a.group) =>
     onChange({
       ...event,
@@ -122,6 +124,24 @@ export function AssessmentFields({
           : []
         : undefined,
     });
+  if (a.version === 4 && !onlyParticipants)
+    return (
+      <FoundationAssessment
+        event={{ ...event, assessment: a }}
+        onChange={onChange}
+      >
+        <AssessmentFields
+          event={event}
+          onChange={onChange}
+          match={match}
+          eligible={eligible}
+          hideChecklist={hideChecklist}
+          hideParticipants={hideParticipants}
+          onlyParticipants
+          compact={compact}
+        />
+      </FoundationAssessment>
+    );
   return (
     <section
       className={
@@ -129,7 +149,7 @@ export function AssessmentFields({
         (a.version >= 2 && event.skill === "attack"
           ? " has-attack-origin"
           : "") +
-        (a.version === 3 && ["reception", "defense"].includes(event.skill)
+        (a.version >= 3 && ["reception", "defense"].includes(event.skill)
           ? " has-pass-quality"
           : "")
       }
@@ -150,14 +170,14 @@ export function AssessmentFields({
                     key={id}
                     type="button"
                     aria-pressed={
-                      (a.version === 3
+                      (a.version >= 3
                         ? effectiveDifficulty({ ...event, assessment: a })
                         : a.difficulty) === id
                     }
                     onClick={() =>
                       change({
                         difficulty: id as Difficulty,
-                        ...(a.version === 3
+                        ...(a.version >= 3
                           ? { difficultySource: "manual" as const }
                           : {}),
                       })
@@ -221,54 +241,51 @@ export function AssessmentFields({
                 ))}
             </div>
           )}
-          {a.version === 3 &&
-            ["reception", "defense"].includes(event.skill) && (
-              <div
-                className="block-group-buttons pass-quality-buttons"
-                role="group"
-                aria-label="Qualidade do passe A B C"
-              >
-                {Object.entries(passLabels).map(([id, label]) => {
-                  const inferred =
-                    event.result === "simple_A"
-                      ? "A"
-                      : event.result === "simple_B"
-                        ? "B"
-                        : event.result === "simple_C"
-                          ? "C"
-                          : undefined;
-                  return (
-                    <button
-                      type="button"
-                      key={id}
-                      aria-label={label}
-                      aria-pressed={
-                        (a.criteria?.passQuality ?? inferred) === id
-                      }
-                      onClick={() =>
-                        onChange({
-                          ...event,
-                          ...(id === "error"
-                            ? { result: "simple_theirs", winner: undefined }
-                            : {}),
-                          assessment: {
-                            ...a,
-                            execution: undefined,
-                            criteria: {
-                              ...a.criteria,
-                              passQuality: id as "A" | "B" | "C" | "error",
-                            },
+          {a.version >= 3 && ["reception", "defense"].includes(event.skill) && (
+            <div
+              className="block-group-buttons pass-quality-buttons"
+              role="group"
+              aria-label="Qualidade do passe A B C"
+            >
+              {Object.entries(passLabels).map(([id, label]) => {
+                const inferred =
+                  event.result === "simple_A"
+                    ? "A"
+                    : event.result === "simple_B"
+                      ? "B"
+                      : event.result === "simple_C"
+                        ? "C"
+                        : undefined;
+                return (
+                  <button
+                    type="button"
+                    key={id}
+                    aria-label={label}
+                    aria-pressed={(a.criteria?.passQuality ?? inferred) === id}
+                    onClick={() =>
+                      onChange({
+                        ...event,
+                        ...(id === "error"
+                          ? { result: "simple_theirs", winner: undefined }
+                          : {}),
+                        assessment: {
+                          ...a,
+                          execution: undefined,
+                          criteria: {
+                            ...a.criteria,
+                            passQuality: id as "A" | "B" | "C" | "error",
                           },
-                        })
-                      }
-                    >
-                      <Target size={18} aria-hidden="true" />
-                      {id === "error" ? "Erro direto" : id}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                        },
+                      })
+                    }
+                  >
+                    <Target size={18} aria-hidden="true" />
+                    {id === "error" ? "Erro direto" : id}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {compact && event.skill === "block" && (
             <div
               className="block-group-buttons"
@@ -310,7 +327,7 @@ export function AssessmentFields({
                 ajustar um detalhe.
               </p>
             )}
-            {a.version === 3 && (
+            {a.version >= 3 && (
               <>
                 <CriteriaFields
                   skill={event.skill}
@@ -348,8 +365,7 @@ export function AssessmentFields({
             )}
             {a.version >= 2 &&
               !(
-                a.version === 3 &&
-                ["reception", "defense"].includes(event.skill)
+                a.version >= 3 && ["reception", "defense"].includes(event.skill)
               ) && (
                 <label>
                   Execução individual · separada do placar
@@ -361,14 +377,14 @@ export function AssessmentFields({
                       delete criteria.blockQuality;
                       onChange({
                         ...event,
-                        ...(a.version === 3 && e.target.value === "error"
+                        ...(a.version >= 3 && e.target.value === "error"
                           ? { result: "simple_theirs", winner: undefined }
                           : {}),
                         assessment: {
                           ...a,
                           execution: (e.target.value ||
                             undefined) as typeof a.execution,
-                          ...(a.version === 3 ? { criteria } : {}),
+                          ...(a.version >= 3 ? { criteria } : {}),
                         },
                       });
                     }}
@@ -489,7 +505,7 @@ export function AssessmentFields({
                                     ...a,
                                     tags,
                                     group: undefined,
-                                    ...(a.version === 3
+                                    ...(a.version >= 3
                                       ? {
                                           criteria: {
                                             attackType: "tip" as const,
@@ -503,7 +519,7 @@ export function AssessmentFields({
                                   participants: undefined,
                                 });
                               } else if (
-                                a.version === 3 &&
+                                a.version >= 3 &&
                                 tags.includes(t.id) &&
                                 [
                                   "rule_fault",
@@ -696,7 +712,7 @@ export function AssessmentFields({
                       ))}
                     </select>
                   </label>
-                  {a.version === 3 && (
+                  {a.version >= 3 && (
                     <CriteriaFields
                       skill={p.skill ?? event.skill}
                       value={p.criteria}

@@ -182,7 +182,7 @@ export interface Result {
 }
 export interface SkillEvent {
   assessment?: {
-    version: 1 | 2 | 3;
+    version: 1 | 2 | 3 | 4;
     criteria?: AssessmentCriteria;
     difficultySource?: "manual" | "context";
     difficulty: "easy" | "normal" | "hard" | "emergency";
@@ -212,6 +212,7 @@ export interface SkillEvent {
 }
 export interface AssessmentCriteria {
   blockQuality?:
+    | "error"
     | "perfect"
     | "effective"
     | "simple"

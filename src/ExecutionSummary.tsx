@@ -21,7 +21,7 @@ export function ExecutionSummary({ events }: { events: SkillEvent[] }) {
         {Object.entries(difficultyLabels).map(([key, label]) => {
           const group = rows.filter(
             (e) =>
-              (e.assessment?.version === 3
+              ((e.assessment?.version ?? 0) >= 3
                 ? effectiveDifficulty(e)
                 : e.assessment?.tags.includes("save_extreme")
                   ? "emergency"
@@ -90,7 +90,7 @@ export function RatingGuide() {
                       skill: "attack",
                       result: "simple_good",
                       assessment: {
-                        version: 3,
+                        version: 4,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
@@ -103,7 +103,7 @@ export function RatingGuide() {
                       skill: "attack",
                       result: "simple_gafe",
                       assessment: {
-                        version: 3,
+                        version: 4,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
@@ -118,9 +118,10 @@ export function RatingGuide() {
       <p className="ui-note">
         A = perfeita para levantar; B = levantável com ajuste; C = ruim. Erro
         direto é separado de C. A dificuldade ajusta a execução, com influência
-        maior em defesa/ataque e menor no bloqueio; infração confirmada vale 0.
-        Ataque do fundo descreve a jogada, com dificuldade ajustável. Salvadas e
-        “tirou da cartola” não acumulam bônus.
+        maior em defesa/ataque e menor no bloqueio; toque na rede / infração de
+        bloqueio vale 0. Ataque do fundo descreve a jogada, com dificuldade
+        ajustável. Salvadas são descritas pela dificuldade de emergência, sem
+        bônus acumulados.
       </p>
       <p className="ui-note">
         Jogadas coletivas: cada participante recebe avaliação própria. Sem

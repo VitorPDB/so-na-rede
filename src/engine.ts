@@ -551,7 +551,7 @@ export interface StatsResult {
   rating: number | null;
   sample: string;
   provisional: boolean;
-  ratingVersion: "v2" | "v3" | "mixed" | "legacy";
+  ratingVersion: "v2" | "v3" | "v4" | "mixed" | "legacy";
   list: Metric[];
   best?: Metric;
   worst?: Metric;
@@ -696,9 +696,11 @@ export function stats(
       ? version2.length === observed.length
         ? new Set(observed.map((e) => e.assessment?.version)).size > 1
           ? "mixed"
-          : observed[0].assessment?.version === 3
-            ? "v3"
-            : "v2"
+          : observed[0].assessment?.version === 4
+            ? "v4"
+            : observed[0].assessment?.version === 3
+              ? "v3"
+              : "v2"
         : "mixed"
       : "legacy",
     list,

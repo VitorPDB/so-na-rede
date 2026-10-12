@@ -525,7 +525,7 @@ export function toggleTag(tags: string[], id: string) {
   ];
 }
 export const normalAssessment = (): NonNullable<SkillEvent["assessment"]> => ({
-  version: 3,
+  version: 4,
   difficultySource: "context",
   difficulty: "normal",
   tags: [],
@@ -544,7 +544,7 @@ export function assessmentError(
   if (a !== undefined) {
     if (
       !a ||
-      ![1, 2, 3].includes(a.version) ||
+      ![1, 2, 3, 4].includes(a.version) ||
       !Object.hasOwn(difficultyLabels, a.difficulty) ||
       !Array.isArray(a.tags) ||
       a.tags.length > 6
@@ -566,7 +566,7 @@ export function assessmentError(
       return "Avaliação da execução inválida.";
     if (a.criteria !== undefined || a.difficultySource !== undefined) {
       if (
-        a.version !== 3 ||
+        a.version < 3 ||
         (a.difficultySource !== undefined &&
           !["manual", "context"].includes(a.difficultySource))
       )
@@ -611,8 +611,7 @@ export function assessmentError(
       p.some(
         (x) =>
           x?.criteria !== undefined &&
-          (a.version !== 3 ||
-            criteriaError(x.skill ?? event.skill, x.criteria)),
+          (a.version < 3 || criteriaError(x.skill ?? event.skill, x.criteria)),
       )
     )
       return "Critérios de participante inválidos.";
@@ -673,6 +672,7 @@ export function assessmentError(
     return "Erro adversário não recebe nota individual.";
 }
 export function assessed(event: SkillEvent) {
+  if (event.assessment?.version === 4) return assessedV4(event);
   if (event.assessment?.version === 3) return assessedV3(event);
   if (event.assessment?.version === 2) return assessedV2(event);
   const r = resultOf(event),
@@ -744,6 +744,122 @@ export function assessed(event: SkillEvent) {
       responsibility !== "partial" &&
       r.winner === "ours" &&
       q > 0.5,
+    rated: true,
+  };
+}
+// Independent foundation model. Versions 1–3 keep their original calculations.
+export function assessedV4(event: SkillEvent) {
+  const a = event.assessment!,
+    r = resultOf(event),
+    c = a.criteria;
+  const empty = {
+    quality: 0.5,
+    error: false,
+    penalty: 0,
+    point: false,
+    rated: false,
+  };
+  if (
+    event.skill === "opponent" ||
+    a.responsibility === "none" ||
+    a.execution === "unrated" ||
+    c?.blockQuality === "unrated"
+  )
+    return empty;
+  const pass =
+    c?.passQuality ??
+    (event.result === "simple_A"
+      ? "A"
+      : event.result === "simple_B"
+        ? "B"
+        : event.result === "simple_C"
+          ? "C"
+          : undefined);
+  const execution =
+    a.execution ??
+    (a.responsibility === "wrong"
+      ? "poor"
+      : a.responsibility === "partial"
+        ? "neutral"
+        : event.result === "simple_gafe"
+          ? "poor"
+          : r.error
+            ? "error"
+            : r.winner === "ours"
+              ? "point"
+              : "good");
+  let value = {
+    error: 1,
+    poor: 3,
+    neutral: 5,
+    good: 7.5,
+    excellent: 9,
+    point: 9.5,
+    unrated: 5,
+  }[execution];
+  if (pass) value = { A: 9, B: 7.5, C: 3, error: 1 }[pass];
+  if (
+    event.skill === "block" &&
+    !c?.blockQuality &&
+    !a.responsibility &&
+    !a.execution
+  )
+    value =
+      r.error && event.result !== "simple_gafe"
+        ? 1
+        : r.winner === "ours"
+          ? 9.5
+          : event.result === "simple_gafe"
+            ? 2
+            : 8.5;
+  if (event.skill === "block" && c?.blockQuality)
+    value = {
+      perfect: 9.5,
+      error: 1,
+      effective: 8.5,
+      simple: 5.5,
+      direction: 7.5,
+      used: 4,
+      late: 2,
+      absent: 1,
+      gap: 2.5,
+      unrated: 5,
+    }[c.blockQuality];
+  const error =
+    pass === "error" ||
+    c?.blockQuality === "error" ||
+    (!pass && !c?.blockQuality && execution === "error");
+  const difficulty = effectiveDifficulty({
+    ...event,
+    assessment: { ...a, tags: [] },
+  });
+  const strength = {
+    defense: 1,
+    reception: 0.75,
+    attack: 1,
+    set: 0.75,
+    block: 0.5,
+    serve: 0.25,
+    opponent: 0,
+  }[event.skill];
+  const offset =
+    { easy: -1, normal: 0, hard: 1, emergency: 1.5 }[difficulty] * strength;
+  // Neutral execution stays neutral; difficulty cannot turn a gafe into a good action.
+  if (value !== 5) value += offset;
+  if (c?.blockQuality === "error") value = 0;
+  if (value < 5) value = Math.min(4.9, value);
+  if (event.skill === "attack" && c?.approach === "poor" && value > 5 && !error)
+    value -= 0.25;
+  return {
+    quality: Math.max(0, Math.min(10, value)) / 10,
+    error,
+    penalty: 0,
+    point:
+      (event.winner ?? r.winner) === "ours" &&
+      !error &&
+      value > 5 &&
+      a.responsibility !== "wrong" &&
+      a.responsibility !== "partial",
     rated: true,
   };
 }
@@ -1001,7 +1117,7 @@ export function playerEvents<T extends SkillEvent & { role?: Role }>(
         assessment: {
           ...e.assessment!,
           difficulty: p.difficulty ?? e.assessment!.difficulty,
-          ...(e.assessment!.version === 3
+          ...(e.assessment!.version >= 3
             ? {
                 difficultySource: p.difficulty
                   ? ("manual" as const)
@@ -1036,7 +1152,7 @@ export function assessmentText(e: SkillEvent) {
       ? executionLabels[e.assessment.execution]
       : undefined,
     difficultyLabels[
-      e.assessment.version === 3
+      e.assessment.version >= 3
         ? effectiveDifficulty(e)
         : e.assessment.difficulty
     ],

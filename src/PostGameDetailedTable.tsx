@@ -1,3 +1,4 @@
+import { postResults } from "./postgame";
 import { useMemo, useRef, useState } from "react";
 import { append, assignToZone, project } from "./engine";
 import { archiveGame } from "./career";
@@ -484,7 +485,12 @@ export function PostGameDetailed({
                                 event: {
                                   ...c.event,
                                   skill,
-                                  result: skills[skill].results[0].id,
+                                  result:
+                                    skill === "opponent"
+                                      ? "error"
+                                      : ["reception", "defense"].includes(skill)
+                                        ? "simple_B"
+                                        : "simple_good",
                                   playerId:
                                     skill === "opponent"
                                       ? undefined
@@ -535,9 +541,12 @@ export function PostGameDetailed({
                               })
                             }
                           >
-                            {skills[c.event.skill].results.map((r) => (
+                            {postResults(
+                              c.event.skill,
+                              "simple",
+                              c.event.assessment?.version,
+                            ).map((r) => (
                               <option key={r.id} value={r.id}>
-                                {r.id.startsWith("simple_") ? "Simples: " : ""}
                                 {r.label}
                               </option>
                             ))}

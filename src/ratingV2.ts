@@ -71,7 +71,8 @@ export function captureRatingContext(
   if ((event.assessment?.version ?? 0) < 2 || event.skill === "opponent")
     return event;
   if (
-    event.assessment?.version === 3 &&
+    event.assessment &&
+    event.assessment.version >= 3 &&
     event.skill === "serve" &&
     !event.assessment.criteria?.gameMoment
   ) {

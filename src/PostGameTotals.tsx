@@ -59,7 +59,7 @@ export function PostGameTotals({
       result,
       difficulty === "legacy" ? undefined : difficulty,
       situation,
-      game.ratingVersion === 3 && difficulty !== "legacy"
+      (game.ratingVersion ?? 0) >= 3 && difficulty !== "legacy"
         ? criteria
         : undefined,
       difficultySource,
@@ -71,7 +71,7 @@ export function PostGameTotals({
     [extraPlayer, setExtraPlayer] = useState(match.players[0].id);
   const index = Math.min(setIndex, game.sets.length - 1),
     set = game.sets[index];
-  const results = postResults(skill, game.mode);
+  const results = postResults(skill, game.mode, game.ratingVersion);
   const report = useMemo(
     () => postSummary(game, match, reportSet),
     [
@@ -150,19 +150,21 @@ export function PostGameTotals({
               <option value={3}>Melhor de 3</option>
             </select>
           </label>
-          <label>
-            Detalhamento
-            <select
-              disabled={hasCounts}
-              value={game.mode}
-              onChange={(e) =>
-                save({ ...game, mode: e.target.value as PostGame["mode"] })
-              }
-            >
-              <option value="simple">Simples · Bom / Gafe / Ponto</option>
-              <option value="advanced">Avançado · todas as qualidades</option>
-            </select>
-          </label>
+          {(game.ratingVersion ?? 0) < 4 && (
+            <label>
+              Detalhamento
+              <select
+                disabled={hasCounts}
+                value={game.mode}
+                onChange={(e) =>
+                  save({ ...game, mode: e.target.value as PostGame["mode"] })
+                }
+              >
+                <option value="simple">Simples · Bom / Gafe / Ponto</option>
+                <option value="advanced">Avançado · todas as qualidades</option>
+              </select>
+            </label>
+          )}
         </div>
         <div className="postgame-toolbar">
           {game.sets.map((_, i) => (
@@ -297,23 +299,25 @@ export function PostGameTotals({
               ))}
             </select>
           </label>
-          <label>
-            Situação específica
-            <select
-              value={situation}
-              disabled={difficulty === "legacy"}
-              onChange={(e) => setSituation(e.target.value)}
-            >
-              <option value="">Sem etiqueta</option>
-              {visibleTags(skill, game.ratingVersion ?? 1).map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {(game.ratingVersion ?? 0) < 4 && (
+            <label>
+              Situação específica
+              <select
+                value={situation}
+                disabled={difficulty === "legacy"}
+                onChange={(e) => setSituation(e.target.value)}
+              >
+                <option value="">Sem etiqueta</option>
+                {visibleTags(skill, game.ratingVersion ?? 1).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
-        {game.ratingVersion === 3 && difficulty !== "legacy" && (
+        {(game.ratingVersion ?? 0) >= 3 && difficulty !== "legacy" && (
           <details className="assessment-details">
             <summary>
               Critérios de{" "}
@@ -333,6 +337,7 @@ export function PostGameTotals({
             <CriteriaFields
               skill={skill}
               value={criteria}
+              hidePass={(game.ratingVersion ?? 0) >= 4}
               onChange={setCriteria}
             />
             <p className="ui-note">
