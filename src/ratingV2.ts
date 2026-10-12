@@ -68,8 +68,39 @@ export function captureRatingContext(
   state: Projection,
   event: SkillEvent,
 ): SkillEvent {
-  if (event.assessment?.version !== 2 || event.skill === "opponent")
+  if ((event.assessment?.version ?? 0) < 2 || event.skill === "opponent")
     return event;
+  if (
+    event.assessment?.version === 3 &&
+    event.skill === "serve" &&
+    !event.assessment.criteria?.gameMoment
+  ) {
+    const target = state.set === match.bestOf ? 15 : 25;
+    const afterTimeout = state.markers.some(
+      (m) =>
+        m.set === state.set &&
+        m.rally === state.rally &&
+        m.command.type === "timeout",
+    );
+    const decisive =
+      Math.max(...state.score) >= target - 1 ||
+      (Math.max(...state.score) >= target - 5 &&
+        Math.abs(state.score[0] - state.score[1]) <= 2);
+    event = {
+      ...event,
+      assessment: {
+        ...event.assessment,
+        criteria: {
+          ...event.assessment.criteria,
+          gameMoment: afterTimeout
+            ? "after-timeout"
+            : decisive
+              ? "decisive"
+              : "normal",
+        },
+      },
+    };
+  }
   return {
     ...event,
     ratingContext:

@@ -12,6 +12,7 @@ import {
   type Role,
   type Skill,
   type SkillEvent,
+  type AssessmentCriteria,
 } from "./model";
 
 export const postSkills = [
@@ -41,7 +42,7 @@ export interface PostSet {
   rows: PostRow[];
 }
 export interface PostGame {
-  ratingVersion?: 1 | 2;
+  ratingVersion?: 1 | 2 | 3;
   id: string;
   date: string;
   opponent: string;
@@ -54,8 +55,69 @@ export const countKey = (
   result: string,
   difficulty?: Difficulty,
   tag = "",
-) =>
-  `${skill}:${result}${difficulty ? ":" + difficulty + (tag ? ":" + tag : "") : ""}`;
+  criteria?: AssessmentCriteria,
+  difficultySource?: "manual" | "context",
+) => {
+  const ordered = criteria
+    ? Object.fromEntries(
+        Object.entries(criteria)
+          .filter(([, value]) => value !== undefined)
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+      )
+    : undefined;
+  const hasCriteria =
+    (ordered && Object.keys(ordered).length > 0) ||
+    (difficultySource === "manual" &&
+      ["magic", "save_hard", "save_extreme"].includes(tag));
+  let key = `${skill}:${result}`;
+  if (difficulty || hasCriteria) key += ":" + (difficulty ?? "normal");
+  if (tag || hasCriteria) key += ":" + tag;
+  if (hasCriteria)
+    key +=
+      ":" +
+      encodeURIComponent(
+        JSON.stringify({
+          criteria: ordered ?? {},
+          ...(difficultySource ? { difficultySource } : {}),
+        }),
+      );
+  return key;
+};
+export function cellAssessment(
+  game: PostGame,
+  key: string,
+): SkillEvent["assessment"] {
+  const [, , difficulty, tag, payload, extra] = key.split(":");
+  if (
+    extra !== undefined ||
+    (payload !== undefined && game.ratingVersion !== 3)
+  )
+    throw new Error("Critérios da célula inválidos.");
+  let detail: {
+    criteria?: AssessmentCriteria;
+    difficultySource?: "manual" | "context";
+  } = {};
+  if (payload !== undefined) {
+    detail = JSON.parse(decodeURIComponent(payload));
+    if (
+      !detail ||
+      typeof detail !== "object" ||
+      Array.isArray(detail) ||
+      Object.keys(detail).some(
+        (k) => !["criteria", "difficultySource"].includes(k),
+      )
+    )
+      throw new Error("Critérios inválidos.");
+  }
+  return difficulty || (game.ratingVersion ?? 0) >= 2
+    ? {
+        version: game.ratingVersion ?? 1,
+        difficulty: (difficulty ?? "normal") as Difficulty,
+        tags: tag ? [tag] : [],
+        ...detail,
+      }
+    : undefined;
+}
 export const postResults = (skill: Skill, mode: PostGame["mode"]) =>
   skills[skill].results.filter(
     (r) => r.id.startsWith("simple_") === (mode === "simple"),
@@ -100,7 +162,7 @@ export function emptyPostSet(match: Match): PostSet {
 }
 export function newPostGame(match: Match): PostGame {
   return {
-    ratingVersion: 2,
+    ratingVersion: 3,
     id: crypto.randomUUID(),
     date: new Date().toISOString(),
     opponent: "",
@@ -115,7 +177,10 @@ export function postGameErrors(
   final = false,
 ): string[] {
   const errors: string[] = [];
-  if (game?.ratingVersion !== undefined && ![1, 2].includes(game.ratingVersion))
+  if (
+    game?.ratingVersion !== undefined &&
+    ![1, 2, 3].includes(game.ratingVersion)
+  )
     return ["Versão de notas inválida."];
   if (
     !game ||
@@ -170,22 +235,23 @@ export function postGameErrors(
         return ["Jogador/função inválido ou duplicado."];
       ids.add(id);
       for (const [key, n] of Object.entries(row.counts)) {
-        const [skill, result, difficulty, tag, extra] = key.split(":");
+        const [skill, result] = key.split(":");
+        let assessment: SkillEvent["assessment"];
+        try {
+          assessment = cellAssessment(game, key);
+        } catch {
+          return ["Critérios da célula inválidos."];
+        }
         const definition =
           postSkills.includes(skill as (typeof postSkills)[number]) &&
           postResults(skill as Skill, game.mode).find((r) => r.id === result);
         if (
           !definition ||
-          extra !== undefined ||
-          (difficulty !== undefined &&
+          (assessment !== undefined &&
             assessmentError({
               skill: skill as Skill,
               result,
-              assessment: {
-                version: game.ratingVersion ?? 1,
-                difficulty: difficulty as Difficulty,
-                tags: tag ? [tag] : [],
-              },
+              assessment,
             })) ||
           !Number.isInteger(n) ||
           n < 0 ||
@@ -235,7 +301,7 @@ export function postEvents(game: PostGame, set = 0, match?: Match) {
             skill: skill as Skill,
             result,
             ratingContext:
-              game.ratingVersion === 2 && match
+              (game.ratingVersion ?? 0) >= 2 && match
                 ? {
                     source: "totals",
                     role: row.role,
@@ -250,14 +316,7 @@ export function postEvents(game: PostGame, set = 0, match?: Match) {
                     },
                   }
                 : undefined,
-            assessment:
-              difficulty || game.ratingVersion === 2
-                ? {
-                    version: game.ratingVersion ?? 1,
-                    difficulty: (difficulty ?? "normal") as Difficulty,
-                    tags: tag ? [tag] : [],
-                  }
-                : undefined,
+            assessment: cellAssessment(game, key),
           });
       }),
     );

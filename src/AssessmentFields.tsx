@@ -9,8 +9,11 @@ import {
   type Responsibility,
   assessed,
   executionLabels,
+  visibleTags,
 } from "./assessment";
 import { Photo } from "./PlayerProfile";
+import { CriteriaFields } from "./CriteriaFields";
+import { effectiveDifficulty, passLabels } from "./criteria";
 import {
   Circle,
   Gauge,
@@ -123,8 +126,11 @@ export function AssessmentFields({
     <section
       className={
         "assessment-fields" +
-        (a.version === 2 && event.skill === "attack"
+        (a.version >= 2 && event.skill === "attack"
           ? " has-attack-origin"
+          : "") +
+        (a.version === 3 && ["reception", "defense"].includes(event.skill)
+          ? " has-pass-quality"
           : "")
       }
       aria-label="Detalhes da execução"
@@ -143,8 +149,19 @@ export function AssessmentFields({
                   <button
                     key={id}
                     type="button"
-                    aria-pressed={a.difficulty === id}
-                    onClick={() => change({ difficulty: id as Difficulty })}
+                    aria-pressed={
+                      (a.version === 3
+                        ? effectiveDifficulty({ ...event, assessment: a })
+                        : a.difficulty) === id
+                    }
+                    onClick={() =>
+                      change({
+                        difficulty: id as Difficulty,
+                        ...(a.version === 3
+                          ? { difficultySource: "manual" as const }
+                          : {}),
+                      })
+                    }
                   >
                     <Icon size={18} aria-hidden="true" />
                     {label}
@@ -179,7 +196,7 @@ export function AssessmentFields({
               </label>
             )}
           </div>
-          {a.version === 2 && event.skill === "attack" && (
+          {a.version >= 2 && event.skill === "attack" && (
             <div
               className="block-group-buttons attack-origin-buttons"
               role="group"
@@ -204,6 +221,54 @@ export function AssessmentFields({
                 ))}
             </div>
           )}
+          {a.version === 3 &&
+            ["reception", "defense"].includes(event.skill) && (
+              <div
+                className="block-group-buttons pass-quality-buttons"
+                role="group"
+                aria-label="Qualidade do passe A B C"
+              >
+                {Object.entries(passLabels).map(([id, label]) => {
+                  const inferred =
+                    event.result === "simple_A"
+                      ? "A"
+                      : event.result === "simple_B"
+                        ? "B"
+                        : event.result === "simple_C"
+                          ? "C"
+                          : undefined;
+                  return (
+                    <button
+                      type="button"
+                      key={id}
+                      aria-label={label}
+                      aria-pressed={
+                        (a.criteria?.passQuality ?? inferred) === id
+                      }
+                      onClick={() =>
+                        onChange({
+                          ...event,
+                          ...(id === "error"
+                            ? { result: "simple_theirs", winner: undefined }
+                            : {}),
+                          assessment: {
+                            ...a,
+                            execution: undefined,
+                            criteria: {
+                              ...a.criteria,
+                              passQuality: id as "A" | "B" | "C" | "error",
+                            },
+                          },
+                        })
+                      }
+                    >
+                      <Target size={18} aria-hidden="true" />
+                      {id === "error" ? "Erro direto" : id}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           {compact && event.skill === "block" && (
             <div
               className="block-group-buttons"
@@ -245,35 +310,86 @@ export function AssessmentFields({
                 ajustar um detalhe.
               </p>
             )}
-            {a.version === 2 && (
-              <label>
-                Execução individual · separada do placar
-                <select
-                  value={a.execution ?? ""}
-                  onChange={(e) =>
+            {a.version === 3 && (
+              <>
+                <CriteriaFields
+                  skill={event.skill}
+                  value={a.criteria}
+                  hidePass
+                  onChange={(criteria) =>
                     change({
-                      execution: (e.target.value ||
-                        undefined) as typeof a.execution,
+                      criteria,
+                      ...(criteria.blockQuality !== a.criteria?.blockQuality
+                        ? { execution: undefined }
+                        : {}),
                     })
                   }
-                >
-                  <option value="">Conforme resultado e detalhes</option>
-                  {Object.entries(executionLabels).map(([id, label]) => (
-                    <option
-                      key={id}
-                      value={id}
-                      disabled={
-                        id === "point" &&
-                        event.winner !== "ours" &&
-                        resultOf(event).winner !== "ours"
-                      }
-                    >
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                />
+                <p className="ui-note">
+                  Qualidade é a base da nota. O contexto sugere a dificuldade,
+                  sem somar outro bônus pelo mesmo lance. Técnica, tipo e
+                  momento ficam registrados para análise.
+                </p>
+                {a.difficultySource === "manual" && (
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() =>
+                      change({
+                        difficulty: "normal",
+                        difficultySource: "context",
+                      })
+                    }
+                  >
+                    Usar dificuldade sugerida pelo contexto
+                  </button>
+                )}
+              </>
             )}
+            {a.version >= 2 &&
+              !(
+                a.version === 3 &&
+                ["reception", "defense"].includes(event.skill)
+              ) && (
+                <label>
+                  Execução individual · separada do placar
+                  <select
+                    value={a.execution ?? ""}
+                    onChange={(e) => {
+                      const criteria = { ...a.criteria };
+                      delete criteria.passQuality;
+                      delete criteria.blockQuality;
+                      onChange({
+                        ...event,
+                        ...(a.version === 3 && e.target.value === "error"
+                          ? { result: "simple_theirs", winner: undefined }
+                          : {}),
+                        assessment: {
+                          ...a,
+                          execution: (e.target.value ||
+                            undefined) as typeof a.execution,
+                          ...(a.version === 3 ? { criteria } : {}),
+                        },
+                      });
+                    }}
+                  >
+                    <option value="">Conforme resultado e detalhes</option>
+                    {Object.entries(executionLabels).map(([id, label]) => (
+                      <option
+                        key={id}
+                        value={id}
+                        disabled={
+                          id === "point" &&
+                          event.winner !== "ours" &&
+                          resultOf(event).winner !== "ours"
+                        }
+                      >
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
             {!compact && (
               <label>
                 Qualidade / resultado
@@ -324,7 +440,12 @@ export function AssessmentFields({
             {Object.entries(categories).map(
               ([category, { label, icon: CategoryIcon }]) => {
                 const options = tagsFor(event.skill).filter(
-                  (t) => t.category === category,
+                  (t) =>
+                    t.category === category &&
+                    (visibleTags(event.skill, a.version).some(
+                      (v) => v.id === t.id,
+                    ) ||
+                      a.tags.includes(t.id)),
                 );
                 if (!options.length) return null;
                 return (
@@ -350,7 +471,7 @@ export function AssessmentFields({
                             onClick={() => {
                               const tags = toggleTag(a.tags, t.id);
                               if (
-                                a.version === 2 &&
+                                a.version >= 2 &&
                                 t.id === "setter_tip" &&
                                 event.skill === "set" &&
                                 tags.includes(t.id)
@@ -364,10 +485,44 @@ export function AssessmentFields({
                                     : r.winner === "theirs"
                                       ? "error"
                                       : "simple_good",
-                                  assessment: { ...a, tags, group: undefined },
+                                  assessment: {
+                                    ...a,
+                                    tags,
+                                    group: undefined,
+                                    ...(a.version === 3
+                                      ? {
+                                          criteria: {
+                                            attackType: "tip" as const,
+                                          },
+                                          difficulty:
+                                            effectiveDifficulty(event),
+                                          difficultySource: "manual" as const,
+                                        }
+                                      : {}),
+                                  },
                                   participants: undefined,
                                 });
-                              } else change({ tags });
+                              } else if (
+                                a.version === 3 &&
+                                tags.includes(t.id) &&
+                                [
+                                  "rule_fault",
+                                  "out_fault",
+                                  "ugly_error",
+                                  "net_fault",
+                                ].includes(t.id)
+                              )
+                                onChange({
+                                  ...event,
+                                  result: "simple_theirs",
+                                  winner: undefined,
+                                  assessment: {
+                                    ...a,
+                                    tags,
+                                    execution: "error",
+                                  },
+                                });
+                              else change({ tags });
                             }}
                           >
                             <Icon size={20} aria-hidden="true" />
@@ -495,6 +650,7 @@ export function AssessmentFields({
                                       SkillEvent["skill"],
                                       "opponent"
                                     >,
+                                    criteria: undefined,
                                   }
                                 : x,
                             ),
@@ -540,6 +696,20 @@ export function AssessmentFields({
                       ))}
                     </select>
                   </label>
+                  {a.version === 3 && (
+                    <CriteriaFields
+                      skill={p.skill ?? event.skill}
+                      value={p.criteria}
+                      onChange={(criteria) =>
+                        onChange({
+                          ...event,
+                          participants: participants.map((x) =>
+                            x.playerId === p.playerId ? { ...x, criteria } : x,
+                          ),
+                        })
+                      }
+                    />
+                  )}
                 </details>
                 <label>
                   Execução

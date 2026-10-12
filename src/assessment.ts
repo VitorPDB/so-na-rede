@@ -1,5 +1,6 @@
 import { resultOf, type SkillEvent, type Skill, type Role } from "./model";
 import { contextError } from "./ratingV2";
+import { criteriaError, criteriaText, effectiveDifficulty } from "./criteria";
 export const difficultyLabels = {
   easy: "Fácil",
   normal: "Normal",
@@ -476,6 +477,43 @@ export const situations: Situation[] = [
 ];
 export const tagsFor = (skill: Skill) =>
   situations.filter((s) => s.skills.includes(skill));
+export function visibleTags(skill: Skill, version: number) {
+  if (version < 3) return tagsFor(skill);
+  return tagsFor(skill).filter((t) => {
+    if (t.category === "attack_origin" || t.category === "pressure")
+      return false;
+    if (t.category === "technique")
+      return [
+        "setter_tip",
+        "forced_tip",
+        "forced_attack",
+        "forced_up",
+      ].includes(t.id);
+    if (
+      ["reception", "defense", "block"].includes(skill) &&
+      t.category === "execution"
+    )
+      return ["rule_fault", "ugly_error"].includes(t.id);
+    if (t.category === "ball")
+      return [
+        "body",
+        "short",
+        "deep",
+        "seam",
+        "deflection",
+        "coverage",
+        "rescue_partner",
+        "reaction",
+        "off_net",
+        "low",
+        "tight",
+        "running",
+        "fast_middle",
+        "long_move",
+      ].includes(t.id);
+    return true;
+  });
+}
 export function toggleTag(tags: string[], id: string) {
   if (tags.includes(id)) return tags.filter((t) => t !== id);
   const category = situations.find((s) => s.id === id)?.category;
@@ -487,7 +525,8 @@ export function toggleTag(tags: string[], id: string) {
   ];
 }
 export const normalAssessment = (): NonNullable<SkillEvent["assessment"]> => ({
-  version: 2,
+  version: 3,
+  difficultySource: "context",
   difficulty: "normal",
   tags: [],
 });
@@ -499,13 +538,13 @@ export function assessmentError(
     contextError(event.ratingContext) ??
     event.participants?.map((p) => contextError(p.ratingContext)).find(Boolean);
   if (invalidContext) return invalidContext;
-  if (event.ratingContext && event.assessment?.version !== 2)
-    return "Contexto de nota exige avaliação v2.";
+  if (event.ratingContext && (event.assessment?.version ?? 0) < 2)
+    return "Contexto de nota exige avaliação v2 ou v3.";
   const a = event.assessment;
   if (a !== undefined) {
     if (
       !a ||
-      ![1, 2].includes(a.version) ||
+      ![1, 2, 3].includes(a.version) ||
       !Object.hasOwn(difficultyLabels, a.difficulty) ||
       !Array.isArray(a.tags) ||
       a.tags.length > 6
@@ -513,7 +552,7 @@ export function assessmentError(
       return "Dificuldade/contexto inválido.";
     if (
       a.execution !== undefined &&
-      (a.version !== 2 ||
+      (a.version < 2 ||
         ![
           "error",
           "poor",
@@ -525,6 +564,16 @@ export function assessmentError(
         ].includes(a.execution))
     )
       return "Avaliação da execução inválida.";
+    if (a.criteria !== undefined || a.difficultySource !== undefined) {
+      if (
+        a.version !== 3 ||
+        (a.difficultySource !== undefined &&
+          !["manual", "context"].includes(a.difficultySource))
+      )
+        return "Critérios exigem avaliação v3.";
+      const error = criteriaError(event.skill, a.criteria);
+      if (error) return error;
+    }
     if (
       a.execution === "point" &&
       event.winner !== "ours" &&
@@ -558,6 +607,15 @@ export function assessmentError(
     if (!a?.group || !Array.isArray(event.participants))
       return "Informe a jogada coletiva e seus participantes.";
     const p = event.participants;
+    if (
+      p.some(
+        (x) =>
+          x?.criteria !== undefined &&
+          (a.version !== 3 ||
+            criteriaError(x.skill ?? event.skill, x.criteria)),
+      )
+    )
+      return "Critérios de participante inválidos.";
     if (p.some((x) => !x || typeof x.playerId !== "string"))
       return "Participante inválido.";
     const size =
@@ -615,6 +673,7 @@ export function assessmentError(
     return "Erro adversário não recebe nota individual.";
 }
 export function assessed(event: SkillEvent) {
+  if (event.assessment?.version === 3) return assessedV3(event);
   if (event.assessment?.version === 2) return assessedV2(event);
   const r = resultOf(event),
     a = event.assessment;
@@ -687,6 +746,95 @@ export function assessed(event: SkillEvent) {
       q > 0.5,
     rated: true,
   };
+}
+export function assessedV3(event: SkillEvent) {
+  const a = event.assessment!,
+    c = a.criteria;
+  let execution = a.execution;
+  const pass =
+    c?.passQuality ??
+    (event.result === "simple_A"
+      ? "A"
+      : event.result === "simple_B"
+        ? "B"
+        : event.result === "simple_C"
+          ? "C"
+          : undefined);
+  if (!execution && pass)
+    execution =
+      pass === "A"
+        ? "excellent"
+        : pass === "B"
+          ? "good"
+          : pass === "C"
+            ? "poor"
+            : "error";
+  if (!execution && c?.blockQuality)
+    execution =
+      c.blockQuality === "unrated"
+        ? "unrated"
+        : c.blockQuality === "absent"
+          ? "error"
+          : ["used", "late", "gap"].includes(c.blockQuality)
+            ? "poor"
+            : c.blockQuality === "simple"
+              ? "neutral"
+              : c.blockQuality === "direction"
+                ? "good"
+                : "excellent";
+  const mapped = {
+    ...a,
+    version: 2 as const,
+    execution,
+    criteria: undefined,
+    difficultySource: undefined,
+    tags:
+      a.difficultySource === "manual"
+        ? a.tags.filter(
+            (t) => !["magic", "save_hard", "save_extreme"].includes(t),
+          )
+        : a.tags,
+  };
+  const actual = assessedV2({
+    ...event,
+    assessment: { ...mapped, difficulty: effectiveDifficulty(event) },
+  });
+  if (!actual.rated || event.skill === "serve") return actual;
+  const reference = assessedV2({
+    ...event,
+    assessment: {
+      ...mapped,
+      difficulty: "normal",
+      tags: a.tags.filter(
+        (t) => !["magic", "save_hard", "save_extreme"].includes(t),
+      ),
+    },
+  });
+  const factor = {
+    defense: 1,
+    reception: 0.75,
+    attack: 1,
+    set: 0.75,
+    block: 0.5,
+    opponent: 0,
+    serve: 0,
+  }[event.skill];
+  let quality =
+    reference.quality + factor * (actual.quality - reference.quality);
+  if (event.skill === "block" && c?.blockQuality && !a.execution) {
+    if (c.blockQuality === "perfect") quality += 0.05;
+    if (c.blockQuality === "used") quality += 0.1;
+    if (c.blockQuality === "late") quality -= 0.1;
+    if (c.blockQuality === "gap") quality -= 0.05;
+  }
+  if (
+    event.skill === "attack" &&
+    c?.approach === "poor" &&
+    quality > 0.5 &&
+    !actual.error
+  )
+    quality -= 0.025;
+  return { ...actual, quality: Math.max(0, Math.min(1, quality)) };
 }
 export const executionLabels = {
   error: "Erro direto",
@@ -853,9 +1001,21 @@ export function playerEvents<T extends SkillEvent & { role?: Role }>(
         assessment: {
           ...e.assessment!,
           difficulty: p.difficulty ?? e.assessment!.difficulty,
+          ...(e.assessment!.version === 3
+            ? {
+                difficultySource: p.difficulty
+                  ? ("manual" as const)
+                  : e.assessment!.difficultySource,
+              }
+            : {}),
           tags: primary ? e.assessment!.tags : [],
           responsibility: p.responsibility,
           execution: primary ? e.assessment!.execution : undefined,
+          criteria: p.criteria
+            ? { ...(primary ? e.assessment!.criteria : {}), ...p.criteria }
+            : primary
+              ? e.assessment!.criteria
+              : undefined,
         },
         ...(!primary
           ? {
@@ -871,10 +1031,15 @@ export function playerEvents<T extends SkillEvent & { role?: Role }>(
 export function assessmentText(e: SkillEvent) {
   if (!e.assessment) return "Registro anterior · sem contexto";
   return [
+    criteriaText(e.assessment.criteria),
     e.assessment.execution
       ? executionLabels[e.assessment.execution]
       : undefined,
-    difficultyLabels[e.assessment.difficulty],
+    difficultyLabels[
+      e.assessment.version === 3
+        ? effectiveDifficulty(e)
+        : e.assessment.difficulty
+    ],
     e.assessment.responsibility
       ? responsibilityLabels[e.assessment.responsibility]
       : undefined,

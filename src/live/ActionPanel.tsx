@@ -10,6 +10,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   Trophy,
+  Volleyball,
   type LucideIcon,
 } from "lucide-react";
 import { type Projection, type Side, type Skill, skills } from "../model";
@@ -70,6 +71,30 @@ export function ActionPanel({
           {simpleSkills.map((key, row) => {
             const Icon = skillIcons[key];
             const title = key === "attack" ? "Ataque" : skills[key].label;
+            const options =
+              key === "reception" || key === "defense"
+                ? [
+                    {
+                      id: "simple_A",
+                      label: "A",
+                      tone: "good",
+                      icon: ThumbsUp,
+                    },
+                    {
+                      id: "simple_B",
+                      label: "B",
+                      tone: "neutral",
+                      icon: Volleyball,
+                    },
+                    {
+                      id: "simple_C",
+                      label: "C",
+                      tone: "gafe",
+                      icon: ThumbsDown,
+                    },
+                    ...outcomes.slice(2),
+                  ]
+                : outcomes;
             return (
               <div
                 className="outcome-row"
@@ -81,7 +106,7 @@ export function ActionPanel({
                   <strong>{title}</strong>
                 </div>
                 <div className="outcome-buttons">
-                  {outcomes.map((o) => (
+                  {options.map((o) => (
                     <button
                       type="button"
                       key={o.id}

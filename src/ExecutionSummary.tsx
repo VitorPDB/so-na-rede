@@ -1,5 +1,6 @@
 import { assessed, difficultyLabels, type Difficulty } from "./assessment";
 import { type SkillEvent } from "./model";
+import { effectiveDifficulty } from "./criteria";
 export function ExecutionSummary({ events }: { events: SkillEvent[] }) {
   const rows = events.filter(
     (e) => e.skill !== "opponent" && e.assessment && assessed(e).rated,
@@ -20,12 +21,14 @@ export function ExecutionSummary({ events }: { events: SkillEvent[] }) {
         {Object.entries(difficultyLabels).map(([key, label]) => {
           const group = rows.filter(
             (e) =>
-              (e.assessment?.tags.includes("save_extreme")
-                ? "emergency"
-                : e.assessment?.tags.includes("save_hard") &&
-                    e.assessment.difficulty !== "emergency"
-                  ? "hard"
-                  : e.assessment?.difficulty) === key,
+              (e.assessment?.version === 3
+                ? effectiveDifficulty(e)
+                : e.assessment?.tags.includes("save_extreme")
+                  ? "emergency"
+                  : e.assessment?.tags.includes("save_hard") &&
+                      e.assessment.difficulty !== "emergency"
+                    ? "hard"
+                    : e.assessment?.difficulty) === key,
           );
           const value = group.length
             ? Math.round(
@@ -63,8 +66,8 @@ export function RatingGuide() {
         <div>
           <h2>Como dificuldade e execução entram na nota</h2>
           <p>
-            Versão 2: avaliação por ação de 0 a 10. Normal é o padrão; a
-            quantidade de ações indica a amostra, sem reduzir a nota.
+            Critérios por fundamento: avaliação por ação de 0 a 10. Normal é o
+            padrão; a quantidade de ações indica a amostra, sem reduzir a nota.
           </p>
         </div>
       </header>
@@ -87,7 +90,7 @@ export function RatingGuide() {
                       skill: "attack",
                       result: "simple_good",
                       assessment: {
-                        version: 2,
+                        version: 3,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
@@ -100,7 +103,7 @@ export function RatingGuide() {
                       skill: "attack",
                       result: "simple_gafe",
                       assessment: {
-                        version: 2,
+                        version: 3,
                         difficulty: id as Difficulty,
                         tags: [],
                       },
@@ -113,10 +116,11 @@ export function RatingGuide() {
         </table>
       </div>
       <p className="ui-note">
-        Continuidade neutra vale 5. Erro direto vale 0 / 1 / 2 / 3 conforme
-        dificuldade; infração confirmada vale 0. Ataque do fundo descreve a
-        jogada, com dificuldade ajustável. Salvadas e “tirou da cartola” não
-        acumulam bônus.
+        A = perfeita para levantar; B = levantável com ajuste; C = ruim. Erro
+        direto é separado de C. A dificuldade ajusta a execução, com influência
+        maior em defesa/ataque e menor no bloqueio; infração confirmada vale 0.
+        Ataque do fundo descreve a jogada, com dificuldade ajustável. Salvadas e
+        “tirou da cartola” não acumulam bônus.
       </p>
       <p className="ui-note">
         Jogadas coletivas: cada participante recebe avaliação própria. Sem
@@ -126,7 +130,9 @@ export function RatingGuide() {
       <p className="ui-note">
         Registros antigos mantêm a fórmula original. Jogos históricos já
         resumidos também mantêm suas notas. Uma partida com registros das duas
-        versões mostra avaliação mista.
+        versões mostra avaliação mista. Tipo de saque, técnica e direção são
+        informações de análise, sem bônus automático. O passe recebido
+        contextualiza o levantamento; a qualidade entregue é sua base.
       </p>
     </section>
   );

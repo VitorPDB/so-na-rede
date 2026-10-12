@@ -551,7 +551,7 @@ export interface StatsResult {
   rating: number | null;
   sample: string;
   provisional: boolean;
-  ratingVersion: "v2" | "mixed" | "legacy";
+  ratingVersion: "v2" | "v3" | "mixed" | "legacy";
   list: Metric[];
   best?: Metric;
   worst?: Metric;
@@ -670,9 +670,9 @@ export function stats(
   const ranked = [...available].sort(
     (a, b) => b.quality - a.quality || b.count - a.count,
   );
-  const version2 = observed.filter((e) => e.assessment?.version === 2);
+  const version2 = observed.filter((e) => (e.assessment?.version ?? 0) >= 2);
   if (version2.length) {
-    const legacy = observed.filter((e) => e.assessment?.version !== 2);
+    const legacy = observed.filter((e) => (e.assessment?.version ?? 0) < 2);
     const current = ratingV2(version2, weights, profiles);
     const old = legacy.length ? stats(legacy, weights, profiles).rating : null;
     rating =
@@ -694,7 +694,11 @@ export function stats(
     provisional: observed.length > 0 && observed.length < 5,
     ratingVersion: version2.length
       ? version2.length === observed.length
-        ? "v2"
+        ? new Set(observed.map((e) => e.assessment?.version)).size > 1
+          ? "mixed"
+          : observed[0].assessment?.version === 3
+            ? "v3"
+            : "v2"
         : "mixed"
       : "legacy",
     list,

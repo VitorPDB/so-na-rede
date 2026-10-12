@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { type Match, type Role, type Skill, roleLabels } from "./model";
+import {
+  type Match,
+  type Role,
+  type Skill,
+  type AssessmentCriteria,
+  roleLabels,
+} from "./model";
+import { CriteriaFields } from "./CriteriaFields";
 import { Photo } from "./PlayerProfile";
 import {
   archivePostGame,
@@ -13,10 +20,13 @@ import {
   postSummary,
   postDate,
   type PostGame,
+  cellAssessment,
 } from "./postgame";
 import { download } from "./storage";
 import { ExecutionSummary } from "./ExecutionSummary";
 import { difficultyLabels, tagsFor, type Difficulty } from "./assessment";
+import { visibleTags } from "./assessment";
+import { criteriaText } from "./criteria";
 
 export function PostGameTotals({
   match,
@@ -39,12 +49,20 @@ export function PostGameTotals({
       : "normal",
   );
   const [situation, setSituation] = useState("");
+  const [criteria, setCriteria] = useState<AssessmentCriteria>({});
+  const [difficultySource, setDifficultySource] = useState<
+    "manual" | "context"
+  >("context");
   const keyFor = (s: Skill, result: string) =>
     countKey(
       s,
       result,
       difficulty === "legacy" ? undefined : difficulty,
       situation,
+      game.ratingVersion === 3 && difficulty !== "legacy"
+        ? criteria
+        : undefined,
+      difficultySource,
     );
   const [setIndex, setSetIndex] = useState(0),
     [skill, setSkill] = useState<Skill>("attack"),
@@ -237,6 +255,8 @@ export function PostGameTotals({
               onClick={() => {
                 setSkill(s);
                 setSituation("");
+                setCriteria({});
+                setDifficultySource("context");
               }}
             >
               {
@@ -262,9 +282,10 @@ export function PostGameTotals({
             Dificuldade das bolas nesta tabela
             <select
               value={difficulty}
-              onChange={(e) =>
-                setDifficulty(e.target.value as Difficulty | "legacy")
-              }
+              onChange={(e) => {
+                setDifficulty(e.target.value as Difficulty | "legacy");
+                setDifficultySource("manual");
+              }}
             >
               <option value="legacy">
                 Sem contexto · registros anteriores
@@ -284,7 +305,7 @@ export function PostGameTotals({
               onChange={(e) => setSituation(e.target.value)}
             >
               <option value="">Sem etiqueta</option>
-              {tagsFor(skill).map((t) => (
+              {visibleTags(skill, game.ratingVersion ?? 1).map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
                 </option>
@@ -292,8 +313,36 @@ export function PostGameTotals({
             </select>
           </label>
         </div>
+        {game.ratingVersion === 3 && difficulty !== "legacy" && (
+          <details className="assessment-details">
+            <summary>
+              Critérios de{" "}
+              {skill === "set"
+                ? "levantamento"
+                : skill === "attack"
+                  ? "ataque"
+                  : skill === "reception"
+                    ? "recepção"
+                    : skill === "defense"
+                      ? "defesa"
+                      : skill === "serve"
+                        ? "saque"
+                        : "bloqueio"}{" "}
+              · filtro da tabela
+            </summary>
+            <CriteriaFields
+              skill={skill}
+              value={criteria}
+              onChange={setCriteria}
+            />
+            <p className="ui-note">
+              Cada combinação de critérios tem suas próprias quantidades.
+              Alterar o filtro mantém os outros registros.
+            </p>
+          </details>
+        )}
         <p className="muted">
-          Os números abaixo pertencem apenas à dificuldade e situação
+          Os números abaixo pertencem apenas à dificuldade, critérios e situação
           selecionadas. Alterar o filtro mantém os outros dados.{" "}
           {set.rows.reduce(
             (n, r) => n + Object.values(r.counts).reduce((a, b) => a + b, 0),
@@ -330,39 +379,40 @@ export function PostGameTotals({
                       </span>
                     </td>
                     <td>
-                      {game.ratingVersion === 2 && row.role === "middle" && (
-                        <label>
-                          Contexto
-                          <select
-                            aria-label={`Contexto ${player.name} linha ${rowIndex + 1}`}
-                            value={row.coverage ?? "standard"}
-                            onChange={(e) =>
-                              changeSet({
-                                ...set,
-                                rows: set.rows.map((r, i) =>
-                                  i === rowIndex
-                                    ? {
-                                        ...r,
-                                        coverage: e.target
-                                          .value as typeof r.coverage,
-                                      }
-                                    : r,
-                                ),
-                              })
-                            }
-                          >
-                            <option value="standard">
-                              Rede / contexto não informado
-                            </option>
-                            <option value="middle-backrow">
-                              Fundo · recepção e defesa
-                            </option>
-                            <option value="middle-no-pass">
-                              Fundo · apenas defesa
-                            </option>
-                          </select>
-                        </label>
-                      )}
+                      {(game.ratingVersion ?? 0) >= 2 &&
+                        row.role === "middle" && (
+                          <label>
+                            Contexto
+                            <select
+                              aria-label={`Contexto ${player.name} linha ${rowIndex + 1}`}
+                              value={row.coverage ?? "standard"}
+                              onChange={(e) =>
+                                changeSet({
+                                  ...set,
+                                  rows: set.rows.map((r, i) =>
+                                    i === rowIndex
+                                      ? {
+                                          ...r,
+                                          coverage: e.target
+                                            .value as typeof r.coverage,
+                                        }
+                                      : r,
+                                  ),
+                                })
+                              }
+                            >
+                              <option value="standard">
+                                Rede / contexto não informado
+                              </option>
+                              <option value="middle-backrow">
+                                Fundo · recepção e defesa
+                              </option>
+                              <option value="middle-no-pass">
+                                Fundo · apenas defesa
+                              </option>
+                            </select>
+                          </label>
+                        )}
                       <select
                         aria-label={`Função ${player.name} linha ${rowIndex + 1}`}
                         value={row.role}
@@ -507,7 +557,7 @@ export function PostGameTotals({
           >
             Adicionar outra função
           </button>
-          {game.ratingVersion === 2 && (
+          {(game.ratingVersion ?? 0) >= 2 && (
             <button
               className="button secondary"
               onClick={() => {
@@ -617,6 +667,7 @@ export function PostGameTotals({
                   "Quantidade",
                   "Dificuldade",
                   "Situação",
+                  "Critérios",
                 ],
               ];
               game.sets.forEach((s, i) => {
@@ -635,6 +686,7 @@ export function PostGameTotals({
                       String(n),
                       difficulty ?? "Sem contexto",
                       situation ?? "",
+                      criteriaText(cellAssessment(game, key)?.criteria),
                     ]);
                   }),
                 );
@@ -647,6 +699,7 @@ export function PostGameTotals({
                   "opponent",
                   "error",
                   String(s.opponentErrors),
+                  "",
                   "",
                   "",
                 ]);

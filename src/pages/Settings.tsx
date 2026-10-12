@@ -279,9 +279,9 @@ export function Settings({
           description="A função vem da formação, não do cadastro. Fundamentos sem ações não entram na nota."
         >
           <p className="ui-note">
-            Versão 2: média de qualidade, sem ações fictícias puxando a nota
-            para 5. Pesos e contexto ficam gravados em cada nova ação; registros
-            antigos mantêm sua avaliação.
+            Critérios por fundamento: média de qualidade, sem ações fictícias
+            puxando a nota para 5. Pesos e contexto ficam gravados em cada nova
+            ação; registros antigos mantêm sua avaliação.
           </p>
           <label className="ui-field">
             Central que permanece no fundo

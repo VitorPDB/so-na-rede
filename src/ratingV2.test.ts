@@ -5,13 +5,18 @@ import { append, correct, project, stats, undo } from "./engine";
 import {
   assessed,
   assessmentError,
-  normalAssessment,
+  normalAssessment as currentAssessment,
   playerEvents,
 } from "./assessment";
 import { contextFor, effectiveProfiles } from "./ratingV2";
 import { parseMatch } from "./storage";
 import { newPostGame, countKey, postGameErrors, postSummary } from "./postgame";
 import { publicSnapshot } from "./publicSnapshot";
+const normalAssessment = () => ({
+  difficulty: "normal" as const,
+  tags: [],
+  version: 2 as const,
+});
 const event = (
   result = "simple_good",
   patch: Partial<SkillEvent["assessment"]> = {},

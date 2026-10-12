@@ -783,7 +783,7 @@
 }
 .outcome-buttons {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
   gap: var(--sp-2);
 }
 @container (min-width: 440px) {
@@ -1135,18 +1135,50 @@
   display: none;
 }
 @media (min-width: 900px) {
-  .shell .player-chooser .assessment-fields.has-attack-origin {
+  .shell .player-chooser .assessment-fields.has-attack-origin,
+  .shell .player-chooser .assessment-fields.has-pass-quality {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--sp-2);
   }
   .shell .player-chooser .has-attack-origin .assessment-top,
+  .shell .player-chooser .has-pass-quality .assessment-top,
+  .shell .player-chooser .pass-quality-buttons,
   .shell .player-chooser .attack-origin-buttons {
     min-width: 0;
     margin: 0;
   }
   .shell .player-chooser .has-attack-origin .assessment-details {
     grid-column: 1 / -1;
+  }
+  .shell .player-chooser .has-pass-quality .assessment-details {
+    grid-column: 1 / -1;
+  }
+}
+.criteria-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.shell .player-chooser .pass-quality-buttons {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.criteria-fields label {
+  min-width: 0;
+}
+.criteria-fields label > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.criteria-fields small {
+  color: var(--c-text-muted);
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .criteria-fields {
+    grid-template-columns: 1fr;
   }
 }
 .shell .chooser-backdrop {

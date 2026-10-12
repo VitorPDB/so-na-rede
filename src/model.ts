@@ -182,7 +182,9 @@ export interface Result {
 }
 export interface SkillEvent {
   assessment?: {
-    version: 1 | 2;
+    version: 1 | 2 | 3;
+    criteria?: AssessmentCriteria;
+    difficultySource?: "manual" | "context";
     difficulty: "easy" | "normal" | "hard" | "emergency";
     tags: string[];
     group?: "combination" | "double" | "triple";
@@ -198,6 +200,7 @@ export interface SkillEvent {
     skill?: Exclude<Skill, "opponent">;
     difficulty?: "easy" | "normal" | "hard" | "emergency";
     ratingContext?: RatingContext;
+    criteria?: AssessmentCriteria;
   }[];
   playerId?: string;
   skill: Skill;
@@ -206,6 +209,29 @@ export interface SkillEvent {
   touch?: 1 | 2 | 3;
   videoTimestampMs?: number;
   winner?: Side;
+}
+export interface AssessmentCriteria {
+  blockQuality?:
+    | "perfect"
+    | "effective"
+    | "simple"
+    | "direction"
+    | "used"
+    | "late"
+    | "absent"
+    | "gap"
+    | "unrated";
+  passQuality?: "A" | "B" | "C" | "error";
+  technique?: "touch" | "bump" | "one-hand" | "emergency";
+  incomingBall?: "strong" | "long" | "tip" | "free" | "deflection";
+  receivedServe?: "underhand" | "float" | "jump";
+  serveType?: "underhand" | "float" | "jump" | "targeted";
+  gameMoment?: "normal" | "decisive" | "after-timeout" | "error-streak";
+  incomingSet?: "A" | "B" | "C";
+  attackType?: "power" | "tip" | "placed" | "tool" | "quick";
+  approach?: "good" | "adjusted" | "poor";
+  incomingPass?: "A" | "B" | "C";
+  setDirection?: "front" | "back" | "middle" | "backrow";
 }
 export type Command =
   | { type: "restartSet" }
@@ -471,6 +497,28 @@ for (const skill of [...simpleSkills, "defense" as const]) {
 }
 export function resultOf(event: SkillEvent) {
   return skills[event.skill].results.find((r) => r.id === event.result)!;
+}
+for (const skill of ["reception", "defense"] as const) {
+  skills[skill].results.push(
+    {
+      id: "simple_A",
+      label: "A · perfeita para levantar",
+      quality: 0.9,
+      ...(skill === "reception" ? { reception: 3 as const } : {}),
+    },
+    {
+      id: "simple_B",
+      label: "B · exige ajuste",
+      quality: 0.75,
+      ...(skill === "reception" ? { reception: 2 as const } : {}),
+    },
+    {
+      id: "simple_C",
+      label: "C · bola ruim",
+      quality: 0.3,
+      ...(skill === "reception" ? { reception: 1 as const } : {}),
+    },
+  );
 }
 export function newMatch(): Match {
   const roster: [string, number, string[]][] = [

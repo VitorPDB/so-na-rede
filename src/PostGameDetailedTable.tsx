@@ -515,6 +515,22 @@ export function PostGameDetailed({
                                   ...c.event,
                                   result: e.target.value,
                                   winner: undefined,
+                                  assessment: c.event.assessment
+                                    ? {
+                                        ...c.event.assessment,
+                                        execution: undefined,
+                                        criteria: c.event.assessment.criteria
+                                          ? Object.fromEntries(
+                                              Object.entries(
+                                                c.event.assessment.criteria,
+                                              ).filter(
+                                                ([key]) =>
+                                                  key !== "passQuality",
+                                              ),
+                                            )
+                                          : undefined,
+                                      }
+                                    : undefined,
                                 },
                               })
                             }

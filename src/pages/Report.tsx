@@ -63,10 +63,12 @@ export function Report({
     <div className="rp">
       <p className="ui-note">
         {collective.ratingVersion === "mixed"
-          ? "Avaliação mista: registros antigos mantêm a fórmula anterior; novas ações usam notas v2."
-          : collective.ratingVersion === "v2"
-            ? "Notas v2 · médias de qualidade. A amostra aparece separadamente e não reduz a nota."
-            : "Registros anteriores · fórmula original preservada."}
+          ? "Avaliação mista: registros antigos mantêm a fórmula anterior; novas ações usam os critérios por fundamento."
+          : collective.ratingVersion === "v3"
+            ? "Notas por fundamento · qualidade e dificuldade separadas. A/B/C não dependem da zona ou de um jogador específico."
+            : collective.ratingVersion === "v2"
+              ? "Notas v2 · médias de qualidade. A amostra aparece separadamente e não reduz a nota."
+              : "Registros anteriores · fórmula original preservada."}
       </p>
       <div className="an-toolbar">
         <div className="ui-chips" role="radiogroup" aria-label="Recorte">

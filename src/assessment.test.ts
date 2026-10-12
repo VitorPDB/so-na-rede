@@ -20,7 +20,8 @@ import { gameSnapshot } from "./career";
 import { publicSnapshot } from "./publicSnapshot";
 // These regression fixtures verify unchanged v1 semantics; v2 has its own tests.
 const normalAssessment = () => ({
-  ...currentAssessment(),
+  difficulty: "normal" as const,
+  tags: [],
   version: 1 as const,
 });
 const action = (
