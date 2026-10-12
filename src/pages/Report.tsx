@@ -12,6 +12,8 @@ import { playerEvents } from "../assessment";
 import { ExecutionSummary } from "../ExecutionSummary";
 import { Photo } from "../PlayerProfile";
 import { RatingBadge } from "../live/Insights";
+import { CriteriaReport } from "../CriteriaReport";
+import { criterionDistribution } from "../criteriaStats";
 
 export function Report({
   match,
@@ -37,6 +39,10 @@ export function Report({
   const rows = match.players
     .map((player) => ({
       player,
+      technique: criterionDistribution(
+        playerEvents(events, player.id),
+        "technique",
+      ),
       ...stats(
         playerEvents(events, player.id),
         match.weights,
@@ -180,6 +186,7 @@ export function Report({
                 ))}
                 <th scope="col">Melhor</th>
                 <th scope="col">Pior</th>
+                <th scope="col">Técnica mais usada</th>
               </tr>
             </thead>
             <tbody>
@@ -228,6 +235,17 @@ export function Report({
                     <strong>{row.worst?.label ?? "—"}</strong>
                     <small>{row.reason(row.worst)}</small>
                   </td>
+                  <td>
+                    <strong>
+                      {row.technique.leaders.map((r) => r.label).join(" / ") ||
+                        "Sem informação"}
+                    </strong>
+                    <small>
+                      {row.technique.known} informadas · {row.technique.missing}{" "}
+                      sem detalhe
+                      {row.technique.leaders.length > 1 ? " · empate" : ""}
+                    </small>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -236,6 +254,11 @@ export function Report({
       </section>
 
       <ExecutionSummary events={events} />
+      <CriteriaReport
+        events={events}
+        players={match.players}
+        period={set ? `Set ${set}` : "Jogo completo"}
+      />
 
       <div className="rp-bottom">
         <section className="ui-card">

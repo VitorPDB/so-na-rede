@@ -28,6 +28,8 @@ import { difficultyLabels, tagsFor, type Difficulty } from "./assessment";
 import { visibleTags } from "./assessment";
 import { criteriaText } from "./criteria";
 import { criteriaForResult } from "./actionQuality";
+import { CriteriaReport } from "./CriteriaReport";
+import { postEvents } from "./postgame";
 
 export function PostGameTotals({
   match,
@@ -906,6 +908,12 @@ export function PostGameTotals({
           </table>
         </div>
       </section>
+      <CriteriaReport
+        events={postEvents(game, reportSet, match)}
+        players={match.players}
+        title="Técnicas e contexto · pós-jogo"
+        period={reportSet ? `Set ${reportSet}` : "Jogo completo"}
+      />
     </div>
   );
 }
