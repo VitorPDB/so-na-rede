@@ -16,6 +16,8 @@ import { cloud } from "./cloud";
 import { usePublicLive, type PublicRow } from "./usePublicLive";
 import { usePublicHistory } from "./usePublicHistory";
 import { MatchVideoPlayer } from "./MatchVideos";
+import { CriteriaReport } from "./CriteriaReport";
+import { validCriteriaData } from "./criteriaStats";
 
 const grade = (n: number | null) => (n === null ? "—" : n.toFixed(1));
 export function PublicLive() {
@@ -67,6 +69,7 @@ export function PublicLive() {
     ? s?.periods?.find((p) => p.set === setFilter)
     : undefined;
   const periodAvailable = !setFilter || Boolean(period);
+  const technical = setFilter ? period?.technical : s?.technical;
   const players =
     s?.players.map((p) => ({
       ...p,
@@ -566,6 +569,25 @@ export function PublicLive() {
               </p>
             )}
           </section>
+          {validCriteriaData(technical) ? (
+            <CriteriaReport
+              key={s.matchId}
+              players={players}
+              aggregateData={technical}
+              period={scope}
+            />
+          ) : (
+            <section className="ui-card pub-section">
+              <header>
+                <h2>Como o time joga</h2>
+              </header>
+              <p className="ui-note">
+                Esta publicação ainda não inclui técnicas e contexto das ações.
+                Esses detalhes aparecem nas novas publicações feitas com o app
+                atualizado.
+              </p>
+            </section>
+          )}
           <section className="ui-card pub-section">
             <header>
               <div>

@@ -1,3 +1,4 @@
+import { validCriteriaData } from "./criteriaStats";
 import {
   type Match,
   type Command,
@@ -175,6 +176,8 @@ export function parseMatch(raw: string): Match {
         if (
           !publication ||
           publication.version !== 1 ||
+          (publication.technical !== undefined &&
+            !validCriteriaData(publication.technical)) ||
           publication.matchId !== game.id ||
           typeof publication.team !== "string" ||
           typeof publication.opponent !== "string" ||
@@ -184,6 +187,7 @@ export function parseMatch(raw: string): Match {
           publication.periods.some(
             (p) =>
               !p ||
+              (p.technical !== undefined && !validCriteriaData(p.technical)) ||
               !Number.isInteger(p.set) ||
               !validSummary(p.teamStats) ||
               !validPlayers(p.players),

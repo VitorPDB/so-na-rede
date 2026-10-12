@@ -147,3 +147,155 @@ export function criterionDistribution(events: SkillEvent[], key: string) {
     leaders: max ? rows.filter((r) => r.count === max) : [],
   };
 }
+export type CriteriaCube = {
+  skill: Skill;
+  key: string;
+  total: number;
+  rows: { id: string; count: number; rated: number; qualitySum: number }[];
+}[];
+export interface PublicCriteriaData {
+  version: 1;
+  team: CriteriaCube;
+  players: { id: string; data: CriteriaCube }[];
+}
+function criteriaCube(rows: SkillEvent[]): CriteriaCube {
+  return [...new Set(rows.map((e) => e.skill))].flatMap((skill) =>
+    analysisFields
+      .filter((f) => f.skills.includes(skill))
+      .map((f) => {
+        const data = criterionDistribution(
+          rows.filter((e) => e.skill === skill),
+          f.key,
+        );
+        return {
+          skill,
+          key: f.key,
+          total: data.total,
+          rows: data.rows
+            .filter((r) => r.count)
+            .map((r) => ({
+              id: r.id,
+              count: r.count,
+              rated: r.rated,
+              qualitySum: ((r.rating ?? 0) * r.rated) / 10,
+            })),
+        };
+      }),
+  );
+}
+export function criteriaPublication(
+  events: SkillEvent[],
+  playerIds: string[],
+): PublicCriteriaData {
+  return {
+    version: 1,
+    team: criteriaCube(analysisParticipations(events)),
+    players: playerIds.map((id) => ({
+      id,
+      data: criteriaCube(analysisParticipations(events, id)),
+    })),
+  };
+}
+export function distributionFromCube(
+  cube: CriteriaCube,
+  key: string,
+  skill: Skill | "all" = "all",
+): ReturnType<typeof criterionDistribution> {
+  const base = criterionDistribution([], key);
+  const selected = cube.filter(
+    (c) => c.key === key && (skill === "all" || c.skill === skill),
+  );
+  const total = selected.reduce((n, c) => n + c.total, 0);
+  const sums = base.rows.map((r) => {
+    const matching = selected.flatMap((c) =>
+      c.rows.filter((row) => row.id === r.id),
+    );
+    const count = matching.reduce((n, v) => n + v.count, 0),
+      rated = matching.reduce((n, v) => n + v.rated, 0),
+      sum = matching.reduce((n, v) => n + v.qualitySum, 0);
+    return { ...r, count, rated, rating: rated ? (10 * sum) / rated : null };
+  });
+  const known = sums.reduce((n, r) => n + r.count, 0),
+    max = Math.max(0, ...sums.map((r) => r.count));
+  const rows = sums.map((r) => ({
+    ...r,
+    percent: known ? (100 * r.count) / known : 0,
+  }));
+  return {
+    ...base,
+    total,
+    known,
+    missing: total - known,
+    coverage: total ? (100 * known) / total : 0,
+    rows,
+    leaders: max ? rows.filter((r) => r.count === max) : [],
+  };
+}
+export function validCriteriaData(value: unknown): value is PublicCriteriaData {
+  const cube = (input: unknown) => {
+    if (!Array.isArray(input) || input.length > analysisFields.length * 6)
+      return false;
+    const seen = new Set<string>();
+    return input.every((c) => {
+      const field = analysisFields.find(
+        (f) => f.key === c?.key && f.skills.includes(c?.skill),
+      );
+      const key = `${c?.skill}:${c?.key}`;
+      if (
+        !field ||
+        seen.has(key) ||
+        !Number.isInteger(c.total) ||
+        c.total < 0 ||
+        c.total > 1_000_000 ||
+        !Array.isArray(c.rows) ||
+        c.rows.length > Object.keys(field.options).length
+      )
+        return false;
+      seen.add(key);
+      const ids = new Set<string>();
+      return (
+        c.rows.every((r: CriteriaCube[number]["rows"][number]) => {
+          if (
+            !r ||
+            !Object.hasOwn(field.options, r.id) ||
+            ids.has(r.id) ||
+            !Number.isInteger(r.count) ||
+            r.count <= 0 ||
+            r.count > c.total ||
+            !Number.isInteger(r.rated) ||
+            r.rated < 0 ||
+            r.rated > r.count ||
+            !Number.isFinite(r.qualitySum) ||
+            r.qualitySum < 0 ||
+            r.qualitySum > r.rated + 1e-6
+          )
+            return false;
+          ids.add(r.id);
+          return true;
+        }) &&
+        c.rows.reduce(
+          (n: number, r: CriteriaCube[number]["rows"][number]) => n + r.count,
+          0,
+        ) <= c.total
+      );
+    });
+  };
+  if (!value || typeof value !== "object") return false;
+  const v = value as PublicCriteriaData;
+  if (
+    v.version !== 1 ||
+    !cube(v.team) ||
+    !Array.isArray(v.players) ||
+    v.players.length > 100
+  )
+    return false;
+  const ids = new Set<string>();
+  return v.players.every(
+    (p) =>
+      p &&
+      typeof p.id === "string" &&
+      !ids.has(p.id) &&
+      cube(p.data) &&
+      Boolean(ids.add(p.id)),
+  );
+}

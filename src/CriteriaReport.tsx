@@ -11,6 +11,8 @@ import {
   analysisParticipations,
   analysisFields,
   criterionDistribution,
+  distributionFromCube,
+  type PublicCriteriaData,
 } from "./criteriaStats";
 import { download, csv } from "./storage";
 type Distribution = ReturnType<typeof criterionDistribution>;
@@ -65,17 +67,19 @@ function DistributionCard({ data }: { data: Distribution }) {
   );
 }
 export function CriteriaReport({
-  events,
+  events = [],
   players,
   title = "Como o time joga",
   fixedPlayer,
   period = "Partida atual",
+  aggregateData,
 }: {
-  events: SkillEvent[];
-  players: Player[];
+  events?: SkillEvent[];
+  players: Pick<Player, "id" | "name" | "number">[];
   title?: string;
   fixedPlayer?: string;
   period?: string;
+  aggregateData?: PublicCriteriaData;
 }) {
   const [player, setPlayer] = useState("");
   const [skill, setSkill] = useState<Skill | "all">("all");
@@ -90,9 +94,18 @@ export function CriteriaReport({
   const fields = analysisFields.filter(
     (f) => skill === "all" || f.skills.includes(skill),
   );
-  const data = fields.map((f) => criterionDistribution(rows, f.key));
-  const technique = criterionDistribution(
-    rows,
+  const distribution = (key: string) =>
+    aggregateData
+      ? distributionFromCube(
+          id
+            ? (aggregateData.players.find((p) => p.id === id)?.data ?? [])
+            : aggregateData.team,
+          key,
+          skill,
+        )
+      : criterionDistribution(rows, key);
+  const data = fields.map((f) => distribution(f.key));
+  const technique = distribution(
     skill === "attack"
       ? "attackType"
       : skill === "serve"
@@ -111,8 +124,8 @@ export function CriteriaReport({
           : skill === "block"
             ? "group"
             : "passQuality";
-  const pass = criterionDistribution(rows, passKey);
-  const difficulty = criterionDistribution(rows, "difficulty");
+  const pass = distribution(passKey);
+  const difficulty = distribution("difficulty");
   const headline = (d: Distribution) =>
     d.leaders.length
       ? d.leaders.map((r) => r.label).join(" / ")
@@ -262,7 +275,8 @@ export function CriteriaReport({
           <span>Dificuldade mais frequente</span>
           <strong>{headline(difficulty)}</strong>
           <small>
-            {rows.length} participações · {difficulty.missing} sem dificuldade
+            {difficulty.total} participações · {difficulty.missing} sem
+            dificuldade
           </small>
         </div>
       </div>

@@ -1,3 +1,13 @@
+import {
+  criteriaPublication,
+  distributionFromCube,
+  validCriteriaData,
+  analysisFields,
+} from "./criteriaStats";
+import { publicSnapshot } from "./publicSnapshot";
+import { archiveGame } from "./career";
+import { parseMatch } from "./storage";
+
 import test from "node:test";
 import assert from "node:assert/strict";
 import { type SkillEvent, newMatch } from "./model";
@@ -147,5 +157,103 @@ test("totais, correção e desfazer atualizam a distribuição", () => {
   assert.equal(
     criterionDistribution(project(undo(one)).events, "technique").known,
     0,
+  );
+});
+
+test("público recebe agregados equivalentes, sem eventos privados ou média de médias", () => {
+  const rows = [
+    event("touch"),
+    event("bump"),
+    event("bump", "simple_gafe"),
+    event(),
+  ];
+  const pub = criteriaPublication(rows, ["p1", "p2"]);
+  assert(validCriteriaData(pub));
+  for (const field of analysisFields) {
+    const actual = distributionFromCube(pub.team, field.key),
+      expected = criterionDistribution(analysisParticipations(rows), field.key);
+    assert.equal(actual.total, expected.total);
+    assert.equal(actual.known, expected.known);
+    assert.equal(actual.missing, expected.missing);
+    actual.rows.forEach((r, i) => {
+      assert.equal(r.count, expected.rows[i].count);
+      assert.equal(r.percent, expected.rows[i].percent);
+      assert(
+        Math.abs((r.rating ?? 0) - (expected.rows[i].rating ?? 0)) < 1e-10,
+      );
+    });
+  }
+  assert.equal(distributionFromCube(pub.players[1].data, "technique").known, 0);
+  for (const c of pub.team) {
+    assert.deepEqual(Object.keys(c).sort(), ["key", "rows", "skill", "total"]);
+    for (const r of c.rows)
+      assert.deepEqual(Object.keys(r).sort(), [
+        "count",
+        "id",
+        "qualitySum",
+        "rated",
+      ]);
+  }
+  assert.equal(
+    validCriteriaData({ ...pub, team: [...pub.team, pub.team[0]] }),
+    false,
+  );
+  const invalid = structuredClone(pub);
+  invalid.team[0].rows[0].qualitySum = Infinity;
+  assert.equal(validCriteriaData(invalid), false);
+});
+test("publicação separa sets/jogadores, persiste no histórico e corrige/desfaz técnicas", () => {
+  let m = append(newMatch(), { type: "event", event: event("touch") });
+  const original = m;
+  while (!project(m).setFinished)
+    m = append(m, { type: "point", winner: "ours" });
+  m = append(m, {
+    type: "nextSet",
+    lineup: m.initialLineup,
+    roles: m.initialRoles,
+    server: "ours",
+  });
+  m = append(m, { type: "event", event: { ...event("bump"), playerId: "p2" } });
+  const s = publicSnapshot(m);
+  assert(validCriteriaData(s.technical));
+  assert.equal(
+    distributionFromCube(s.periods[0].technical!.team, "technique").leaders[0]
+      .id,
+    "touch",
+  );
+  assert.equal(
+    distributionFromCube(s.periods[1].technical!.team, "technique").leaders[0]
+      .id,
+    "bump",
+  );
+  assert.equal(
+    distributionFromCube(
+      s.periods[1].technical!.players.find((p) => p.id === "p1")!.data,
+      "technique",
+    ).known,
+    0,
+  );
+  const restored = parseMatch(
+    JSON.stringify({ ...newMatch(), history: archiveGame(m) }),
+  );
+  assert(validCriteriaData(restored.history![0].publicData!.technical));
+  const changed = correct(
+    original,
+    original.audit[0].id,
+    event("bump"),
+    "motivo privado",
+  );
+  assert.equal(
+    distributionFromCube(publicSnapshot(changed).technical!.team, "technique")
+      .leaders[0].id,
+    "bump",
+  );
+  assert(!JSON.stringify(publicSnapshot(changed)).includes("motivo privado"));
+  assert.equal(
+    distributionFromCube(
+      publicSnapshot(undo(changed)).technical!.team,
+      "technique",
+    ).leaders[0].id,
+    "touch",
   );
 });
