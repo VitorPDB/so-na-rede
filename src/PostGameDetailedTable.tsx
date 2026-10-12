@@ -531,7 +531,8 @@ export function PostGameDetailed({
                                                 c.event.assessment.criteria,
                                               ).filter(
                                                 ([key]) =>
-                                                  key !== "passQuality",
+                                                  key !== "passQuality" &&
+                                                  key !== "blockQuality",
                                               ),
                                             )
                                           : undefined,

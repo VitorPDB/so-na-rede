@@ -4,9 +4,9 @@ Branch: `codex/notas-abc-fundamentos`. Novas ações e fichas de pós-jogo usam 
 
 ## Interface
 
-A ação continua sendo escolhida antes do jogador. Qualidade e dificuldade ficam à vista; os outros critérios estão no dropdown “Contexto do lance”. Foram retirados da ficha nova o catálogo de etiquetas, o seletor duplicado de resultado/execução e a responsabilidade individual genérica. Bloqueios simples, duplos e triplos e a responsabilidade de cada participante continuam disponíveis.
+A ação continua sendo escolhida antes do jogador. Qualidade e dificuldade ficam à vista; os outros critérios estão nas seções expansíveis de “Contexto do lance”. Bom exibe somente qualidades positivas; Gafe, qualidades ruins que continuam o rally. Recepção e defesa usam Bom com A/B (B como padrão), Gafe com C e erro direto separado. O contexto recebido continua livre: um levantamento Bom pode vir de passe C. Foram retirados da ficha nova o catálogo de etiquetas, o seletor duplicado de resultado/execução e a responsabilidade individual genérica. Bloqueios simples, duplos e triplos e a responsabilidade de cada participante continuam disponíveis.
 
-Os seletores têm fundo escuro, borda discreta, indicador de abertura, foco visível e alvo mínimo de 56 px. A lista de opções usa o seletor nativo do dispositivo, permitindo uso por teclado e leitor de tela.
+Os detalhes usam seções expansíveis e cartões com ícones, borda discreta e seleção destacada. Qualidade e dificuldade ficam acessíveis no topo. Os controles têm foco visível, navegação por teclado e alvo mínimo de 56 px; as cores usam os tokens dos temas existentes.
 
 | Fundamento | Qualidade principal | Contexto |
 |---|---|---|

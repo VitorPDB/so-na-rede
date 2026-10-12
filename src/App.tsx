@@ -1,3 +1,4 @@
+import { initialAssessment } from "./actionQuality";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight,
@@ -53,7 +54,6 @@ import { CloudPanel, usePublication } from "./CloudPanel";
 import { PostGameView } from "./PostGameView";
 import {
   playerEvents,
-  normalAssessment,
   assessmentText,
   difficultyLabels,
   responsibilityLabels,
@@ -303,7 +303,8 @@ export default function App() {
     const event: SkillEvent = {
       skill: key,
       result,
-      assessment: key === "opponent" ? undefined : normalAssessment(),
+      assessment:
+        key === "opponent" ? undefined : initialAssessment(key, result),
     };
 
     if (key === "opponent") {
@@ -1326,9 +1327,27 @@ export default function App() {
                                 RESULTADO
                                 <select
                                   value={editResult}
-                                  onChange={(ev) =>
-                                    setEditResult(ev.target.value)
-                                  }
+                                  onChange={(ev) => {
+                                    setEditResult(ev.target.value);
+                                    if (
+                                      editDetails?.assessment?.version === 4
+                                    ) {
+                                      const criteria = {
+                                        ...editDetails.assessment.criteria,
+                                      };
+                                      delete criteria.passQuality;
+                                      delete criteria.blockQuality;
+                                      setEditDetails({
+                                        ...editDetails,
+                                        result: ev.target.value,
+                                        assessment: {
+                                          ...editDetails.assessment,
+                                          execution: undefined,
+                                          criteria,
+                                        },
+                                      });
+                                    }
+                                  }}
                                 >
                                   {skills[activeEvent!.skill].results.map(
                                     (r) => (

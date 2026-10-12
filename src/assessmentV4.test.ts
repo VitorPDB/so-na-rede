@@ -11,6 +11,11 @@ import { append, project, stats, undo } from "./engine";
 import { parseMatch } from "./storage";
 import { effectiveProfiles } from "./ratingV2";
 import { newPostGame, countKey, postEvents, postResults } from "./postgame";
+import {
+  compatibleQuality,
+  initialAssessment,
+  criteriaForResult,
+} from "./actionQuality";
 const event = (
   skill: SkillEvent["skill"],
   result = "simple_good",
@@ -62,6 +67,7 @@ test("v4 substitui etiquetas por qualidade: gafe continua e difícil cobra menos
       assessment: { ...at.assessment!, tags: ["magic", "ugly_error"] },
     }),
   );
+
   assert.equal(
     assessed({
       ...at,
@@ -121,7 +127,7 @@ test("v4 pós-jogo usa ficha nova, mantém critérios no backup e oculta resulta
   assert.equal(game.ratingVersion, 4);
   assert.deepEqual(
     postResults("reception", "advanced", 4).map((r) => r.id),
-    ["simple_ours", "simple_theirs", "simple_A", "simple_B", "simple_C"],
+    ["simple_good", "simple_gafe", "simple_ours", "simple_theirs"],
   );
   const key = countKey(
     "set",
@@ -137,4 +143,65 @@ test("v4 pós-jogo usa ficha nova, mantém critérios no backup e oculta resulta
   assert.equal(row.assessment?.version, 4);
   assert.equal(assessmentError(row), undefined);
   assert.equal(assessed(row).quality, 0.375);
+});
+
+test("Bom/Gafe limita qualidades da própria execução sem limitar a bola recebida", () => {
+  const options = {
+    good: "Boa",
+    excellent: "Excelente",
+    poor: "Gafe",
+    error: "Erro direto",
+    point: "Ponto",
+  };
+  assert.deepEqual(
+    Object.keys(compatibleQuality(event("set"), "execution", options)),
+    ["good", "excellent"],
+  );
+  assert.deepEqual(
+    Object.keys(
+      compatibleQuality(event("set", "simple_gafe"), "execution", options),
+    ),
+    ["poor"],
+  );
+  for (const skill of ["reception", "defense"] as const) {
+    const good = {
+      ...event(skill),
+      assessment: initialAssessment(skill, "simple_good"),
+    };
+    const gafe = {
+      ...event(skill, "simple_gafe"),
+      assessment: initialAssessment(skill, "simple_gafe"),
+    };
+    assert.equal(good.assessment.criteria?.passQuality, "B");
+    assert.equal(gafe.assessment.criteria?.passQuality, "C");
+    assert.equal(assessed(gafe).error, false);
+    assert.deepEqual(
+      Object.keys(
+        compatibleQuality(good, "passQuality", {
+          A: "A",
+          B: "B",
+          C: "C",
+          error: "Erro",
+        }),
+      ),
+      ["A", "B"],
+    );
+    assert.deepEqual(
+      criteriaForResult(skill, "simple_gafe", { passQuality: "A" }),
+      {},
+    );
+  }
+  assert.deepEqual(
+    criteriaForResult("block", "simple_good", { blockQuality: "late" }),
+    {},
+  );
+  const set = {
+    ...event("set"),
+    assessment: {
+      ...normalAssessment(),
+      criteria: { incomingPass: "C" as const },
+    },
+  };
+  assert.equal(assessmentError(set), undefined);
+  assert(assessed(set).quality > 0.75);
 });

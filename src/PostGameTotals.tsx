@@ -27,6 +27,7 @@ import { ExecutionSummary } from "./ExecutionSummary";
 import { difficultyLabels, tagsFor, type Difficulty } from "./assessment";
 import { visibleTags } from "./assessment";
 import { criteriaText } from "./criteria";
+import { criteriaForResult } from "./actionQuality";
 
 export function PostGameTotals({
   match,
@@ -60,7 +61,9 @@ export function PostGameTotals({
       difficulty === "legacy" ? undefined : difficulty,
       situation,
       (game.ratingVersion ?? 0) >= 3 && difficulty !== "legacy"
-        ? criteria
+        ? game.ratingVersion === 4
+          ? criteriaForResult(s, result, criteria)
+          : criteria
         : undefined,
       difficultySource,
     );
@@ -72,6 +75,23 @@ export function PostGameTotals({
   const index = Math.min(setIndex, game.sets.length - 1),
     set = game.sets[index];
   const results = postResults(skill, game.mode, game.ratingVersion);
+  if (game.ratingVersion === 4) {
+    for (const result of postResults(skill, "simple", 3)) {
+      if (
+        !results.some((r) => r.id === result.id) &&
+        game.sets.some((s) =>
+          s.rows.some((r) =>
+            Object.keys(r.counts).some(
+              (k) =>
+                k.startsWith(`${skill}:${result.id}:`) ||
+                k === `${skill}:${result.id}`,
+            ),
+          ),
+        )
+      )
+        results.push(result);
+    }
+  }
   const report = useMemo(
     () => postSummary(game, match, reportSet),
     [
@@ -337,7 +357,12 @@ export function PostGameTotals({
             <CriteriaFields
               skill={skill}
               value={criteria}
-              hidePass={(game.ratingVersion ?? 0) >= 4}
+              event={
+                game.ratingVersion === 4 &&
+                ["reception", "defense"].includes(skill)
+                  ? { skill, result: "simple_good" }
+                  : undefined
+              }
               onChange={setCriteria}
             />
             <p className="ui-note">

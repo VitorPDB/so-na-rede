@@ -126,20 +126,9 @@ export const postResults = (
   skills[skill].results.filter((r) =>
     version >= 4
       ? skill === "opponent" ||
-        (["reception", "defense"].includes(skill)
-          ? [
-              "simple_A",
-              "simple_B",
-              "simple_C",
-              "simple_ours",
-              "simple_theirs",
-            ].includes(r.id)
-          : [
-              "simple_good",
-              "simple_gafe",
-              "simple_ours",
-              "simple_theirs",
-            ].includes(r.id))
+        ["simple_good", "simple_gafe", "simple_ours", "simple_theirs"].includes(
+          r.id,
+        )
       : r.id.startsWith("simple_") === (mode === "simple"),
   );
 export function emptyPostSet(match: Match): PostSet {

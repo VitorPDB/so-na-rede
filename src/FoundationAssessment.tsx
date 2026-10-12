@@ -1,10 +1,16 @@
 import { AssessmentSelect } from "./AssessmentSelect";
-import { Gauge, Target, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import type { ReactNode } from "react";
-import { type Match, type SkillEvent, resultOf } from "./model";
+import { type Match, type SkillEvent } from "./model";
 import { assessed, difficultyLabels } from "./assessment";
 import { CriteriaFields } from "./CriteriaFields";
 import { effectiveDifficulty } from "./criteria";
+import {
+  blockFor,
+  executionFor,
+  passFor,
+  compatibleQuality,
+} from "./actionQuality";
 
 export function FoundationAssessment({
   event,
@@ -18,16 +24,6 @@ export function FoundationAssessment({
 }) {
   const a = event.assessment!;
   const pass = ["reception", "defense"].includes(event.skill);
-  const r = resultOf(event);
-  const execution =
-    a.execution ??
-    (event.result === "simple_gafe"
-      ? "poor"
-      : r.error
-        ? "error"
-        : r.winner === "ours"
-          ? "point"
-          : "good");
   const change = (patch: Partial<typeof a>) =>
     onChange({ ...event, assessment: { ...a, ...patch } });
   const groupOptions: Record<string, string> =
@@ -38,59 +34,46 @@ export function FoundationAssessment({
           triple: "Triplo · 3 jogadores",
         }
       : { "": "Individual", combination: "Jogada ensaiada · 2 a 6 jogadores" };
+  const setGroup = (value: string) =>
+    onChange({
+      ...event,
+      assessment: {
+        ...a,
+        ...(event.skill === "block"
+          ? { criteria: { ...a.criteria, blockQuality: blockFor(event) } }
+          : {}),
+        group: (value || undefined) as typeof a.group,
+      },
+      participants: value
+        ? event.playerId
+          ? [{ playerId: event.playerId, responsibility: "correct" }]
+          : []
+        : undefined,
+    });
   const grade = assessed(event);
   return (
     <section className="foundation-assessment" aria-label="Ficha do fundamento">
       <div className="foundation-core">
         <div className="foundation-quality">
-          <span className="ui-eyebrow">
-            <Target size={16} /> Qualidade · base da nota
-          </span>
           {pass || event.skill === "block" ? (
             <CriteriaFields
               skill={event.skill}
+              event={event}
               value={{
                 ...(pass
-                  ? {
-                      passQuality:
-                        event.result === "simple_A"
-                          ? "A"
-                          : event.result === "simple_C"
-                            ? "C"
-                            : event.result === "simple_B"
-                              ? "B"
-                              : r.error
-                                ? "error"
-                                : "B",
-                    }
-                  : {
-                      blockQuality:
-                        r.error && event.result !== "simple_gafe"
-                          ? "error"
-                          : r.winner === "ours"
-                            ? "perfect"
-                            : event.result === "simple_gafe"
-                              ? "late"
-                              : "effective",
-                    }),
+                  ? { passQuality: passFor(event) }
+                  : { blockQuality: blockFor(event) }),
                 ...a.criteria,
               }}
               onlyQuality
-              onChange={(criteria) => {
-                const direct =
-                  criteria.passQuality === "error" ||
-                  criteria.blockQuality === "error";
-                onChange({
-                  ...event,
-                  ...(direct
-                    ? { result: "simple_theirs", winner: undefined }
-                    : {}),
-                  assessment: { ...a, execution: undefined, criteria },
-                });
-              }}
+              inlineQuality={pass}
+              onChange={(criteria) =>
+                change({ criteria, execution: undefined })
+              }
             />
           ) : (
             <AssessmentSelect
+              inline
               label={
                 event.skill === "set"
                   ? "Qualidade da bola entregue"
@@ -98,84 +81,40 @@ export function FoundationAssessment({
                     ? "Qualidade do saque"
                     : "Qualidade do ataque"
               }
-              value={execution}
-              options={{
+              value={executionFor(event)}
+              options={compatibleQuality(event, "execution", {
                 good: "Boa",
                 excellent: "Excelente",
-                neutral: "Normal · continuidade",
                 poor: "Gafe · rally continua",
                 error: "Erro direto",
-                ...(r.winner === "ours"
-                  ? { point: "Ponto bem executado" }
-                  : {}),
+                point: "Ponto bem executado",
                 unrated: "Sem oportunidade real",
-              }}
+              })}
               onChange={(value) =>
-                onChange({
-                  ...event,
-                  ...(value === "error"
-                    ? { result: "simple_theirs", winner: undefined }
-                    : {}),
-                  assessment: { ...a, execution: value as typeof a.execution },
-                })
+                change({ execution: value as typeof a.execution })
               }
             />
           )}
         </div>
-        <div>
-          <span className="ui-eyebrow">
-            <Gauge size={16} /> Dificuldade · ajusta a cobrança
-          </span>
-          <AssessmentSelect
-            label="Dificuldade do lance"
-            value={a.difficultySource === "manual" ? a.difficulty : "context"}
-            options={{
-              context: `Automática · ${difficultyLabels[effectiveDifficulty(event)]}`,
-              ...difficultyLabels,
-            }}
-            onChange={(value) =>
-              change(
-                value === "context"
-                  ? { difficulty: "normal", difficultySource: "context" }
-                  : {
-                      difficulty: value as typeof a.difficulty,
-                      difficultySource: "manual",
-                    },
-              )
-            }
-          />
-        </div>
+        <AssessmentSelect
+          inline
+          label="Dificuldade do lance"
+          value={effectiveDifficulty(event)}
+          options={difficultyLabels}
+          onChange={(value) =>
+            change({
+              difficulty: value as typeof a.difficulty,
+              difficultySource: "manual",
+            })
+          }
+        />
       </div>
       {event.skill === "block" && (
         <AssessmentSelect
           label="Tipo de bloqueio"
           value={a.group ?? ""}
           options={groupOptions}
-          onChange={(value) =>
-            onChange({
-              ...event,
-              assessment: {
-                ...a,
-                criteria: {
-                  blockQuality:
-                    r.error && event.result !== "simple_gafe"
-                      ? "error"
-                      : r.winner === "ours"
-                        ? "perfect"
-                        : event.result === "simple_gafe"
-                          ? "late"
-                          : "effective",
-                  ...a.criteria,
-                },
-                group: (value || undefined) as typeof a.group,
-              },
-              participants: value
-                ? event.playerId
-                  ? [{ playerId: event.playerId, responsibility: "correct" }]
-                  : []
-                : undefined,
-            })
-          }
+          onChange={setGroup}
         />
       )}
       <details className="foundation-context">
@@ -194,6 +133,28 @@ export function FoundationAssessment({
           hideQuality
           onChange={(criteria) => change({ criteria })}
         />
+        <AssessmentSelect
+          label="Participação avaliável"
+          value={a.execution === "unrated" ? "unrated" : "rated"}
+          options={{
+            rated: "Avaliar esta ação",
+            unrated: "Sem oportunidade real · excluir da nota",
+          }}
+          onChange={(value) =>
+            change({ execution: value === "unrated" ? "unrated" : undefined })
+          }
+        />
+        {a.difficultySource === "manual" && (
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() =>
+              change({ difficulty: "normal", difficultySource: "context" })
+            }
+          >
+            Usar dificuldade sugerida pelo contexto
+          </button>
+        )}
         {event.skill === "attack" && (
           <AssessmentSelect
             label="Origem do ataque"
@@ -213,25 +174,12 @@ export function FoundationAssessment({
             label="Participação na jogada"
             value={a.group ?? ""}
             options={groupOptions}
-            onChange={(value) =>
-              onChange({
-                ...event,
-                assessment: {
-                  ...a,
-                  group: (value || undefined) as typeof a.group,
-                },
-                participants: value
-                  ? event.playerId
-                    ? [{ playerId: event.playerId, responsibility: "correct" }]
-                    : []
-                  : undefined,
-              })
-            }
+            onChange={setGroup}
           />
         )}
         <p className="ui-note">
-          Tipo e técnica contextualizam a análise. A dificuldade ajusta a
-          qualidade uma única vez.
+          A qualidade se refere à sua ação. O passe ou levantamento recebido
+          pode ser ruim mesmo quando a execução foi boa.
         </p>
       </details>
       {children}

@@ -1,7 +1,7 @@
-import { Hand, Target, Volleyball, Timer, Move, ArrowUp } from "lucide-react";
-import type { AssessmentCriteria, Skill } from "./model";
+import type { AssessmentCriteria, Skill, SkillEvent } from "./model";
 import { criteriaFields } from "./criteria";
 import { AssessmentSelect } from "./AssessmentSelect";
+import { compatibleQuality } from "./actionQuality";
 export function CriteriaFields({
   skill,
   value = {},
@@ -9,6 +9,8 @@ export function CriteriaFields({
   hidePass = false,
   onlyQuality = false,
   hideQuality = false,
+  event,
+  inlineQuality = false,
 }: {
   skill: Skill;
   value?: AssessmentCriteria;
@@ -16,6 +18,8 @@ export function CriteriaFields({
   hidePass?: boolean;
   onlyQuality?: boolean;
   hideQuality?: boolean;
+  event?: SkillEvent;
+  inlineQuality?: boolean;
 }) {
   return (
     <div className="criteria-fields">
@@ -28,28 +32,17 @@ export function CriteriaFields({
             (!hideQuality || !["passQuality", "blockQuality"].includes(f.key)),
         )
         .map((field) => {
-          const Icon =
-            field.key === "technique"
-              ? Hand
-              : field.key === "gameMoment"
-                ? Timer
-                : field.key === "approach"
-                  ? Move
-                  : field.key === "setDirection"
-                    ? ArrowUp
-                    : field.key === "passQuality"
-                      ? Target
-                      : Volleyball;
           return (
             <div className="criterion-field" key={field.key}>
-              <span>
-                <Icon size={17} aria-hidden="true" />
-                {field.label}
-              </span>
               <AssessmentSelect
                 label={field.label}
                 value={value[field.key] ?? ""}
-                options={{ "": "Não informado", ...field.options }}
+                inline={inlineQuality}
+                options={
+                  event && ["passQuality", "blockQuality"].includes(field.key)
+                    ? compatibleQuality(event, field.key, field.options)
+                    : { "": "Não informado", ...field.options }
+                }
                 hint={field.hint}
                 onChange={(selected) => {
                   const next = { ...value };
