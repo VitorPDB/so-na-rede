@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { initialAssessment } from "./actionQuality";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -1308,7 +1309,7 @@ export default function App() {
                             <div className="correction-form">
                               <label>
                                 JOGADOR
-                                <select
+                                <CardSelect
                                   value={editPlayer}
                                   onChange={(ev) =>
                                     setEditPlayer(ev.target.value)
@@ -1321,11 +1322,11 @@ export default function App() {
                                       {p.name}
                                     </option>
                                   ))}
-                                </select>
+                                </CardSelect>
                               </label>
                               <label>
                                 RESULTADO
-                                <select
+                                <CardSelect
                                   value={editResult}
                                   onChange={(ev) => {
                                     setEditResult(ev.target.value);
@@ -1356,7 +1357,7 @@ export default function App() {
                                       </option>
                                     ),
                                   )}
-                                </select>
+                                </CardSelect>
                               </label>
                               <label>
                                 MOTIVO

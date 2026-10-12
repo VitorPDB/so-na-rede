@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { useMemo, useState } from "react";
 import {
   type Match,
@@ -155,7 +156,7 @@ export function PostGameTotals({
           </label>
           <label>
             Formato
-            <select
+            <CardSelect
               value={game.bestOf}
               onChange={(e) => {
                 const bestOf = Number(e.target.value) as 3 | 5;
@@ -170,12 +171,12 @@ export function PostGameTotals({
             >
               <option value={5}>Melhor de 5</option>
               <option value={3}>Melhor de 3</option>
-            </select>
+            </CardSelect>
           </label>
           {(game.ratingVersion ?? 0) < 4 && (
             <label>
               Detalhamento
-              <select
+              <CardSelect
                 disabled={hasCounts}
                 value={game.mode}
                 onChange={(e) =>
@@ -184,7 +185,7 @@ export function PostGameTotals({
               >
                 <option value="simple">Simples · Bom / Gafe / Ponto</option>
                 <option value="advanced">Avançado · todas as qualidades</option>
-              </select>
+              </CardSelect>
             </label>
           )}
         </div>
@@ -304,7 +305,7 @@ export function PostGameTotals({
         <div className="postgame-fields">
           <label>
             Dificuldade das bolas nesta tabela
-            <select
+            <CardSelect
               value={difficulty}
               onChange={(e) => {
                 setDifficulty(e.target.value as Difficulty | "legacy");
@@ -319,12 +320,12 @@ export function PostGameTotals({
                   {label}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
           {(game.ratingVersion ?? 0) < 4 && (
             <label>
               Situação específica
-              <select
+              <CardSelect
                 value={situation}
                 disabled={difficulty === "legacy"}
                 onChange={(e) => setSituation(e.target.value)}
@@ -335,7 +336,7 @@ export function PostGameTotals({
                     {t.label}
                   </option>
                 ))}
-              </select>
+              </CardSelect>
             </label>
           )}
         </div>
@@ -415,7 +416,7 @@ export function PostGameTotals({
                         row.role === "middle" && (
                           <label>
                             Contexto
-                            <select
+                            <CardSelect
                               aria-label={`Contexto ${player.name} linha ${rowIndex + 1}`}
                               value={row.coverage ?? "standard"}
                               onChange={(e) =>
@@ -442,10 +443,10 @@ export function PostGameTotals({
                               <option value="middle-no-pass">
                                 Fundo · apenas defesa
                               </option>
-                            </select>
+                            </CardSelect>
                           </label>
                         )}
-                      <select
+                      <CardSelect
                         aria-label={`Função ${player.name} linha ${rowIndex + 1}`}
                         value={row.role}
                         onChange={(e) =>
@@ -468,7 +469,7 @@ export function PostGameTotals({
                             {label}
                           </option>
                         ))}
-                      </select>
+                      </CardSelect>
                     </td>
                     {results.map((r, columnIndex) => (
                       <td key={r.id}>
@@ -554,7 +555,7 @@ export function PostGameTotals({
         <div className="postgame-toolbar">
           <label>
             Jogador para outra função
-            <select
+            <CardSelect
               value={extraPlayer}
               onChange={(e) => setExtraPlayer(e.target.value)}
             >
@@ -563,7 +564,7 @@ export function PostGameTotals({
                   {p.name}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
           <button
             className="button secondary"
@@ -779,7 +780,7 @@ export function PostGameTotals({
           </label>
           <label>
             Reabrir pós-jogo salvo
-            <select
+            <CardSelect
               value=""
               onChange={(e) => {
                 const existing = match.history?.find(
@@ -804,7 +805,7 @@ export function PostGameTotals({
                     {g.opponent}
                   </option>
                 ))}
-            </select>
+            </CardSelect>
           </label>
           <button
             className="button secondary"
@@ -829,7 +830,7 @@ export function PostGameTotals({
         <ExecutionSummary events={report.events} />
         <label>
           Resumo
-          <select
+          <CardSelect
             value={reportSet}
             onChange={(e) => setReportSet(Number(e.target.value))}
           >
@@ -839,7 +840,7 @@ export function PostGameTotals({
                 Set {i + 1}
               </option>
             ))}
-          </select>
+          </CardSelect>
         </label>
         <div className="public-overview">
           <article>

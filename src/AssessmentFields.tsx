@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { FoundationAssessment } from "./FoundationAssessment";
 import { type Match, type SkillEvent, skills, resultOf } from "./model";
 import {
@@ -192,7 +193,7 @@ export function AssessmentFields({
             {!compact && event.skill !== "serve" && (
               <label className="group-select">
                 Participação
-                <select
+                <CardSelect
                   value={group ?? ""}
                   onChange={(e) =>
                     setGroup((e.target.value || undefined) as typeof group)
@@ -212,7 +213,7 @@ export function AssessmentFields({
                       </option>
                     </>
                   )}
-                </select>
+                </CardSelect>
               </label>
             )}
           </div>
@@ -369,7 +370,7 @@ export function AssessmentFields({
               ) && (
                 <label>
                   Execução individual · separada do placar
-                  <select
+                  <CardSelect
                     value={a.execution ?? ""}
                     onChange={(e) => {
                       const criteria = { ...a.criteria };
@@ -403,13 +404,13 @@ export function AssessmentFields({
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </CardSelect>
                 </label>
               )}
             {!compact && (
               <label>
                 Qualidade / resultado
-                <select
+                <CardSelect
                   value={event.result}
                   onChange={(e) =>
                     onChange({
@@ -425,7 +426,7 @@ export function AssessmentFields({
                       {r.label}
                     </option>
                   ))}
-                </select>
+                </CardSelect>
               </label>
             )}
             {compact && event.skill !== "serve" && (
@@ -434,7 +435,7 @@ export function AssessmentFields({
                   <UsersRound size={18} aria-hidden="true" /> Participação na
                   jogada
                 </span>
-                <select
+                <CardSelect
                   value={group ?? ""}
                   onChange={(e) =>
                     setGroup((e.target.value || undefined) as typeof group)
@@ -450,7 +451,7 @@ export function AssessmentFields({
                       <option value="triple">Bloqueio triplo</option>
                     </>
                   )}
-                </select>
+                </CardSelect>
               </label>
             )}
             {Object.entries(categories).map(
@@ -554,7 +555,7 @@ export function AssessmentFields({
             {!group && (
               <label>
                 Responsabilidade individual
-                <select
+                <CardSelect
                   value={a.responsibility ?? ""}
                   disabled={!!group}
                   onChange={(e) =>
@@ -570,7 +571,7 @@ export function AssessmentFields({
                       {label}
                     </option>
                   ))}
-                </select>
+                </CardSelect>
               </label>
             )}
             <p className="assessment-preview">
@@ -647,7 +648,7 @@ export function AssessmentFields({
                   {group === "combination" && (
                     <label>
                       Fundamento
-                      <select
+                      <CardSelect
                         aria-label={`Fundamento ${player?.name ?? p.playerId}`}
                         value={p.skill ?? event.skill}
                         disabled={
@@ -680,12 +681,12 @@ export function AssessmentFields({
                               {s.label}
                             </option>
                           ))}
-                      </select>
+                      </CardSelect>
                     </label>
                   )}
                   <label>
                     Dificuldade
-                    <select
+                    <CardSelect
                       aria-label={`Dificuldade ${player?.name ?? p.playerId}`}
                       value={p.difficulty ?? ""}
                       onChange={(e) =>
@@ -710,7 +711,7 @@ export function AssessmentFields({
                           {label}
                         </option>
                       ))}
-                    </select>
+                    </CardSelect>
                   </label>
                   {a.version >= 3 && (
                     <CriteriaFields
@@ -729,7 +730,7 @@ export function AssessmentFields({
                 </details>
                 <label>
                   Execução
-                  <select
+                  <CardSelect
                     aria-label={`Execução ${player?.name ?? p.playerId}`}
                     value={p.responsibility}
                     onChange={(e) =>
@@ -753,14 +754,14 @@ export function AssessmentFields({
                         {label}
                       </option>
                     ))}
-                  </select>
+                  </CardSelect>
                 </label>
               </div>
             );
           })}
           <label>
             Autor principal / finalizador
-            <select
+            <CardSelect
               aria-label="Autor principal da jogada"
               value={event.playerId ?? ""}
               onChange={(e) =>
@@ -790,7 +791,7 @@ export function AssessmentFields({
                   {match.players.find((x) => x.id === p.playerId)?.name}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
           <p className="muted">
             O ponto conta uma vez para o time. Crédito de ponto individual só

@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { useState } from "react";
 import { ExternalLink, Play, Plus, Trash2, Pencil, Video } from "lucide-react";
 import type { MatchVideo } from "./model";
@@ -177,7 +178,7 @@ export function MatchVideoEditor({
         </label>
         <label>
           Tipo
-          <select
+          <CardSelect
             className="ui-select"
             value={kind}
             onChange={(e) => setKind(e.target.value as MatchVideo["kind"])}
@@ -187,7 +188,7 @@ export function MatchVideoEditor({
                 {label}
               </option>
             ))}
-          </select>
+          </CardSelect>
         </label>
         <label>
           Início em segundos · opcional
@@ -203,7 +204,7 @@ export function MatchVideoEditor({
         </label>
         <label>
           Set · opcional
-          <select
+          <CardSelect
             className="ui-select"
             value={set}
             onChange={(e) => setSet(e.target.value)}
@@ -214,7 +215,7 @@ export function MatchVideoEditor({
                 Set {n}
               </option>
             ))}
-          </select>
+          </CardSelect>
         </label>
       </div>
       <div className="video-actions">

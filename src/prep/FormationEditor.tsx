@@ -1,3 +1,4 @@
+import { CardSelect } from "../CardSelect";
 import { Check, Info, Save, Trash2, Volleyball } from "lucide-react";
 import {
   type Match,
@@ -196,7 +197,7 @@ export function FormationEditor(props: FormationEditorProps) {
           <div className="fe-presets-body">
             <label className="fe-field">
               <span className="ui-eyebrow">Carregar</span>
-              <select
+              <CardSelect
                 className="ui-select"
                 aria-label="Formação salva"
                 value={props.presetId}
@@ -208,7 +209,7 @@ export function FormationEditor(props: FormationEditorProps) {
                     {f.name}
                   </option>
                 ))}
-              </select>
+              </CardSelect>
             </label>
             <label className="fe-field">
               <span className="ui-eyebrow">Nome</span>

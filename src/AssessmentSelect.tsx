@@ -17,7 +17,12 @@ import {
   UsersRound,
   UserRound,
 } from "lucide-react";
-function fieldIcon(label: string) {
+export function fieldIcon(label: string) {
+  if (/Jogador|Quem analisar|Autor|Função|Central/i.test(label))
+    return UserRound;
+  if (/Formação|Formato/i.test(label)) return UsersRound;
+  if (/Período|Partida/i.test(label)) return Timer;
+  if (/Adversário/i.test(label)) return Shield;
   return /Dificuldade/.test(label)
     ? Gauge
     : /Qualidade|Execução/.test(label)
@@ -34,7 +39,7 @@ function fieldIcon(label: string) {
                 ? UsersRound
                 : Volleyball;
 }
-function choiceIcon(id: string, label: string) {
+export function choiceIcon(id: string, label: string) {
   if (id === "easy") return Circle;
   if (id === "normal") return Gauge;
   if (id === "hard") return Mountain;

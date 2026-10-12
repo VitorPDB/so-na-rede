@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { useMemo, useState } from "react";
 import {
   Hand,
@@ -203,7 +204,7 @@ export function CriteriaReport({
         {!fixedPlayer && (
           <label>
             Quem analisar
-            <select
+            <CardSelect
               className="ui-select"
               aria-label="Jogador da análise técnica"
               value={player}
@@ -215,12 +216,12 @@ export function CriteriaReport({
                   {p.name} · #{p.number}
                 </option>
               ))}
-            </select>
+            </CardSelect>
           </label>
         )}
         <label>
           Fundamento
-          <select
+          <CardSelect
             className="ui-select"
             aria-label="Fundamento da análise técnica"
             value={skill}
@@ -234,7 +235,7 @@ export function CriteriaReport({
                   {def.label}
                 </option>
               ))}
-          </select>
+          </CardSelect>
         </label>
       </div>
       <div className="cr-kpis">

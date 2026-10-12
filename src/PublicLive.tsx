@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -402,7 +403,7 @@ export function PublicLive() {
             </div>
             <label>
               <span className="ui-eyebrow">Período</span>
-              <select
+              <CardSelect
                 className="ui-select"
                 aria-label="Período das estatísticas"
                 value={setFilter}
@@ -414,7 +415,7 @@ export function PublicLive() {
                     Set {i + 1}
                   </option>
                 ))}
-              </select>
+              </CardSelect>
             </label>
           </div>
           {!periodAvailable && (

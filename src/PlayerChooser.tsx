@@ -70,7 +70,11 @@ export function PlayerChooser({
           ...(dialog.current?.querySelectorAll<HTMLElement>(
             "button:not(:disabled),select:not(:disabled),input:not(:disabled),summary",
           ) ?? []),
-        ].filter((item) => item.getClientRects().length > 0);
+        ].filter(
+          (item) =>
+            item.getClientRects().length > 0 &&
+            item.getAttribute("aria-disabled") !== "true",
+        );
         const first = items[0],
           last = items.at(-1);
         if (e.shiftKey && document.activeElement === first) {

@@ -1,3 +1,4 @@
+import { CardSelect } from "../CardSelect";
 import { useState, type ReactNode } from "react";
 import {
   ArrowRight,
@@ -285,7 +286,7 @@ export function Settings({
           </p>
           <label className="ui-field">
             Central que permanece no fundo
-            <select
+            <CardSelect
               value={match.middleCoverage ?? "auto"}
               onChange={(e) =>
                 onChange({
@@ -303,7 +304,7 @@ export function Settings({
               <option value="standard">
                 Manter pesos de central em todas as zonas
               </option>
-            </select>
+            </CardSelect>
           </label>
           <p className="ui-note">
             A zona de rotação define rede/fundo. A troca automática de líbero

@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { useState } from "react";
 import { Clock3 } from "lucide-react";
 import { Photo } from "./PlayerPhoto";
@@ -78,7 +79,7 @@ export function MatchHistory({
       </header>
       <label className="pub-history-select">
         <span className="ui-eyebrow">Escolher partida</span>
-        <select
+        <CardSelect
           className="ui-select"
           value={selected}
           disabled={publishing}
@@ -96,7 +97,7 @@ export function MatchHistory({
               {g.finished ? "" : " · incompleta"}
             </option>
           ))}
-        </select>
+        </CardSelect>
       </label>
       {!games.length && (
         <p className="ui-note">
@@ -201,7 +202,7 @@ export function MatchHistory({
             {snapshot && (
               <label>
                 <span className="ui-eyebrow">Período do histórico</span>
-                <select
+                <CardSelect
                   aria-label="Período da partida salva"
                   className="ui-select"
                   value={period}
@@ -213,7 +214,7 @@ export function MatchHistory({
                       Set {s.set}
                     </option>
                   ))}
-                </select>
+                </CardSelect>
               </label>
             )}
           </div>

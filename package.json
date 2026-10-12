@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "tsx --test src/engine.test.ts src/cloud.test.ts src/assessment.test.ts src/publicLive.test.ts src/ratingV2.test.ts src/videos.test.ts src/assessmentV3.test.ts src/assessmentV4.test.ts src/criteriaStats.test.ts"
+    "test": "tsx --test src/engine.test.ts src/cloud.test.ts src/assessment.test.ts src/publicLive.test.ts src/ratingV2.test.ts src/videos.test.ts src/assessmentV3.test.ts src/assessmentV4.test.ts src/criteriaStats.test.ts src/CardSelect.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.1",

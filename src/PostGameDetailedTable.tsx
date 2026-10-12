@@ -1,3 +1,4 @@
+import { CardSelect } from "./CardSelect";
 import { postResults } from "./postgame";
 import { useMemo, useRef, useState } from "react";
 import { append, assignToZone, project } from "./engine";
@@ -139,7 +140,7 @@ export function PostGameDetailed({
           </label>
           <label>
             Formato
-            <select
+            <CardSelect
               value={draft.bestOf}
               onChange={(e) =>
                 save({ ...draft, bestOf: Number(e.target.value) as 3 | 5 })
@@ -147,11 +148,11 @@ export function PostGameDetailed({
             >
               <option value={5}>Melhor de 5</option>
               <option value={3}>Melhor de 3</option>
-            </select>
+            </CardSelect>
           </label>
           <label>
             Primeiro saque
-            <select
+            <CardSelect
               value={draft.server}
               onChange={(e) =>
                 save({ ...draft, server: e.target.value as "ours" | "theirs" })
@@ -159,7 +160,7 @@ export function PostGameDetailed({
             >
               <option value="ours">Nosso</option>
               <option value="theirs">Deles</option>
-            </select>
+            </CardSelect>
           </label>
         </div>
         <details className="postgame-formation">
@@ -169,7 +170,7 @@ export function PostGameDetailed({
             {[4, 3, 2, 5, 6, 1].map((zone) => (
               <label key={zone}>
                 Zona {zone}
-                <select
+                <CardSelect
                   aria-label={`Pós-jogo jogador zona ${zone}`}
                   value={draft.lineup[zone - 1]}
                   onChange={(e) =>
@@ -186,8 +187,8 @@ export function PostGameDetailed({
                         {p.name}
                       </option>
                     ))}
-                </select>
-                <select
+                </CardSelect>
+                <CardSelect
                   aria-label={`Pós-jogo função zona ${zone}`}
                   value={draft.roles[zone - 1]}
                   onChange={(e) =>
@@ -206,7 +207,7 @@ export function PostGameDetailed({
                         {label}
                       </option>
                     ))}
-                </select>
+                </CardSelect>
               </label>
             ))}
           </div>
@@ -295,7 +296,7 @@ export function PostGameDetailed({
                       </small>
                     </td>
                     <td>
-                      <select
+                      <CardSelect
                         aria-label={`Ação linha ${index + 1}`}
                         value={c.type}
                         onChange={(e) =>
@@ -319,11 +320,11 @@ export function PostGameDetailed({
                             {label}
                           </option>
                         ))}
-                      </select>
+                      </CardSelect>
                     </td>
                     <td>
                       {c.type === "event" && (
-                        <select
+                        <CardSelect
                           aria-label={`Jogador linha ${index + 1}`}
                           value={c.event.playerId ?? ""}
                           disabled={c.event.skill === "opponent"}
@@ -339,13 +340,13 @@ export function PostGameDetailed({
                           ) : (
                             playerOptions
                           )}
-                        </select>
+                        </CardSelect>
                       )}
                       {c.type === "sub" && (
                         <>
                           <label>
                             Sai
-                            <select
+                            <CardSelect
                               value={c.outgoing}
                               onChange={(e) =>
                                 update(index, {
@@ -355,11 +356,11 @@ export function PostGameDetailed({
                               }
                             >
                               {playerOptions}
-                            </select>
+                            </CardSelect>
                           </label>
                           <label>
                             Entra
-                            <select
+                            <CardSelect
                               value={c.incoming}
                               onChange={(e) =>
                                 update(index, {
@@ -369,7 +370,7 @@ export function PostGameDetailed({
                               }
                             >
                               {playerOptions}
-                            </select>
+                            </CardSelect>
                           </label>
                         </>
                       )}
@@ -377,7 +378,7 @@ export function PostGameDetailed({
                         <>
                           <label>
                             Movimento
-                            <select
+                            <CardSelect
                               value={c.playerId ? "enter" : "exit"}
                               onChange={(e) =>
                                 update(
@@ -396,12 +397,12 @@ export function PostGameDetailed({
                             >
                               <option value="enter">Entrada</option>
                               <option value="exit">Saída</option>
-                            </select>
+                            </CardSelect>
                           </label>
                           {c.playerId && (
                             <label>
                               Substitui
-                              <select
+                              <CardSelect
                                 value={c.replaced}
                                 onChange={(e) =>
                                   update(index, {
@@ -411,7 +412,7 @@ export function PostGameDetailed({
                                 }
                               >
                                 {playerOptions}
-                              </select>
+                              </CardSelect>
                             </label>
                           )}
                         </>
@@ -421,7 +422,7 @@ export function PostGameDetailed({
                           {[1, 2, 3, 4, 5, 6].map((zone) => (
                             <label key={zone}>
                               Z{zone}
-                              <select
+                              <CardSelect
                                 value={c.lineup[zone - 1]}
                                 onChange={(e) =>
                                   update(index, {
@@ -441,8 +442,8 @@ export function PostGameDetailed({
                                       {p.name}
                                     </option>
                                   ))}
-                              </select>
-                              <select
+                              </CardSelect>
+                              <CardSelect
                                 aria-label={`Função set linha ${index + 1} zona ${zone}`}
                                 value={
                                   c.roles?.[zone - 1] ?? draft.roles[zone - 1]
@@ -466,7 +467,7 @@ export function PostGameDetailed({
                                       {label}
                                     </option>
                                   ))}
-                              </select>
+                              </CardSelect>
                             </label>
                           ))}
                         </div>
@@ -475,7 +476,7 @@ export function PostGameDetailed({
                     <td>
                       {c.type === "event" && (
                         <>
-                          <select
+                          <CardSelect
                             aria-label={`Fundamento linha ${index + 1}`}
                             value={c.event.skill}
                             onChange={(e) => {
@@ -510,8 +511,8 @@ export function PostGameDetailed({
                                 {s.label}
                               </option>
                             ))}
-                          </select>
-                          <select
+                          </CardSelect>
+                          <CardSelect
                             aria-label={`Resultado linha ${index + 1}`}
                             value={c.event.result}
                             onChange={(e) =>
@@ -551,10 +552,10 @@ export function PostGameDetailed({
                                 {r.label}
                               </option>
                             ))}
-                          </select>
+                          </CardSelect>
                           <label>
                             Encerrar rally
-                            <select
+                            <CardSelect
                               value={c.event.winner ?? ""}
                               onChange={(e) =>
                                 update(index, {
@@ -571,7 +572,7 @@ export function PostGameDetailed({
                               <option value="">Conforme resultado</option>
                               <option value="ours">Ponto nosso</option>
                               <option value="theirs">Ponto deles</option>
-                            </select>
+                            </CardSelect>
                           </label>
                           <AssessmentFields
                             event={c.event}
@@ -590,7 +591,7 @@ export function PostGameDetailed({
                             : c.type === "point"
                               ? "Quem pontuou"
                               : "Primeiro saque"}
-                          <select
+                          <CardSelect
                             value={
                               c.type === "point"
                                 ? c.winner
@@ -612,13 +613,13 @@ export function PostGameDetailed({
                           >
                             <option value="ours">Nosso time</option>
                             <option value="theirs">Adversário</option>
-                          </select>
+                          </CardSelect>
                         </label>
                       )}
                       {c.type === "autoLibero" && (
                         <label>
                           Troca automática
-                          <select
+                          <CardSelect
                             value={String(c.enabled)}
                             onChange={(e) =>
                               update(index, {
@@ -629,7 +630,7 @@ export function PostGameDetailed({
                           >
                             <option value="true">Ativar</option>
                             <option value="false">Desativar</option>
-                          </select>
+                          </CardSelect>
                         </label>
                       )}
                       {c.type === "restartSet" && (
@@ -644,7 +645,7 @@ export function PostGameDetailed({
                         <>
                           <label>
                             Zona
-                            <select
+                            <CardSelect
                               value={c.event.zone ?? ""}
                               onChange={(e) =>
                                 update(index, {
@@ -665,11 +666,11 @@ export function PostGameDetailed({
                                   {n}
                                 </option>
                               ))}
-                            </select>
+                            </CardSelect>
                           </label>
                           <label>
                             Toque
-                            <select
+                            <CardSelect
                               value={c.event.touch ?? ""}
                               onChange={(e) =>
                                 update(index, {
@@ -689,7 +690,7 @@ export function PostGameDetailed({
                                   {n}
                                 </option>
                               ))}
-                            </select>
+                            </CardSelect>
                           </label>
                           <label>
                             Vídeo · segundos
