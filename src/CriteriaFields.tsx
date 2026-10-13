@@ -64,7 +64,15 @@ export function CriteriaFields({
                     : field.key === "incomingSet"
                       ? { "": "Não informado", ...incomingSetOptions }
                       : field.key === "setType"
-                        ? { "": "Não informado", ...setTypeOptions }
+                        ? {
+                            "": "Não informado",
+                            ...Object.fromEntries(
+                              Object.entries(setTypeOptions).filter(
+                                ([key]) =>
+                                  skill === "set" || key !== "setter_tip",
+                              ),
+                            ),
+                          }
                         : { "": "Não informado", ...field.options }
                 }
                 hint={field.hint}

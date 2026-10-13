@@ -16,6 +16,7 @@ export const setTypeOptions = {
   third: "Terceiro tempo",
   head: "Cabeça",
   china: "China",
+  setter_tip: "Largadinha do levantador",
 };
 export const incomingSetOptions = {
   good: "Bom",
@@ -208,6 +209,8 @@ export function criteriaError(
   if (!criteria || typeof criteria !== "object" || Array.isArray(criteria))
     return "Critérios do fundamento inválidos.";
   for (const [key, value] of Object.entries(criteria)) {
+    if (skill === "attack" && key === "setType" && value === "setter_tip")
+      return "Registre a largadinha do levantador no próprio levantamento.";
     const field = criteriaFields.find(
       (f) => f.key === key && f.skills.includes(skill),
     );
@@ -261,7 +264,11 @@ export function effectiveDifficulty(event: SkillEvent) {
     const ballDifficulty =
       incoming === "A" || incoming === "good" ? 0 : badIncoming ? 2 : 1;
     const typeDifficulty =
-      selectedType === "third" ? 0 : selectedType === "second" ? 1 : 2;
+      selectedType === "third"
+        ? 0
+        : selectedType === "second" || selectedType === "setter_tip"
+          ? 1
+          : 2;
     return (["easy", "normal", "hard"] as const)[
       Math.max(ballDifficulty, typeDifficulty)
     ];

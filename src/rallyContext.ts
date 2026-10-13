@@ -22,7 +22,12 @@ export function withRallyContext(
   if (event.skill === "attack") {
     if (setTypeSource === "rally") delete criteria.setType;
     setTypeSource = undefined;
-    if (previous?.skill === "set" && previous.assessment?.criteria?.setType) {
+    if (
+      previous?.skill === "set" &&
+      previous.assessment?.criteria?.setType &&
+      previous.assessment.criteria.setType !== "setter_tip" &&
+      !previous.assessment.tags.includes("setter_tip")
+    ) {
       criteria.setType = previous.assessment.criteria.setType;
       setTypeSource = "rally";
     }

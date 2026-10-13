@@ -80,7 +80,9 @@ export function FoundationAssessment({
               inline
               label={
                 event.skill === "set"
-                  ? "Qualidade da bola entregue"
+                  ? a.criteria?.setType === "setter_tip"
+                    ? "Qualidade da largadinha"
+                    : "Qualidade da bola entregue"
                   : event.skill === "serve"
                     ? "Qualidade do saque"
                     : "Qualidade do ataque"
@@ -146,6 +148,12 @@ export function FoundationAssessment({
             })
           }
         />
+        {event.skill === "set" && a.criteria?.setType === "setter_tip" && (
+          <p className="rally-pass-context">
+            Se a largadinha pontuar, registre o ponto aqui uma vez. Não precisa
+            registrar outro ataque.
+          </p>
+        )}
         {event.skill === "attack" && a.setTypeSource === "rally" && (
           <p className="rally-pass-context" role="status">
             Levantamento recebido:{" "}
@@ -204,7 +212,30 @@ export function FoundationAssessment({
               attack_pipe: "Fundo · pipe Z6",
               attack_back_one: "Fundo · saída Z1",
             }}
-            onChange={(value) => change({ tags: [value] })}
+            onChange={(value) =>
+              change({
+                tags: [
+                  ...a.tags.filter((t) => !t.startsWith("attack_")),
+                  value,
+                ],
+              })
+            }
+          />
+        )}
+        {["set", "attack"].includes(event.skill) && (
+          <AssessmentSelect
+            label="Recurso especial"
+            value={a.tags.includes("magic") ? "magic" : ""}
+            options={{ "": "Sem recurso especial", magic: "Tirou da cartola" }}
+            hint="Improviso excepcional. A dificuldade manual continua tendo prioridade."
+            onChange={(value) =>
+              change({
+                tags: [
+                  ...a.tags.filter((t) => t !== "magic"),
+                  ...(value ? [value] : []),
+                ],
+              })
+            }
           />
         )}
         {event.skill !== "serve" && event.skill !== "block" && (

@@ -244,7 +244,8 @@ export interface AssessmentCriteria {
     | "first"
     | "second"
     | "third"
-    | "head";
+    | "head"
+    | "setter_tip";
   attackBlockers?: "none" | "single" | "double" | "triple";
   attackType?: "power" | "tip" | "placed" | "tool" | "quick";
   approach?: "good" | "adjusted" | "poor";

@@ -30,6 +30,73 @@ const liveAttack = (id: string): SkillEvent => ({
     rallyContext: "auto",
   },
 });
+test("largadinha do levantador pontua uma vez e não é herdada como levantamento pelo atacante", () => {
+  const m = newMatch();
+  const id = m.players[0].id;
+  const tip: SkillEvent = {
+    ...liveSet(id),
+    result: "simple_ours",
+    assessment: {
+      ...initialAssessment("set", "simple_ours"),
+      rallyContext: "auto",
+      setDifficultyVersion: 1,
+      criteria: { setType: "setter_tip" },
+    },
+  };
+  const match = append(m, { type: "event", event: tip });
+  assert.deepEqual(project(match).score, [1, 0]);
+  assert.equal(project(match).events.length, 1);
+  assert.equal(validPublicSnapshot(publicSnapshot(match)), true);
+  assert.deepEqual(project(undo(match)).score, [0, 0]);
+  const continuing = append(m, {
+    type: "event",
+    event: { ...tip, result: "simple_good" },
+  });
+  assert.equal(
+    withRallyContext(project(continuing), liveAttack(id)).assessment?.criteria
+      ?.setType,
+    undefined,
+  );
+  assert.ok(criteriaError("attack", { setType: "setter_tip" }));
+});
+test("tirou da cartola usa dificuldade contextual, respeita manual e aparece no público sem expor eventos", () => {
+  for (const skill of ["set", "attack"] as const) {
+    const m = newMatch();
+    const id = m.players[0].id;
+    const e: SkillEvent = {
+      skill,
+      result: "simple_good",
+      playerId: id,
+      assessment: {
+        ...initialAssessment(skill, "simple_good"),
+        tags: ["magic"],
+      },
+    };
+    assert.equal(effectiveDifficulty(e), "emergency");
+    assert.equal(
+      effectiveDifficulty({
+        ...e,
+        assessment: {
+          ...e.assessment!,
+          difficultySource: "manual",
+          difficulty: "normal",
+        },
+      }),
+      "normal",
+    );
+    const match = append(m, { type: "event", event: e });
+    const s = publicSnapshot(match);
+    assert.equal(validPublicSnapshot(s), true);
+    assert.equal(
+      distributionFromCube(s.technical!.team, "special", skill).rows.find(
+        (r) => r.id === "magic",
+      )?.count,
+      1,
+    );
+    assert.equal("audit" in s, false);
+    assert.deepEqual(project(match).score, [0, 0]);
+  }
+});
 test("falhas específicas do levantamento dificultam o ataque; erro direto não penaliza o atacante", () => {
   const m = newMatch();
   const id = m.players[0].id;
@@ -93,13 +160,14 @@ test("pós-jogo por totais preserva versão da dificuldade e usa o mesmo cálcul
     undefined,
   );
 });
-test("cinco tipos sugerem dificuldade sem duplicar bônus nem mudar notas anteriores", () => {
+test("tipos sugerem dificuldade sem duplicar bônus nem mudar notas anteriores", () => {
   assert.deepEqual(Object.values(setTypeOptions), [
     "Primeiro tempo",
     "Segundo tempo",
     "Terceiro tempo",
     "Cabeça",
     "China",
+    "Largadinha do levantador",
   ]);
   for (const skill of ["set", "attack"] as const) {
     const e: SkillEvent = {
@@ -121,13 +189,18 @@ test("cinco tipos sugerem dificuldade sem duplicar bônus nem mudar notas anteri
     for (const type of Object.keys(
       setTypeOptions,
     ) as (keyof typeof setTypeOptions)[]) {
+      if (skill === "attack" && type === "setter_tip") continue;
       const typed = {
         ...e,
         assessment: { ...e.assessment!, criteria: { ...good, setType: type } },
       };
       assert.equal(
         effectiveDifficulty(typed),
-        type === "third" ? "easy" : type === "second" ? "normal" : "hard",
+        type === "third"
+          ? "easy"
+          : type === "second" || type === "setter_tip"
+            ? "normal"
+            : "hard",
       );
       assert.equal(
         effectiveDifficulty({

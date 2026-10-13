@@ -40,6 +40,8 @@ export function fieldIcon(label: string) {
                 : Volleyball;
 }
 export function choiceIcon(id: string, label: string) {
+  if (id === "setter_tip") return Hand;
+  if (id === "magic") return Sparkles;
   if (id === "easy") return Circle;
   if (id === "normal") return Gauge;
   if (id === "hard") return Mountain;

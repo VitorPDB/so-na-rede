@@ -23,6 +23,7 @@ export function analysisParticipations(
 }
 function valueFor(e: SkillEvent, key: string): string | undefined {
   const a = e.assessment;
+  if (key === "special") return a?.tags.includes("magic") ? "magic" : undefined;
   if (key === "difficulty")
     return !a
       ? undefined
@@ -97,6 +98,12 @@ export const analysisFields = [
     options: executionLabels,
   },
   ...criteriaFields,
+  {
+    key: "special",
+    label: "Recurso especial",
+    skills: ["set", "attack"] as Skill[],
+    options: { magic: "Tirou da cartola" },
+  },
   {
     key: "origin",
     label: "Origem do ataque",
