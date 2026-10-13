@@ -1,5 +1,5 @@
 import type { AssessmentCriteria, Skill, SkillEvent } from "./model";
-import { criteriaFields } from "./criteria";
+import { criteriaFields, setTypeOptions, incomingSetOptions } from "./criteria";
 import { AssessmentSelect } from "./AssessmentSelect";
 import { compatibleQuality } from "./actionQuality";
 export function CriteriaFields({
@@ -12,6 +12,7 @@ export function CriteriaFields({
   event,
   inlineQuality = false,
   hideIncomingPass = false,
+  hideSetType = false,
 }: {
   skill: Skill;
   value?: AssessmentCriteria;
@@ -22,6 +23,7 @@ export function CriteriaFields({
   event?: SkillEvent;
   inlineQuality?: boolean;
   hideIncomingPass?: boolean;
+  hideSetType?: boolean;
 }) {
   return (
     <div className="criteria-fields">
@@ -31,6 +33,7 @@ export function CriteriaFields({
             f.skills.includes(skill) &&
             (!hidePass || f.key !== "passQuality") &&
             (!hideIncomingPass || f.key !== "incomingPass") &&
+            (!hideSetType || f.key !== "setType") &&
             (!onlyQuality || ["passQuality", "blockQuality"].includes(f.key)) &&
             (!hideQuality || !["passQuality", "blockQuality"].includes(f.key)),
         )
@@ -43,22 +46,26 @@ export function CriteriaFields({
                     ? "Tipo de levantamento"
                     : field.label
                 }
-                value={
-                  field.key === "incomingSet"
-                    ? value.incomingSet === "A" || value.incomingSet === "B"
-                      ? "good"
-                      : value.incomingSet === "C"
-                        ? "poor"
-                        : (value.incomingSet ?? "")
-                    : (value[field.key] ?? "")
+                value={value[field.key] ?? ""}
+                selectedLabel={
+                  (field.key === "incomingSet" &&
+                    value.incomingSet &&
+                    !Object.hasOwn(incomingSetOptions, value.incomingSet)) ||
+                  (field.key === "setType" &&
+                    value.setType &&
+                    !Object.hasOwn(setTypeOptions, value.setType))
+                    ? `${field.options[value[field.key]!]} · registro anterior`
+                    : undefined
                 }
                 inline={inlineQuality}
                 options={
                   event && ["passQuality", "blockQuality"].includes(field.key)
                     ? compatibleQuality(event, field.key, field.options)
                     : field.key === "incomingSet"
-                      ? { "": "Não informado", good: "Bom", poor: "Ruim" }
-                      : { "": "Não informado", ...field.options }
+                      ? { "": "Não informado", ...incomingSetOptions }
+                      : field.key === "setType"
+                        ? { "": "Não informado", ...setTypeOptions }
+                        : { "": "Não informado", ...field.options }
                 }
                 hint={field.hint}
                 onChange={(selected) => {

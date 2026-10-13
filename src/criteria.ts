@@ -10,6 +10,20 @@ export const passLabels = {
   C: "C · bola ruim",
   error: "Erro direto",
 };
+export const setTypeOptions = {
+  first: "Primeiro tempo",
+  second: "Segundo tempo",
+  third: "Terceiro tempo",
+  head: "Cabeça",
+  china: "China",
+};
+export const incomingSetOptions = {
+  good: "Bom",
+  low: "Baixa",
+  short: "Curta",
+  high_bad: "Alta · inadequada",
+  error: "Erro direto",
+};
 export const criteriaFields: {
   key: keyof AssessmentCriteria;
   label: string;
@@ -107,16 +121,17 @@ export const criteriaFields: {
       A: "A · confortável",
       B: "B · exige ajuste",
       C: "C · ruim / limita o ataque",
-      good: "Bom",
       poor: "Ruim",
+      ...incomingSetOptions,
     },
   },
   {
     key: "setType",
     label: "Levantamento recebido",
-    hint: "Tipo de bola · informação tática, sem bônus automático",
+    hint: "Sugere a dificuldade junto com o passe; ajuste manual prevalece",
     skills: ["attack", "set"],
     options: {
+      ...setTypeOptions,
       chute: "Chute",
       meter: "Metro",
       stretched: "Esticada",
@@ -231,10 +246,30 @@ export function effectiveDifficulty(event: SkillEvent) {
       : event.skill === "attack"
         ? c?.incomingSet
         : undefined;
+  const selectedType = c?.setType;
+  const badIncoming =
+    incoming === "C" ||
+    ["poor", "low", "short", "high_bad", "error"].includes(incoming ?? "");
+  if (
+    a.setDifficultyVersion === 1 &&
+    selectedType &&
+    ["set", "attack"].includes(event.skill) &&
+    Object.hasOwn(setTypeOptions, selectedType)
+  ) {
+    // Initial calibration, not an official volleyball rating. Never add type
+    // and ball-quality bonuses twice: use one contextual difficulty tier.
+    const ballDifficulty =
+      incoming === "A" || incoming === "good" ? 0 : badIncoming ? 2 : 1;
+    const typeDifficulty =
+      selectedType === "third" ? 0 : selectedType === "second" ? 1 : 2;
+    return (["easy", "normal", "hard"] as const)[
+      Math.max(ballDifficulty, typeDifficulty)
+    ];
+  }
   if (incoming)
     return incoming === "A" || incoming === "good"
       ? "easy"
-      : incoming === "C" || incoming === "poor"
+      : badIncoming
         ? "hard"
         : "normal";
   if (event.skill === "defense") {

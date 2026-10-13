@@ -4,11 +4,13 @@ import { append, correct, project, undo } from "./engine";
 import { newMatch, type SkillEvent } from "./model";
 import { initialAssessment } from "./actionQuality";
 import { withRallyContext } from "./rallyContext";
-import { effectiveDifficulty, criteriaError } from "./criteria";
+import { effectiveDifficulty, criteriaError, setTypeOptions } from "./criteria";
 import { publicSnapshot } from "./publicSnapshot";
 import { validPublicSnapshot } from "./publicValidation";
 import { parseMatch } from "./storage";
 import { analysisFields, distributionFromCube } from "./criteriaStats";
+import { assessed } from "./assessment";
+import { countKey, cellAssessment, newPostGame } from "./postgame";
 
 const liveSet = (id: string): SkillEvent => ({
   skill: "set",
@@ -18,6 +20,307 @@ const liveSet = (id: string): SkillEvent => ({
     ...initialAssessment("set", "simple_good"),
     rallyContext: "auto",
   },
+});
+const liveAttack = (id: string): SkillEvent => ({
+  skill: "attack",
+  result: "simple_good",
+  playerId: id,
+  assessment: {
+    ...initialAssessment("attack", "simple_good"),
+    rallyContext: "auto",
+  },
+});
+test("falhas específicas do levantamento dificultam o ataque; erro direto não penaliza o atacante", () => {
+  const m = newMatch();
+  const id = m.players[0].id;
+  for (const incomingSet of ["low", "short", "high_bad"] as const) {
+    const e = {
+      ...liveAttack(id),
+      assessment: {
+        ...liveAttack(id).assessment!,
+        setDifficultyVersion: 1 as const,
+        criteria: { incomingSet, setType: "third" as const },
+      },
+    };
+    assert.equal(effectiveDifficulty(e), "hard");
+    assert.equal(assessed(e).rated, true);
+    assert.equal(criteriaError("attack", e.assessment.criteria), undefined);
+  }
+  const e = {
+    ...liveAttack(id),
+    assessment: {
+      ...liveAttack(id).assessment!,
+      criteria: { incomingSet: "error" as const },
+    },
+  };
+  assert.equal(assessed(e).rated, false);
+  assert.equal(assessed(e).error, false);
+  const match = append(m, { type: "event", event: e });
+  assert.deepEqual(project(match).score, [0, 0]);
+  assert.equal(validPublicSnapshot(publicSnapshot(match)), true);
+});
+test("pós-jogo por totais preserva versão da dificuldade e usa o mesmo cálculo", () => {
+  const game = newPostGame(newMatch());
+  const key = countKey(
+    "attack",
+    "simple_good",
+    "normal",
+    "",
+    { setType: "first", incomingSet: "good" },
+    "context",
+    1,
+  );
+  const a = cellAssessment(game, key)!;
+  assert.equal(a.setDifficultyVersion, 1);
+  assert.equal(
+    effectiveDifficulty({
+      skill: "attack",
+      result: "simple_good",
+      assessment: a,
+    }),
+    "hard",
+  );
+  const legacyKey = countKey(
+    "attack",
+    "simple_good",
+    "normal",
+    "",
+    { setType: "china", incomingSet: "good" },
+    "context",
+  );
+  assert.equal(
+    cellAssessment(game, legacyKey)?.setDifficultyVersion,
+    undefined,
+  );
+});
+test("cinco tipos sugerem dificuldade sem duplicar bônus nem mudar notas anteriores", () => {
+  assert.deepEqual(Object.values(setTypeOptions), [
+    "Primeiro tempo",
+    "Segundo tempo",
+    "Terceiro tempo",
+    "Cabeça",
+    "China",
+  ]);
+  for (const skill of ["set", "attack"] as const) {
+    const e: SkillEvent = {
+      skill,
+      result: "simple_good",
+      assessment: {
+        ...initialAssessment(skill, "simple_good"),
+        setDifficultyVersion: 1,
+      },
+    };
+    const good =
+      skill === "set"
+        ? { incomingPass: "A" as const }
+        : { incomingSet: "good" as const };
+    const poor =
+      skill === "set"
+        ? { incomingPass: "C" as const }
+        : { incomingSet: "poor" as const };
+    for (const type of Object.keys(
+      setTypeOptions,
+    ) as (keyof typeof setTypeOptions)[]) {
+      const typed = {
+        ...e,
+        assessment: { ...e.assessment!, criteria: { ...good, setType: type } },
+      };
+      assert.equal(
+        effectiveDifficulty(typed),
+        type === "third" ? "easy" : type === "second" ? "normal" : "hard",
+      );
+      assert.equal(
+        effectiveDifficulty({
+          ...typed,
+          assessment: {
+            ...typed.assessment,
+            criteria: { ...poor, setType: type },
+          },
+        }),
+        "hard",
+      );
+      assert.equal(
+        effectiveDifficulty({
+          ...typed,
+          assessment: {
+            ...typed.assessment,
+            difficultySource: "manual",
+            difficulty: "normal",
+          },
+        }),
+        "normal",
+      );
+    }
+    const thirdUnknown = {
+      ...e,
+      assessment: { ...e.assessment!, criteria: { setType: "third" as const } },
+    };
+    assert.equal(effectiveDifficulty(thirdUnknown), "normal");
+    const oldChina = {
+      ...e,
+      assessment: {
+        ...e.assessment!,
+        setDifficultyVersion: undefined,
+        criteria: { ...good, setType: "china" as const },
+      },
+    };
+    assert.equal(effectiveDifficulty(oldChina), "easy");
+  }
+});
+test("correção do tempo herdado recalcula dificuldade e notas sem mudar o placar", () => {
+  let match = newMatch();
+  const id = match.players[0].id;
+  const setter: SkillEvent = {
+    ...liveSet(id),
+    assessment: {
+      ...liveSet(id).assessment!,
+      setDifficultyVersion: 1,
+      criteria: { setType: "first" },
+    },
+  };
+  match = append(match, { type: "event", event: setter });
+  const attack = {
+    ...liveAttack(id),
+    assessment: {
+      ...liveAttack(id).assessment!,
+      setDifficultyVersion: 1 as const,
+      criteria: { incomingSet: "good" as const },
+    },
+  };
+  match = append(match, {
+    type: "event",
+    event: withRallyContext(project(match), attack),
+  });
+  assert.equal(effectiveDifficulty(project(match).events.at(-1)!), "hard");
+  match = correct(
+    match,
+    match.audit[0].id,
+    {
+      ...setter,
+      assessment: { ...setter.assessment!, criteria: { setType: "third" } },
+    },
+    "Tempo observado no vídeo",
+  );
+  assert.equal(effectiveDifficulty(project(match).events.at(-1)!), "easy");
+  assert.deepEqual(project(match).score, [0, 0]);
+  assert.equal(validPublicSnapshot(publicSnapshot(match)), true);
+});
+test("ataque herda tipo do último levantamento; correção e desfazer atualizam a mesma bola", () => {
+  let match = newMatch();
+  const id = match.players[0].id;
+  const setter: SkillEvent = {
+    ...liveSet(id),
+    assessment: { ...liveSet(id).assessment!, criteria: { setType: "chute" } },
+  };
+  match = append(match, { type: "event", event: setter });
+  const setterId = match.audit[0].id;
+  const draft = withRallyContext(project(match), liveAttack(id));
+  assert.equal(draft.assessment?.criteria?.setType, "chute");
+  assert.equal(draft.assessment?.setTypeSource, "rally");
+  match = append(match, { type: "event", event: draft });
+  match = correct(
+    match,
+    setterId,
+    {
+      ...setter,
+      assessment: { ...setter.assessment!, criteria: { setType: "meter" } },
+    },
+    "Tipo corrigido",
+  );
+  assert.equal(
+    project(match).events.at(-1)?.assessment?.criteria?.setType,
+    "meter",
+  );
+  assert.equal(
+    project(parseMatch(JSON.stringify(match))).events.at(-1)?.assessment
+      ?.criteria?.setType,
+    "meter",
+  );
+  const snapshot = publicSnapshot(match);
+  assert.equal(validPublicSnapshot(snapshot), true);
+  const distribution = distributionFromCube(
+    snapshot.technical!.team,
+    "setType",
+    "attack",
+  );
+  assert.equal(distribution.rows.find((r) => r.id === "meter")?.count, 1);
+  match = undo(match);
+  assert.equal(
+    project(match).events.at(-1)?.assessment?.criteria?.setType,
+    "chute",
+  );
+  match = correct(
+    match,
+    setterId,
+    { ...setter, assessment: { ...setter.assessment!, criteria: {} } },
+    "Tipo não observado",
+  );
+  assert.equal(
+    project(match).events.at(-1)?.assessment?.criteria?.setType,
+    undefined,
+  );
+  assert.equal(
+    project(match).events.at(-1)?.assessment?.setTypeSource,
+    undefined,
+  );
+});
+test("tipo automático não atravessa outro toque ou rally e permite informar quando não houve levantamento registrado", () => {
+  let match = newMatch();
+  const id = match.players[0].id;
+  const manual = {
+    ...liveAttack(id),
+    assessment: {
+      ...liveAttack(id).assessment!,
+      criteria: { setType: "high" as const },
+    },
+  };
+  assert.equal(
+    withRallyContext(project(match), manual).assessment?.criteria?.setType,
+    "high",
+  );
+  match = append(match, {
+    type: "event",
+    event: {
+      ...liveSet(id),
+      assessment: {
+        ...liveSet(id).assessment!,
+        criteria: { setType: "stretched" },
+      },
+    },
+  });
+  const inherited = withRallyContext(project(match), liveAttack(id));
+  assert.equal(inherited.assessment?.criteria?.setType, "stretched");
+  const afterDefense = append(match, {
+    type: "event",
+    event: {
+      skill: "defense",
+      result: "simple_good",
+      playerId: id,
+      assessment: initialAssessment("defense", "simple_good"),
+    },
+  });
+  assert.equal(
+    withRallyContext(project(afterDefense), inherited).assessment?.criteria
+      ?.setType,
+    undefined,
+  );
+  match = append(match, { type: "point", winner: "ours" });
+  assert.equal(
+    withRallyContext(project(match), inherited).assessment?.criteria?.setType,
+    undefined,
+  );
+  assert.equal(
+    withRallyContext(project(match), inherited).assessment?.setTypeSource,
+    undefined,
+  );
+  const archived = {
+    ...manual,
+    assessment: { ...manual.assessment, rallyContext: undefined },
+  };
+  assert.equal(
+    withRallyContext(project(match), archived).assessment?.criteria?.setType,
+    "high",
+  );
 });
 test("levantamento herda passe do rally e recalcula após correção/desfazer, sem alterar históricos manuais", () => {
   let match = newMatch();

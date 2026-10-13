@@ -543,10 +543,26 @@ export function assessmentError(
   const a = event.assessment;
   if (a !== undefined) {
     if (
-      a?.rallyContext !== undefined &&
-      (a.version !== 4 || a.rallyContext !== "auto" || event.skill !== "set")
+      a?.setDifficultyVersion !== undefined &&
+      (a.setDifficultyVersion !== 1 ||
+        a.version !== 4 ||
+        !["set", "attack"].includes(event.skill))
     )
-      return "Contexto automático é exclusivo do levantamento ao vivo v4.";
+      return "Dificuldade por tipo exige levantamento ou ataque v4.";
+    if (
+      a?.rallyContext !== undefined &&
+      (a.version !== 4 ||
+        a.rallyContext !== "auto" ||
+        !["set", "attack"].includes(event.skill))
+    )
+      return "Contexto automático exige levantamento ou ataque ao vivo v4.";
+    if (
+      a?.setTypeSource !== undefined &&
+      (a.setTypeSource !== "rally" ||
+        a.rallyContext !== "auto" ||
+        event.skill !== "attack")
+    )
+      return "Origem automática do levantamento inválida.";
     if (
       !a ||
       ![1, 2, 3, 4].includes(a.version) ||
@@ -768,6 +784,7 @@ export function assessedV4(event: SkillEvent) {
     event.skill === "opponent" ||
     a.responsibility === "none" ||
     a.execution === "unrated" ||
+    (event.skill === "attack" && c?.incomingSet === "error") ||
     c?.blockQuality === "unrated"
   )
     return empty;

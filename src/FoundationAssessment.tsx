@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { type Match, type SkillEvent } from "./model";
 import { assessed, difficultyLabels } from "./assessment";
 import { CriteriaFields } from "./CriteriaFields";
-import { effectiveDifficulty } from "./criteria";
+import { effectiveDifficulty, criteriaFields } from "./criteria";
 import {
   blockFor,
   executionFor,
@@ -136,8 +136,27 @@ export function FoundationAssessment({
           value={a.criteria}
           hideQuality
           hideIncomingPass={a.rallyContext === "auto"}
-          onChange={(criteria) => change({ criteria })}
+          hideSetType={event.skill === "attack" && a.setTypeSource === "rally"}
+          onChange={(criteria) =>
+            change({
+              criteria,
+              ...(criteria.setType !== a.criteria?.setType
+                ? { setDifficultyVersion: 1 as const }
+                : {}),
+            })
+          }
         />
+        {event.skill === "attack" && a.setTypeSource === "rally" && (
+          <p className="rally-pass-context" role="status">
+            Levantamento recebido:{" "}
+            {
+              criteriaFields.find((f) => f.key === "setType")?.options[
+                a.criteria?.setType ?? ""
+              ]
+            }
+            {" · recuperado automaticamente deste rally"}
+          </p>
+        )}
         {event.skill === "set" && a.rallyContext === "auto" && (
           <p className="rally-pass-context" role="status">
             {a.criteria?.incomingPass
@@ -145,9 +164,16 @@ export function FoundationAssessment({
               : "Passe não registrado neste rally · sem dificuldade presumida"}
           </p>
         )}
+        {event.skill === "attack" && a.criteria?.incomingSet === "error" && (
+          <p className="rally-pass-context" role="status">
+            Erro direto do levantamento: ataque sem oportunidade real, excluído
+            da nota. Registre o erro e o ponto no levantamento, sem repetir o
+            ponto aqui.
+          </p>
+        )}
         <AssessmentSelect
           label="Participação avaliável"
-          value={a.execution === "unrated" ? "unrated" : "rated"}
+          value={grade.rated ? "rated" : "unrated"}
           options={{
             rated: "Avaliar esta ação",
             unrated: "Sem oportunidade real · excluir da nota",

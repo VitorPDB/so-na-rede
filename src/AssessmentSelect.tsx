@@ -60,6 +60,7 @@ export function AssessmentSelect({
   onChange,
   hint,
   inline = false,
+  selectedLabel,
 }: {
   label: string;
   value: string;
@@ -67,6 +68,7 @@ export function AssessmentSelect({
   onChange: (value: string) => void;
   hint?: string;
   inline?: boolean;
+  selectedLabel?: string;
 }) {
   const Icon = fieldIcon(label);
   const cards = (
@@ -113,7 +115,7 @@ export function AssessmentSelect({
       <summary>
         <Icon size={18} aria-hidden="true" />
         <strong>{label}</strong>
-        <small>{options[value] ?? "Escolher"}</small>
+        <small>{selectedLabel ?? options[value] ?? "Escolher"}</small>
         <ChevronDown
           size={16}
           className="assessment-choice-chevron"

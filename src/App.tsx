@@ -316,10 +316,14 @@ export default function App() {
       return;
     }
     const contextual =
-      key === "set" && event.assessment
+      (key === "set" || key === "attack") && event.assessment
         ? {
             ...event,
-            assessment: { ...event.assessment, rallyContext: "auto" as const },
+            assessment: {
+              ...event.assessment,
+              rallyContext: "auto" as const,
+              setDifficultyVersion: 1 as const,
+            },
           }
         : event;
     setPendingAction(withRallyContext(s, contextual));

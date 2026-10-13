@@ -11,6 +11,7 @@ export function withRallyContext(
     .filter((e) => e.set === state.set && e.rally === state.rally)
     .at(-1);
   const criteria = { ...event.assessment.criteria };
+  let setTypeSource = event.assessment.setTypeSource;
   if (event.skill === "set") {
     delete criteria.incomingPass;
     if (previous && ["reception", "defense"].includes(previous.skill)) {
@@ -18,5 +19,16 @@ export function withRallyContext(
       if (pass !== "error") criteria.incomingPass = pass;
     }
   }
-  return { ...event, assessment: { ...event.assessment, criteria } };
+  if (event.skill === "attack") {
+    if (setTypeSource === "rally") delete criteria.setType;
+    setTypeSource = undefined;
+    if (previous?.skill === "set" && previous.assessment?.criteria?.setType) {
+      criteria.setType = previous.assessment.criteria.setType;
+      setTypeSource = "rally";
+    }
+  }
+  return {
+    ...event,
+    assessment: { ...event.assessment, criteria, setTypeSource },
+  };
 }

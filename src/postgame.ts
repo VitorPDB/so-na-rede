@@ -57,6 +57,7 @@ export const countKey = (
   tag = "",
   criteria?: AssessmentCriteria,
   difficultySource?: "manual" | "context",
+  setDifficultyVersion?: 1,
 ) => {
   const ordered = criteria
     ? Object.fromEntries(
@@ -79,6 +80,7 @@ export const countKey = (
         JSON.stringify({
           criteria: ordered ?? {},
           ...(difficultySource ? { difficultySource } : {}),
+          ...(setDifficultyVersion ? { setDifficultyVersion } : {}),
         }),
       );
   return key;
@@ -96,6 +98,7 @@ export function cellAssessment(
   let detail: {
     criteria?: AssessmentCriteria;
     difficultySource?: "manual" | "context";
+    setDifficultyVersion?: 1;
   } = {};
   if (payload !== undefined) {
     detail = JSON.parse(decodeURIComponent(payload));
@@ -104,7 +107,8 @@ export function cellAssessment(
       typeof detail !== "object" ||
       Array.isArray(detail) ||
       Object.keys(detail).some(
-        (k) => !["criteria", "difficultySource"].includes(k),
+        (k) =>
+          !["criteria", "difficultySource", "setDifficultyVersion"].includes(k),
       )
     )
       throw new Error("Critérios inválidos.");

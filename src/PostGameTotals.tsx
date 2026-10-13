@@ -70,6 +70,12 @@ export function PostGameTotals({
           : criteria
         : undefined,
       difficultySource,
+      game.ratingVersion === 4 &&
+        difficulty !== "legacy" &&
+        criteria.setType &&
+        ["set", "attack"].includes(s)
+        ? 1
+        : undefined,
     );
   const [setIndex, setSetIndex] = useState(0),
     [skill, setSkill] = useState<Skill>("attack"),
@@ -761,7 +767,8 @@ export function PostGameTotals({
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
-                  if (file.size > 5 * 1024 * 1024) throw new Error("Ficha muito grande.");
+                  if (file.size > 5 * 1024 * 1024)
+                    throw new Error("Ficha muito grande.");
                   const next = JSON.parse(await file.text());
                   if (postGameErrors(next, match).length) throw new Error();
                   if (
