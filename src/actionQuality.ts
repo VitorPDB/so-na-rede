@@ -89,6 +89,7 @@ export function criteriaForResult(
 ) {
   const next = { ...criteria },
     event: SkillEvent = { skill, result };
+  if (next.faultType && actionIntent(event) !== "error") delete next.faultType;
   if (
     next.passQuality &&
     (next.passQuality !== "A" || actionIntent(event) !== "good")

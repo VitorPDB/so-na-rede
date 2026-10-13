@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 import { type Match, type SkillEvent } from "./model";
 import { assessed, difficultyLabels } from "./assessment";
 import { CriteriaFields } from "./CriteriaFields";
-import { effectiveDifficulty, criteriaFields } from "./criteria";
+import { effectiveDifficulty, criteriaFields, faultOptions } from "./criteria";
+import { withDirectFault } from "./faults";
 import {
   blockFor,
   executionFor,
   passFor,
   compatibleQuality,
+  actionIntent,
 } from "./actionQuality";
 
 export function FoundationAssessment({
@@ -115,6 +117,34 @@ export function FoundationAssessment({
           }
         />
       </div>
+      {["set", "attack", "block"].includes(event.skill) &&
+        actionIntent(event) !== "good" && (
+          <AssessmentSelect
+            label="Erro direto / infração"
+            value={a.criteria?.faultType ?? ""}
+            options={{
+              "": "Sem erro direto identificado",
+              ...Object.fromEntries(
+                Object.entries(faultOptions).filter(
+                  ([key]) =>
+                    event.skill === "attack" || !key.startsWith("attack_"),
+                ),
+              ),
+            }}
+            hint="Ao confirmar o jogador, encerra o rally com um único ponto para eles."
+            onChange={(value) => {
+              const criteria = { ...a.criteria };
+              if (value)
+                criteria.faultType = value as NonNullable<
+                  typeof criteria.faultType
+                >;
+              else delete criteria.faultType;
+              onChange(
+                withDirectFault({ ...event, assessment: { ...a, criteria } }),
+              );
+            }}
+          />
+        )}
       {event.skill === "block" && (
         <AssessmentSelect
           label="Tipo de bloqueio"
@@ -137,6 +167,7 @@ export function FoundationAssessment({
           skill={event.skill}
           value={a.criteria}
           hideQuality
+          hideFaults
           hideIncomingPass={a.rallyContext === "auto"}
           hideSetType={event.skill === "attack" && a.setTypeSource === "rally"}
           onChange={(criteria) =>

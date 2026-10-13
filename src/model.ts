@@ -247,7 +247,8 @@ export interface AssessmentCriteria {
     | "head"
     | "setter_tip";
   attackBlockers?: "none" | "single" | "double" | "triple";
-  attackType?: "power" | "tip" | "placed" | "tool" | "quick";
+  attackType?: "power" | "tip" | "placed" | "tool" | "quick" | "free";
+  faultType?: "net_touch" | "invasion" | "attack_net" | "attack_out";
   approach?: "good" | "adjusted" | "poor";
   incomingPass?: "A" | "B" | "C";
   setDirection?: "front" | "back" | "middle" | "backrow";

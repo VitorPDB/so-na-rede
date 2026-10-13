@@ -25,6 +25,12 @@ export const incomingSetOptions = {
   high_bad: "Alta · inadequada",
   error: "Erro direto",
 };
+export const faultOptions = {
+  net_touch: "Toque na rede · infração",
+  invasion: "Invasão · infração",
+  attack_net: "Ataque na rede",
+  attack_out: "Ataque para fora",
+};
 export const criteriaFields: {
   key: keyof AssessmentCriteria;
   label: string;
@@ -32,6 +38,13 @@ export const criteriaFields: {
   skills: Skill[];
   options: Record<string, string>;
 }[] = [
+  {
+    key: "faultType",
+    label: "Erro direto / infração",
+    hint: "Selecione quando o erro encerrou o rally",
+    skills: ["set", "attack", "block"],
+    options: faultOptions,
+  },
   {
     key: "blockQuality",
     label: "Qualidade / precisão do bloqueio",
@@ -164,6 +177,7 @@ export const criteriaFields: {
       placed: "Colocado",
       tool: "Exploração do bloqueio",
       quick: "Rápido / primeiro tempo",
+      free: "Passou de graça",
     },
   },
   {
@@ -209,6 +223,12 @@ export function criteriaError(
   if (!criteria || typeof criteria !== "object" || Array.isArray(criteria))
     return "Critérios do fundamento inválidos.";
   for (const [key, value] of Object.entries(criteria)) {
+    if (
+      key === "faultType" &&
+      ["attack_net", "attack_out"].includes(String(value)) &&
+      skill !== "attack"
+    )
+      return "Erro de ataque é exclusivo do ataque.";
     if (skill === "attack" && key === "setType" && value === "setter_tip")
       return "Registre a largadinha do levantador no próprio levantamento.";
     const field = criteriaFields.find(

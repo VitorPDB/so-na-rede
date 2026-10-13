@@ -16,6 +16,7 @@ import {
 } from "./model";
 import { legacyRoles } from "./formation";
 import { withRallyContext } from "./rallyContext";
+import { withDirectFault } from "./faults";
 import { assessed, assessmentError } from "./assessment";
 import { captureRatingContext, ratingV2, sampleLabel } from "./ratingV2";
 
@@ -444,7 +445,11 @@ export function append(match: Match, command: Command): Match {
   if (command.type === "event")
     command = {
       ...command,
-      event: captureRatingContext(match, project(match), command.event),
+      event: captureRatingContext(
+        match,
+        project(match),
+        withDirectFault(command.event),
+      ),
     };
   const s = project(match);
   const error = validate(match, s, command);

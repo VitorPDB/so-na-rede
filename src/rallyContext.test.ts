@@ -11,6 +11,7 @@ import { parseMatch } from "./storage";
 import { analysisFields, distributionFromCube } from "./criteriaStats";
 import { assessed } from "./assessment";
 import { countKey, cellAssessment, newPostGame } from "./postgame";
+import { playerEvents } from "./assessment";
 
 const liveSet = (id: string): SkillEvent => ({
   skill: "set",
@@ -29,6 +30,98 @@ const liveAttack = (id: string): SkillEvent => ({
     ...initialAssessment("attack", "simple_good"),
     rallyContext: "auto",
   },
+});
+test("infrações por fundamento e erros de ataque encerram um único rally e desfazer restaura", () => {
+  for (const skill of ["set", "attack", "block"] as const) {
+    const faults =
+      skill === "attack"
+        ? (["net_touch", "invasion", "attack_net", "attack_out"] as const)
+        : (["net_touch", "invasion"] as const);
+    for (const faultType of faults) {
+      const m = newMatch();
+      const id = skill === "block" ? project(m).lineup[1] : m.players[0].id;
+      const match = append(m, {
+        type: "event",
+        event: {
+          skill,
+          playerId: id,
+          result: "simple_gafe",
+          assessment: {
+            ...initialAssessment(skill, "simple_gafe"),
+            criteria: { faultType },
+          },
+        },
+      });
+      const state = project(match),
+        event = state.events[0];
+      assert.deepEqual(state.score, [0, 1]);
+      assert.equal(state.rally, 2);
+      assert.equal(state.events.length, 1);
+      assert.equal(assessed(event).error, true);
+      if (faultType === "net_touch" || faultType === "invasion")
+        assert.equal(assessed(event).quality, 0);
+      assert.equal(validPublicSnapshot(publicSnapshot(match)), true);
+      assert.deepEqual(project(undo(match)).score, [0, 0]);
+      const restored = parseMatch(JSON.stringify(match));
+      assert.deepEqual(project(restored).score, [0, 1]);
+    }
+  }
+  assert.ok(criteriaError("set", { faultType: "attack_out" }));
+  assert.ok(criteriaError("defense", { faultType: "net_touch" }));
+});
+test("falta no bloqueio duplo pune o autor e preserva a avaliação do outro participante", () => {
+  const m = newMatch(),
+    [p1, p2] = project(m).lineup.slice(1, 3);
+  const match = append(m, {
+    type: "event",
+    event: {
+      skill: "block",
+      result: "simple_gafe",
+      playerId: p1,
+      participants: [
+        { playerId: p1, responsibility: "correct" },
+        {
+          playerId: p2,
+          responsibility: "correct",
+          criteria: { blockQuality: "direction" },
+        },
+      ],
+      assessment: {
+        ...initialAssessment("block", "simple_gafe"),
+        group: "double",
+        criteria: { faultType: "net_touch" },
+      },
+    },
+  });
+  const e = project(match).events[0];
+  assert.equal(assessed(playerEvents([e], p1)[0]).error, true);
+  assert.equal(assessed(playerEvents([e], p2)[0]).error, false);
+  assert.deepEqual(project(match).score, [0, 1]);
+});
+test("passou de graça mantém o rally aberto e entra no relatório de tipo de ataque", () => {
+  const m = newMatch();
+  const match = append(m, {
+    type: "event",
+    event: {
+      skill: "attack",
+      playerId: m.players[0].id,
+      result: "simple_good",
+      assessment: {
+        ...initialAssessment("attack", "simple_good"),
+        criteria: { attackType: "free" },
+      },
+    },
+  });
+  assert.deepEqual(project(match).score, [0, 0]);
+  assert.equal(project(match).rally, 1);
+  const s = publicSnapshot(match);
+  assert.equal(
+    distributionFromCube(s.technical!.team, "attackType", "attack").rows.find(
+      (r) => r.id === "free",
+    )?.count,
+    1,
+  );
+  assert.equal(validPublicSnapshot(s), true);
 });
 test("largadinha do levantador pontua uma vez e não é herdada como levantamento pelo atacante", () => {
   const m = newMatch();

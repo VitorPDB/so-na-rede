@@ -13,6 +13,7 @@ export function CriteriaFields({
   inlineQuality = false,
   hideIncomingPass = false,
   hideSetType = false,
+  hideFaults = false,
 }: {
   skill: Skill;
   value?: AssessmentCriteria;
@@ -24,6 +25,7 @@ export function CriteriaFields({
   inlineQuality?: boolean;
   hideIncomingPass?: boolean;
   hideSetType?: boolean;
+  hideFaults?: boolean;
 }) {
   return (
     <div className="criteria-fields">
@@ -34,6 +36,7 @@ export function CriteriaFields({
             (!hidePass || f.key !== "passQuality") &&
             (!hideIncomingPass || f.key !== "incomingPass") &&
             (!hideSetType || f.key !== "setType") &&
+            (!hideFaults || f.key !== "faultType") &&
             (!onlyQuality || ["passQuality", "blockQuality"].includes(f.key)) &&
             (!hideQuality || !["passQuality", "blockQuality"].includes(f.key)),
         )
@@ -63,17 +66,28 @@ export function CriteriaFields({
                     ? compatibleQuality(event, field.key, field.options)
                     : field.key === "incomingSet"
                       ? { "": "Não informado", ...incomingSetOptions }
-                      : field.key === "setType"
+                      : field.key === "faultType"
                         ? {
                             "": "Não informado",
                             ...Object.fromEntries(
-                              Object.entries(setTypeOptions).filter(
+                              Object.entries(field.options).filter(
                                 ([key]) =>
-                                  skill === "set" || key !== "setter_tip",
+                                  skill === "attack" ||
+                                  !key.startsWith("attack_"),
                               ),
                             ),
                           }
-                        : { "": "Não informado", ...field.options }
+                        : field.key === "setType"
+                          ? {
+                              "": "Não informado",
+                              ...Object.fromEntries(
+                                Object.entries(setTypeOptions).filter(
+                                  ([key]) =>
+                                    skill === "set" || key !== "setter_tip",
+                                ),
+                              ),
+                            }
+                          : { "": "Não informado", ...field.options }
                 }
                 hint={field.hint}
                 onChange={(selected) => {

@@ -543,6 +543,11 @@ export function assessmentError(
   const a = event.assessment;
   if (a !== undefined) {
     if (
+      a?.criteria?.faultType &&
+      (event.winner ?? resultOf(event).winner) === "ours"
+    )
+      return "Uma infração própria não pode dar ponto para nós.";
+    if (
       a?.setDifficultyVersion !== undefined &&
       (a.setDifficultyVersion !== 1 ||
         a.version !== 4 ||
@@ -784,8 +789,8 @@ export function assessedV4(event: SkillEvent) {
     event.skill === "opponent" ||
     a.responsibility === "none" ||
     a.execution === "unrated" ||
-    (event.skill === "attack" && c?.incomingSet === "error") ||
-    c?.blockQuality === "unrated"
+    (event.skill === "attack" && c?.incomingSet === "error" && !c?.faultType) ||
+    (c?.blockQuality === "unrated" && !c?.faultType)
   )
     return empty;
   const pass =
@@ -798,7 +803,7 @@ export function assessedV4(event: SkillEvent) {
           ? "C"
           : undefined);
   const execution =
-    a.execution ??
+    (c?.faultType ? "error" : a.execution) ??
     (a.responsibility === "wrong"
       ? "poor"
       : a.responsibility === "partial"
@@ -848,6 +853,7 @@ export function assessedV4(event: SkillEvent) {
       unrated: 5,
     }[c.blockQuality];
   const error =
+    !!c?.faultType ||
     pass === "error" ||
     c?.blockQuality === "error" ||
     (!pass && !c?.blockQuality && execution === "error");
@@ -869,6 +875,10 @@ export function assessedV4(event: SkillEvent) {
   // Neutral execution stays neutral; difficulty cannot turn a gafe into a good action.
   if (value !== 5) value += offset;
   if (c?.blockQuality === "error") value = 0;
+  if (c?.faultType)
+    value = ["net_touch", "invasion"].includes(c.faultType)
+      ? 0
+      : Math.max(0, 1 + offset);
   if (value < 5) value = Math.min(4.9, value);
   if (event.skill === "attack" && c?.approach === "poor" && value > 5 && !error)
     value -= 0.25;
