@@ -15,6 +15,7 @@ import {
   p1Roles,
 } from "./model";
 import { legacyRoles } from "./formation";
+import { withRallyContext } from "./rallyContext";
 import { assessed, assessmentError } from "./assessment";
 import { captureRatingContext, ratingV2, sampleLabel } from "./ratingV2";
 
@@ -226,7 +227,7 @@ export function project(match: Match): Projection {
     }
     if (c.type === "event") {
       state.events.push({
-        ...c.event,
+        ...withRallyContext(state, c.event),
         participants: c.event.participants?.map((p) => ({
           ...p,
           role:

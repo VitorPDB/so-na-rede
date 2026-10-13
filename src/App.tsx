@@ -1,5 +1,6 @@
 import { CardSelect } from "./CardSelect";
 import { initialAssessment } from "./actionQuality";
+import { withRallyContext } from "./rallyContext";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeftRight,
@@ -314,7 +315,14 @@ export default function App() {
       act({ type: "event", event });
       return;
     }
-    setPendingAction(event);
+    const contextual =
+      key === "set" && event.assessment
+        ? {
+            ...event,
+            assessment: { ...event.assessment, rallyContext: "auto" as const },
+          }
+        : event;
+    setPendingAction(withRallyContext(s, contextual));
   };
   const assignAction = (playerId: string, details?: SkillEvent) => {
     if (!pendingAction) return;
@@ -635,7 +643,8 @@ export default function App() {
   };
   const importBackup = async (file: File) => {
     try {
-      if (file.size > 25 * 1024 * 1024) throw new Error("Backup excede o limite de 25 MB.");
+      if (file.size > 25 * 1024 * 1024)
+        throw new Error("Backup excede o limite de 25 MB.");
       const data = parseMatch(await file.text());
       if (
         window.confirm(

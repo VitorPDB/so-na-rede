@@ -11,6 +11,7 @@ export function CriteriaFields({
   hideQuality = false,
   event,
   inlineQuality = false,
+  hideIncomingPass = false,
 }: {
   skill: Skill;
   value?: AssessmentCriteria;
@@ -20,6 +21,7 @@ export function CriteriaFields({
   hideQuality?: boolean;
   event?: SkillEvent;
   inlineQuality?: boolean;
+  hideIncomingPass?: boolean;
 }) {
   return (
     <div className="criteria-fields">
@@ -28,6 +30,7 @@ export function CriteriaFields({
           (f) =>
             f.skills.includes(skill) &&
             (!hidePass || f.key !== "passQuality") &&
+            (!hideIncomingPass || f.key !== "incomingPass") &&
             (!onlyQuality || ["passQuality", "blockQuality"].includes(f.key)) &&
             (!hideQuality || !["passQuality", "blockQuality"].includes(f.key)),
         )
@@ -35,13 +38,27 @@ export function CriteriaFields({
           return (
             <div className="criterion-field" key={field.key}>
               <AssessmentSelect
-                label={field.label}
-                value={value[field.key] ?? ""}
+                label={
+                  field.key === "setType" && skill === "set"
+                    ? "Tipo de levantamento"
+                    : field.label
+                }
+                value={
+                  field.key === "incomingSet"
+                    ? value.incomingSet === "A" || value.incomingSet === "B"
+                      ? "good"
+                      : value.incomingSet === "C"
+                        ? "poor"
+                        : (value.incomingSet ?? "")
+                    : (value[field.key] ?? "")
+                }
                 inline={inlineQuality}
                 options={
                   event && ["passQuality", "blockQuality"].includes(field.key)
                     ? compatibleQuality(event, field.key, field.options)
-                    : { "": "Não informado", ...field.options }
+                    : field.key === "incomingSet"
+                      ? { "": "Não informado", good: "Bom", poor: "Ruim" }
+                      : { "": "Não informado", ...field.options }
                 }
                 hint={field.hint}
                 onChange={(selected) => {

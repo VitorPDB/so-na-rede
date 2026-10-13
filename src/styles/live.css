@@ -1191,8 +1191,35 @@
 }
 .foundation-core {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
+}
+.foundation-core.is-block {
+  grid-template-columns: minmax(0, 1fr);
+}
+.foundation-core.is-block .foundation-quality .assessment-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+.foundation-core.is-block .foundation-quality button {
+  align-items: flex-start;
+}
+.assessment-choice-grid button span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.assessment-choice > summary > svg {
+  flex-shrink: 0;
+}
+.assessment-choice > summary strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.rally-pass-context {
+  padding: 12px;
+  color: var(--c-text-2);
+  background: var(--c-surface-2);
+  border-radius: 8px;
+  font-size: var(--fs-sm);
 }
 .assessment-choice {
   border-bottom: 1px solid var(--c-border-subtle);

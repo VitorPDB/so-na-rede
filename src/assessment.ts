@@ -320,14 +320,14 @@ export const situations: Situation[] = [
   },
   {
     id: "touch_simple",
-    label: "Toque simples",
+    label: "Toque simples · facilitou nossa defesa",
     skills: ["block"],
     category: "execution",
     quality: 0.55,
   },
   {
     id: "touch_effective",
-    label: "Toque efetivo · facilita defesa",
+    label: "Toque efetivo · ficou do lado de lá, fácil",
     skills: ["block"],
     category: "execution",
     quality: 0.8,
@@ -542,6 +542,11 @@ export function assessmentError(
     return "Contexto de nota exige avaliação v2 ou v3.";
   const a = event.assessment;
   if (a !== undefined) {
+    if (
+      a?.rallyContext !== undefined &&
+      (a.version !== 4 || a.rallyContext !== "auto" || event.skill !== "set")
+    )
+      return "Contexto automático é exclusivo do levantamento ao vivo v4.";
     if (
       !a ||
       ![1, 2, 3, 4].includes(a.version) ||

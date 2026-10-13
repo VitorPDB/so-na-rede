@@ -25,8 +25,8 @@ export const criteriaFields: {
     options: {
       perfect: "Perfeito",
       error: "Erro direto · toque na rede / infração",
-      effective: "Toque efetivo · facilita defesa",
-      simple: "Toque simples",
+      effective: "Toque efetivo · ficou do lado de lá, fácil",
+      simple: "Toque simples · facilitou nossa defesa",
       direction: "Fechou a direção, sem toque",
       used: "Usado / explorado",
       late: "Atrasado",
@@ -100,13 +100,41 @@ export const criteriaFields: {
   },
   {
     key: "incomingSet",
-    label: "Levantamento recebido",
+    label: "Qualidade do levantamento",
     hint: "Contextualiza a dificuldade do ataque",
     skills: ["attack"],
     options: {
       A: "A · confortável",
       B: "B · exige ajuste",
       C: "C · ruim / limita o ataque",
+      good: "Bom",
+      poor: "Ruim",
+    },
+  },
+  {
+    key: "setType",
+    label: "Levantamento recebido",
+    hint: "Tipo de bola · informação tática, sem bônus automático",
+    skills: ["attack", "set"],
+    options: {
+      chute: "Chute",
+      meter: "Metro",
+      stretched: "Esticada",
+      high: "Alta",
+      half: "Meia-bola",
+      quick: "Primeiro tempo",
+    },
+  },
+  {
+    key: "attackBlockers",
+    label: "Bloqueadores adversários",
+    hint: "Quantidade enfrentada · contexto tático",
+    skills: ["attack"],
+    options: {
+      none: "Nenhum · 0",
+      single: "Simples · 1",
+      double: "Duplo · 2",
+      triple: "Triplo · 3",
     },
   },
   {
@@ -204,7 +232,11 @@ export function effectiveDifficulty(event: SkillEvent) {
         ? c?.incomingSet
         : undefined;
   if (incoming)
-    return incoming === "A" ? "easy" : incoming === "C" ? "hard" : "normal";
+    return incoming === "A" || incoming === "good"
+      ? "easy"
+      : incoming === "C" || incoming === "poor"
+        ? "hard"
+        : "normal";
   if (event.skill === "defense") {
     if (c?.incomingBall === "deflection") return "emergency";
     if (c?.incomingBall === "strong" || c?.incomingBall === "long")

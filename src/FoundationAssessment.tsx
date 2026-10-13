@@ -53,7 +53,11 @@ export function FoundationAssessment({
   const grade = assessed(event);
   return (
     <section className="foundation-assessment" aria-label="Ficha do fundamento">
-      <div className="foundation-core">
+      <div
+        className={
+          "foundation-core" + (event.skill === "block" ? " is-block" : "")
+        }
+      >
         <div className="foundation-quality">
           {pass || event.skill === "block" ? (
             <CriteriaFields
@@ -131,8 +135,16 @@ export function FoundationAssessment({
           skill={event.skill}
           value={a.criteria}
           hideQuality
+          hideIncomingPass={a.rallyContext === "auto"}
           onChange={(criteria) => change({ criteria })}
         />
+        {event.skill === "set" && a.rallyContext === "auto" && (
+          <p className="rally-pass-context" role="status">
+            {a.criteria?.incomingPass
+              ? `Passe ${a.criteria.incomingPass} · recuperado automaticamente deste rally`
+              : "Passe não registrado neste rally · sem dificuldade presumida"}
+          </p>
+        )}
         <AssessmentSelect
           label="Participação avaliável"
           value={a.execution === "unrated" ? "unrated" : "rated"}

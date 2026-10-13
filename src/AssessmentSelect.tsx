@@ -35,7 +35,7 @@ export function fieldIcon(label: string) {
             ? Move
             : /Direção|Origem/.test(label)
               ? ArrowUp
-              : /Participação|Tipo de bloqueio/.test(label)
+              : /Participação|Tipo de bloqueio|Bloqueadores/.test(label)
                 ? UsersRound
                 : Volleyball;
 }

@@ -185,6 +185,7 @@ export interface SkillEvent {
     version: 1 | 2 | 3 | 4;
     criteria?: AssessmentCriteria;
     difficultySource?: "manual" | "context";
+    rallyContext?: "auto";
     difficulty: "easy" | "normal" | "hard" | "emergency";
     tags: string[];
     group?: "combination" | "double" | "triple";
@@ -228,7 +229,9 @@ export interface AssessmentCriteria {
   receivedServe?: "underhand" | "float" | "jump";
   serveType?: "underhand" | "float" | "jump" | "targeted";
   gameMoment?: "normal" | "decisive" | "after-timeout" | "error-streak";
-  incomingSet?: "A" | "B" | "C";
+  incomingSet?: "A" | "B" | "C" | "good" | "poor";
+  setType?: "chute" | "meter" | "stretched" | "high" | "half" | "quick";
+  attackBlockers?: "none" | "single" | "double" | "triple";
   attackType?: "power" | "tip" | "placed" | "tool" | "quick";
   approach?: "good" | "adjusted" | "poor";
   incomingPass?: "A" | "B" | "C";
