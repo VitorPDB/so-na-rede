@@ -43,3 +43,119 @@
 .player-portal .pub-section {
   margin-bottom: 20px;
 }
+.published-picker {
+  border: 1px solid var(--c-border-control);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.published-picker summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+.published-picker summary::-webkit-details-marker {
+  display: none;
+}
+.published-picker summary > svg {
+  flex-shrink: 0;
+}
+.published-picker[open] summary > svg {
+  transform: rotate(180deg);
+}
+.published-score {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  text-align: left;
+}
+.published-score-meta {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin-bottom: 8px;
+}
+.published-team {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+}
+.published-team > span {
+  font-size: 17px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.published-team img,
+.published-team svg {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  justify-self: center;
+}
+.published-team strong {
+  font-size: 28px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.published-versus {
+  justify-self: end;
+  width: 44px;
+  text-align: center;
+  color: var(--c-text-muted);
+  font-size: 13px;
+  line-height: 14px;
+}
+.published-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid var(--c-border-subtle);
+  max-height: 540px;
+  overflow-y: auto;
+}
+.published-options button {
+  padding: 14px 20px;
+  color: var(--c-text);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border-control);
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+}
+.published-options button[aria-pressed="true"] {
+  border-color: var(--c-accent, #c49bd4);
+  background: var(--c-surface-3);
+}
+.published-options button:hover {
+  background: var(--c-surface-3);
+}
+.published-picker summary:focus-visible,
+.published-options button:focus-visible {
+  outline: 2px solid #c49bd4;
+  outline-offset: -3px;
+}
+@media (max-width: 480px) {
+  .published-picker summary,
+  .published-options button {
+    padding: 12px;
+  }
+  .published-team {
+    grid-template-columns: minmax(0, 1fr) 36px 32px;
+    gap: 8px;
+  }
+  .published-team img,
+  .published-team svg {
+    width: 32px;
+    height: 32px;
+  }
+  .published-team > span {
+    font-size: 15px;
+  }
+  .published-versus {
+    width: 32px;
+  }
+}

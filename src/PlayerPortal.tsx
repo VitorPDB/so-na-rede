@@ -1,3 +1,4 @@
+import { PublishedMatchPicker } from "./PublishedMatchPicker";
 import { useEffect, useState } from "react";
 import { cloud } from "./cloud";
 import { CardSelect } from "./CardSelect";
@@ -12,6 +13,7 @@ import { MatchVideoPlayer } from "./MatchVideos";
 
 type Roster = { id: string; name: string; number: number };
 type Game = {
+  opponentLogo?: string | null;
   public: PublicSnapshot;
   own: PublicSnapshot["teamStats"] | null;
   technical: PublicCriteriaData;
@@ -61,7 +63,39 @@ export default function PlayerPortal() {
     });
     if (error)
       throw new Error("Sessão indisponível ou expirada. Entre novamente.");
-    setDashboard(data as Dashboard);
+    const dashboard = data as Dashboard;
+    // Escudos já públicos; nenhuma mudança na autenticação ou no SQL é necessária.
+    const [archive, live, media] = await Promise.all([
+      dashboard.games.length
+        ? cloud!
+            .from("public_matches")
+            .select("match_id,logo:media->>opponentLogo")
+            .in(
+              "match_id",
+              dashboard.games.map((g) => g.public.matchId),
+            )
+        : Promise.resolve({ data: [] }),
+      cloud!
+        .from("live_public")
+        .select("matchId:snapshot->>matchId")
+        .eq("slug", "so-na-rede")
+        .maybeSingle(),
+      cloud!
+        .from("live_media")
+        .select("logo:media->>opponentLogo")
+        .eq("slug", "so-na-rede")
+        .maybeSingle(),
+    ]);
+    setDashboard({
+      ...dashboard,
+      games: dashboard.games.map((g) => ({
+        ...g,
+        opponentLogo:
+          archive.data?.find((row) => row.match_id === g.public.matchId)
+            ?.logo ??
+          (live.data?.matchId === g.public.matchId ? media.data?.logo : null),
+      })),
+    });
   }
   async function login(e: React.FormEvent) {
     e.preventDefault();
@@ -218,24 +252,11 @@ export default function PlayerPortal() {
             {!dashboard.games.length ? (
               <p>A comissão ainda não publicou partidas.</p>
             ) : (
-              <label>
-                Partida
-                <CardSelect
-                  value={gameIndex}
-                  onChange={(e) => setGameIndex(e.target.value)}
-                >
-                  {dashboard.games.map((g, i) => (
-                    <option key={g.public.matchId} value={i}>
-                      {g.public.team} × {g.public.opponent} ·{" "}
-                      {g.public.playedAt
-                        ? new Date(g.public.playedAt).toLocaleDateString(
-                            "pt-BR",
-                          )
-                        : "Partida atual"}
-                    </option>
-                  ))}
-                </CardSelect>
-              </label>
+              <PublishedMatchPicker
+                games={dashboard.games}
+                value={gameIndex}
+                onChange={setGameIndex}
+              />
             )}
           </section>
           {snapshot && (
