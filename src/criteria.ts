@@ -39,6 +39,26 @@ export const criteriaFields: {
   options: Record<string, string>;
 }[] = [
   {
+    key: "ballConstraint",
+    label: "Condição da construção",
+    hint: "Contexto tático; não altera a nota",
+    skills: ["set"],
+    options: {
+      normal: "Escolha normal",
+      forced: "Bola forçada · só deu para subir",
+    },
+  },
+  {
+    key: "freeReason",
+    label: "Motivo da devolução",
+    hint: "Para bolas passadas de graça; não altera a nota",
+    skills: ["attack"],
+    options: {
+      forced: "Devolução forçada / salvada",
+      choice: "Havia condição de atacar",
+    },
+  },
+  {
     key: "faultType",
     label: "Erro direto / infração",
     hint: "Selecione quando o erro encerrou o rally",
@@ -223,6 +243,11 @@ export function criteriaError(
   if (!criteria || typeof criteria !== "object" || Array.isArray(criteria))
     return "Critérios do fundamento inválidos.";
   for (const [key, value] of Object.entries(criteria)) {
+    if (
+      key === "freeReason" &&
+      (criteria as AssessmentCriteria).attackType !== "free"
+    )
+      return "Informe o motivo apenas para uma bola passada de graça.";
     if (
       key === "faultType" &&
       ["attack_net", "attack_out"].includes(String(value)) &&

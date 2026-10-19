@@ -12,6 +12,8 @@ import { playerCareer } from "./career";
 import { playerEvents } from "./assessment";
 import { Photo } from "./PlayerPhoto";
 import { CriteriaReport } from "./CriteriaReport";
+import { CareerPartnerships } from "./SimpleStats";
+import { PlayerVideos } from "./PlayerVideos";
 export { Photo } from "./PlayerPhoto";
 
 const grade = (value: number | null | undefined) =>
@@ -273,6 +275,8 @@ export function PlayerProfile({
         </section>
       </div>
 
+      <CareerPartnerships match={match} playerId={player.id} />
+      <PlayerVideos key={player.id} match={match} playerId={player.id} />
       <CriteriaReport
         events={playerEvents(project(match).events, player.id).filter(
           (e) => roleFilter === "all" || e.role === roleFilter,

@@ -1,4 +1,5 @@
 import { CardSelect } from "./CardSelect";
+import { YoutubeScout, type VideoCapture } from "./YoutubeScout";
 import { initialAssessment } from "./actionQuality";
 import { withRallyContext } from "./rallyContext";
 import { useEffect, useRef, useState } from "react";
@@ -181,6 +182,9 @@ export default function App() {
   }, [theme]);
   const [formationZone, setFormationZone] = useState<Zone>(1);
   const [pendingAction, setPendingAction] = useState<SkillEvent>();
+  const [scoutVideoId, setScoutVideoId] = useState("");
+  const scoutCapture = useRef<VideoCapture | undefined>(undefined);
+  const scoutVideo = match.videos?.find((v) => v.id === scoutVideoId);
   useEffect(() => {
     setPendingAction(undefined);
     setQuickCorrection(undefined);
@@ -304,7 +308,19 @@ export default function App() {
     }
   };
   const record = (key: Skill, result: string) => {
+    let stamp: ReturnType<VideoCapture> = {};
+    if (scoutVideo) {
+      try {
+        if (!scoutCapture.current)
+          throw new Error("Aguarde o player do vídeo ficar pronto.");
+        stamp = scoutCapture.current();
+      } catch (e) {
+        setFeedback({ message: (e as Error).message });
+        return;
+      }
+    }
     const event: SkillEvent = {
+      ...stamp,
       skill: key,
       result,
       assessment:
@@ -623,6 +639,8 @@ export default function App() {
       return "Set reiniciado · estatísticas do set removidas";
     if (entry.kind === "correction" && c?.type === "event")
       return `Correção · ${c.event.playerId ? player(c.event.playerId)?.name : "Adversário"} · ${skills[c.event.skill].label} · ${resultOf(c.event).label} · Motivo: ${entry.reason}`;
+    if (entry.kind === "insertion" && c?.type === "event")
+      return `Complementação de rally · ${c.event.playerId ? player(c.event.playerId)?.name : "Adversário"} · ${skills[c.event.skill].label}`;
     if (!c)
       return `${entry.kind === "undo" ? "Desfeito" : "Corrigido"} · ${entry.reason ?? ""}`;
     if (c.type === "event")
@@ -935,6 +953,32 @@ export default function App() {
               </div>
             )}
             <div className="lv-grid">
+              {!!match.videos?.length && (
+                <section className="ui-card live-video-scout">
+                  <label>
+                    Marcar assistindo ao vídeo
+                    <CardSelect
+                      value={scoutVideoId}
+                      onChange={(e) => setScoutVideoId(e.target.value)}
+                    >
+                      <option value="">Sem vídeo · registro normal</option>
+                      {match.videos.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.title}
+                        </option>
+                      ))}
+                    </CardSelect>
+                  </label>
+                  {scoutVideo && (
+                    <YoutubeScout
+                      key={scoutVideo.id}
+                      video={scoutVideo}
+                      captureRef={scoutCapture}
+                      disabled={!!pendingAction}
+                    />
+                  )}
+                </section>
+              )}
               <CourtCard
                 match={match}
                 state={s}

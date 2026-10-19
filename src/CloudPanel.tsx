@@ -1,3 +1,5 @@
+import { project } from "./engine";
+import { videoMoments } from "./videoMoments";
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Match } from "./model";
@@ -84,6 +86,7 @@ export function usePublication(match: Match) {
     let pending: {
       snapshot: ReturnType<typeof publicSnapshot>;
       media: ReturnType<typeof publicMedia> | null;
+      moments: ReturnType<typeof videoMoments>;
       serial: string;
       mediaSerial: string;
       requestId: string;
@@ -98,13 +101,19 @@ export function usePublication(match: Match) {
       if (source.id !== publication!.matchId) return;
       if (!pending) {
         const snapshot = publicSnapshot(source),
-          serial = JSON.stringify(snapshot);
+          serial = JSON.stringify([
+            snapshot,
+            videoMoments(project(source).events),
+          ]);
         const media = publicMedia(source),
           mediaSerial = JSON.stringify(media);
         if (serial === sent.current && mediaSerial === mediaSent.current)
           return;
         pending = {
           snapshot,
+          moments: videoMoments(project(source).events).filter((m) =>
+            m.videoSource?.startsWith("youtube:"),
+          ),
           serial,
           mediaSerial,
           media: mediaSerial === mediaSent.current ? null : media,
@@ -125,9 +134,10 @@ export function usePublication(match: Match) {
       busy.current = true;
       setStatus("Enviando atualização…");
       try {
-        const { data, error } = await cloud!.rpc("publish_live", {
+        const { data, error } = await cloud!.rpc("publish_player_live", {
           expected_revision: revision,
           snapshot: request.snapshot,
+          moments: request.moments,
           media: request.media,
           request_id: request.requestId,
         });

@@ -33,6 +33,7 @@ export function CriteriaFields({
         .filter(
           (f) =>
             f.skills.includes(skill) &&
+            (f.key !== "freeReason" || value.attackType === "free") &&
             (!hidePass || f.key !== "passQuality") &&
             (!hideIncomingPass || f.key !== "incomingPass") &&
             (!hideSetType || f.key !== "setType") &&
@@ -92,6 +93,8 @@ export function CriteriaFields({
                 hint={field.hint}
                 onChange={(selected) => {
                   const next = { ...value };
+                  if (field.key === "attackType" && selected !== "free")
+                    delete next.freeReason;
                   if (selected) Object.assign(next, { [field.key]: selected });
                   else delete next[field.key];
                   onChange(next);

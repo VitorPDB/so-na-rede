@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RallyReview } from "./RallyReview";
 import type { Match } from "./model";
 import { PostGameDetailed } from "./PostGameDetailedTable";
 import { PostGameTotals } from "./PostGameTotals";
@@ -8,7 +9,7 @@ export function PostGameView(props: {
   onChange: (m: Match) => boolean;
   onApplied: () => void;
 }) {
-  const [mode, setMode] = useState<"detailed" | "totals">("detailed");
+  const [mode, setMode] = useState<"detailed" | "totals" | "review">("review");
   return (
     <>
       <div
@@ -16,6 +17,13 @@ export function PostGameView(props: {
         role="group"
         aria-label="Formato do pós-jogo"
       >
+        <button
+          className="button secondary"
+          aria-pressed={mode === "review"}
+          onClick={() => setMode("review")}
+        >
+          Completar rallies · vídeo
+        </button>
         <button
           aria-pressed={mode === "detailed"}
           className={`button ${mode === "detailed" ? "" : "secondary"}`}
@@ -33,7 +41,9 @@ export function PostGameView(props: {
           Rápido · totais por set
         </button>
       </div>
-      {mode === "detailed" ? (
+      {mode === "review" ? (
+        <RallyReview match={props.match} onChange={props.onChange} />
+      ) : mode === "detailed" ? (
         <PostGameDetailed {...props} />
       ) : (
         <PostGameTotals match={props.match} onChange={props.onChange} />

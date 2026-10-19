@@ -61,16 +61,25 @@ export function activeEntries(audit: AuditEntry[]) {
     audit.filter((e) => e.kind === "undo").map((e) => e.target),
   );
   const corrections = new Map<string, AuditEntry>();
-  for (const entry of audit)
+  const insertions = new Map<string, AuditEntry[]>();
+  for (const entry of audit) {
     if (entry.kind === "correction" && !undone.has(entry.id) && entry.target)
       corrections.set(entry.target, entry);
+    if (entry.kind === "insertion" && !undone.has(entry.id) && entry.target)
+      insertions.set(entry.target, [
+        ...(insertions.get(entry.target) ?? []),
+        entry,
+      ]);
+  }
   return audit
     .filter((e) => e.kind === "action" && !undone.has(e.id))
+    .flatMap((e) => [...(insertions.get(e.id) ?? []), e])
     .map((e) =>
       corrections.has(e.id)
         ? { ...e, command: corrections.get(e.id)!.command }
         : e,
-    );
+    )
+    .map((e) => ({ ...e, kind: "action" as const }));
 }
 export function project(match: Match): Projection {
   const state: Projection = {
@@ -495,6 +504,59 @@ export function undo(match: Match): Match {
     ],
   };
 }
+export function completeRally(
+  match: Match,
+  target: string,
+  event: SkillEvent,
+): Match {
+  const state = project(match);
+  const rally = state.rallies.find((r) => r.id === target);
+  const index = state.active.findIndex((a) => a.id === target);
+  if (!rally || index < 0) throw new Error("Rally encerrado não encontrado.");
+  const closing = state.active[index].command!;
+  const winner = event.winner ?? resultOf(event).winner;
+  if (winner && (closing.type !== "point" || winner !== rally.winner))
+    throw new Error(
+      "O resultado deve preservar o vencedor. Para um rally já detalhado, registre uma ação sem ponto ou use a correção existente.",
+    );
+  const before = {
+    ...match,
+    audit: state.active
+      .slice(0, index)
+      .map((a) => ({ ...a, kind: "action" as const })),
+  };
+  const captured = captureRatingContext(
+    match,
+    project(before),
+    withDirectFault(event),
+  );
+  if (captured.assessment?.criteria?.faultType && !winner)
+    throw new Error(
+      "Uma infração precisa corresponder ao ponto que encerrou o rally.",
+    );
+  const entry: AuditEntry = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    kind: winner ? "correction" : "insertion",
+    target,
+    command: { type: "event", event: captured },
+    reason: "Complementação do rally pelo vídeo",
+  };
+  const candidate = { ...match, audit: [...match.audit, entry] };
+  const replay = { ...match, audit: [] as AuditEntry[] };
+  for (const action of activeEntries(candidate.audit)) {
+    const error = validate(replay, project(replay), action.command!);
+    if (error) throw new Error(error);
+    replay.audit.push({ ...action, kind: "action" });
+  }
+  const after = project(candidate);
+  if (
+    JSON.stringify(after.rallies.map((r) => [r.set, r.score, r.winner])) !==
+    JSON.stringify(state.rallies.map((r) => [r.set, r.score, r.winner]))
+  )
+    throw new Error("A complementação não pode alterar o placar.");
+  return candidate;
+}
 export function correct(
   match: Match,
   target: string,
@@ -541,7 +603,7 @@ export function correct(
       throw new Error(
         `Correção incompatível com ações posteriores: ${error} Desfaça as ações dependentes primeiro.`,
       );
-    replay.audit.push(action);
+    replay.audit.push({ ...action, kind: "action" });
   }
   return candidate;
 }

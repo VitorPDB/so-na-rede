@@ -9,10 +9,14 @@ import {
 import { project, stats } from "./engine";
 import { playerEvents } from "./assessment";
 import { publicSnapshot } from "./publicSnapshot";
+import { matchHighlights } from "./matchHighlights";
+import { videoMoments } from "./videoMoments";
 
 export function gameSnapshot(match: Match): ArchivedGame {
   const state = project(match);
   return {
+    partnerships: matchHighlights(state.events).partnerships,
+    videoMoments: videoMoments(state.events),
     ...(match.videos !== undefined ? { videos: match.videos } : {}),
     id: match.id,
     date: match.audit.at(-1)?.createdAt ?? new Date().toISOString(),

@@ -56,13 +56,17 @@ export default defineConfig({
             "\n" +
             readFileSync("supabase/security-schema.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/security.sql", "utf8"),
+            readFileSync("supabase/security.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/players.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "security-setup.sql"),
           readFileSync("supabase/security-schema.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/security.sql", "utf8"),
+            readFileSync("supabase/security.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/players.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "ativar-online.md"),

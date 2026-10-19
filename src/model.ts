@@ -161,6 +161,13 @@ export interface PlayerGame {
   }[];
 }
 export interface ArchivedGame {
+  videoMoments?: import("./videoMoments").VideoMoment[];
+  partnerships?: {
+    setter: string;
+    attacker: string;
+    count: number;
+    points: number;
+  }[];
   videos?: MatchVideo[];
   publicData?: import("./publicSnapshot").PublicSnapshot;
   postGame?: PostGame;
@@ -211,9 +218,12 @@ export interface SkillEvent {
   zone?: Zone;
   touch?: 1 | 2 | 3;
   videoTimestampMs?: number;
+  videoSource?: string;
   winner?: Side;
 }
 export interface AssessmentCriteria {
+  ballConstraint?: "normal" | "forced";
+  freeReason?: "forced" | "choice";
   blockQuality?:
     | "error"
     | "perfect"
@@ -274,7 +284,7 @@ export interface AuditEntry {
   createdAt: string;
   command?: Command;
   context?: Context;
-  kind: "action" | "undo" | "correction";
+  kind: "action" | "undo" | "correction" | "insertion";
   target?: string;
   reason?: string;
 }

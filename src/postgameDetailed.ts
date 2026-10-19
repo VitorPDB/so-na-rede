@@ -182,6 +182,8 @@ export function validDetailedDraft(
         (e.zone === undefined || [1, 2, 3, 4, 5, 6].includes(e.zone)) &&
         (e.touch === undefined || [1, 2, 3].includes(e.touch)) &&
         (e.winner === undefined || side(e.winner)) &&
+        (e.videoSource === undefined ||
+          (typeof e.videoSource === "string" && e.videoSource.length <= 600)) &&
         (e.videoTimestampMs === undefined ||
           (Number.isFinite(e.videoTimestampMs) && e.videoTimestampMs >= 0))
       );

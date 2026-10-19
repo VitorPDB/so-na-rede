@@ -59,9 +59,9 @@ const detail = {
 };
 const stats = obj({
   rating: { type: "number", min: 0, max: 10, nullable: true },
-  count: num(),
-  points: num(),
-  errors: num(),
+  count: { ...num(), nullable: true },
+  points: { ...num(), nullable: true },
+  errors: { ...num(), nullable: true },
   best: detail,
   worst: detail,
   metrics: list(

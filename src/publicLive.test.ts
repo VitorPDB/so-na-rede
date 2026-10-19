@@ -99,7 +99,7 @@ test("histórico de demonstração contém jogos encerrados e estatísticas de c
     assert.equal(game.snapshot.finished, true);
     assert.deepEqual(game.snapshot.sets, [2, 0]);
     assert.equal(game.snapshot.periods.length, 2);
-    assert.ok(game.snapshot.teamStats.count > 0);
+    assert.ok((game.snapshot.teamStats.count ?? 0) > 0);
   }
 });
 test("novo jogo preserva notas e conjuntos por set no histórico local e no backup", () => {

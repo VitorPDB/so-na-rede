@@ -22,6 +22,7 @@ import { download } from "./storage";
 import { postDate } from "./postgame";
 import { AssessmentFields } from "./AssessmentFields";
 import { normalAssessment } from "./assessment";
+import { VideoReview } from "./VideoReview";
 
 export function PostGameDetailed({
   match,
@@ -238,7 +239,8 @@ export function PostGameDetailed({
                 const file = e.target.files?.[0];
                 if (!file) return;
                 try {
-                  if (file.size > 5 * 1024 * 1024) throw new Error("Ficha muito grande.");
+                  if (file.size > 5 * 1024 * 1024)
+                    throw new Error("Ficha muito grande.");
                   const data = JSON.parse(await file.text());
                   if (!validDetailedDraft(data, match))
                     throw new Error("Ficha inválida.");
@@ -268,6 +270,31 @@ export function PostGameDetailed({
             Exportar ficha JSON
           </button>
         </div>
+        <VideoReview
+          videos={replay.match.videos}
+          marks={draft.rows.flatMap((r, i) =>
+            r.command.type === "event"
+              ? [{ id: r.id, label: `Ação ${i + 1}`, event: r.command.event }]
+              : [],
+          )}
+          onMark={(stamp) => {
+            const command = defaultCommand("event");
+            if (command.type === "event")
+              save({
+                ...draft,
+                rows: [
+                  ...draft.rows,
+                  {
+                    id: crypto.randomUUID(),
+                    command: {
+                      ...command,
+                      event: { ...command.event, ...stamp },
+                    },
+                  },
+                ],
+              });
+          }}
+        />
         <div className="postgame-table-wrap">
           <table className="postgame-table detailed-table">
             <thead>

@@ -1,3 +1,4 @@
+import { safePublicSnapshot } from "./playerPrivacy";
 import { useOpponentColor } from "./opponentColor";
 import { RallyStrip } from "./RallyStrip";
 import { CardSelect } from "./CardSelect";
@@ -66,7 +67,7 @@ export function PublicLive() {
       );
   }, []);
   const row = matchId ? history.game : (demo ?? live.row);
-  const s = row?.snapshot;
+  const s = row?.snapshot ? safePublicSnapshot(row.snapshot) : undefined;
   const media = matchId ? history.game?.media : demo ? null : live.media;
   useOpponentColor(media?.opponentLogo);
   const period = setFilter
@@ -135,6 +136,9 @@ export function PublicLive() {
             <strong>SÓ NA REDE</strong>
             <span>DENTRO DO JOGO</span>
           </div>
+        </a>
+        <a className="ui-btn ui-btn--secondary" href="/?view=player">
+          Área dos jogadores
         </a>
       </header>
       <nav
@@ -438,8 +442,7 @@ export function PublicLive() {
               <p>
                 {featured ? (
                   <>
-                    Nota <b>{grade(featured.stats.rating)}</b> ·{" "}
-                    {featured.stats.points} pontos
+                    Nota <b>{grade(featured.stats.rating)}</b>
                     {provisional ? " · amostra baixa" : ""}
                   </>
                 ) : (
@@ -476,7 +479,6 @@ export function PublicLive() {
                 <small>/10</small>
               </h3>
               <p>
-                {teamStats?.count ?? 0} ações avaliadas ·{" "}
                 {rallies.length
                   ? Math.round((won / rallies.length) * 100) +
                     "% dos rallies ganhos"
@@ -494,7 +496,8 @@ export function PublicLive() {
                 <h2>Jogadores · {scope.toLowerCase()}</h2>
               </div>
               <span className="pub-count">
-                {players.filter((p) => p.stats.count).length} com ações
+                {players.filter((p) => p.stats.rating !== null).length}{" "}
+                avaliados
               </span>
             </header>
             <div className="pub-players">
@@ -527,20 +530,24 @@ export function PublicLive() {
                         {grade(p.stats.rating)}
                       </span>
                     </div>
-                    <div className="pub-player-numbers">
-                      {p.stats.count > 0 && p.stats.count < 5 && (
-                        <span>Nota provisória · amostra inicial</span>
-                      )}
-                      <span>
-                        <b>{p.stats.points}</b> pontos
-                      </span>
-                      <span>
-                        <b>{p.stats.count}</b> ações
-                      </span>
-                      <span>
-                        <b>{p.stats.errors}</b> erros
-                      </span>
-                    </div>
+                    {p.stats.count !== null && (
+                      <div className="pub-player-numbers">
+                        {p.stats.count !== null &&
+                          p.stats.count > 0 &&
+                          p.stats.count < 5 && (
+                            <span>Nota provisória · amostra inicial</span>
+                          )}
+                        <span>
+                          <b>{p.stats.points}</b> pontos
+                        </span>
+                        <span>
+                          <b>{p.stats.count}</b> ações
+                        </span>
+                        <span>
+                          <b>{p.stats.errors}</b> erros
+                        </span>
+                      </div>
+                    )}
                     <dl>
                       <div>
                         <dt>Melhor</dt>
@@ -587,9 +594,8 @@ export function PublicLive() {
                 <h2>Como o time joga</h2>
               </header>
               <p className="ui-note">
-                Esta publicação ainda não inclui técnicas e contexto das ações.
-                Esses detalhes aparecem nas novas publicações feitas com o app
-                atualizado.
+                Os detalhes técnicos ficam na área dos jogadores. Cada atleta
+                acessa seus próprios números com sua senha.
               </p>
             </section>
           )}

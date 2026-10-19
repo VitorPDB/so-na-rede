@@ -1,9 +1,12 @@
 import { validCriteriaData } from "./criteriaStats";
+import { validPartnerships } from "./matchHighlights";
+import { validVideoMoments } from "./videoMoments";
 import {
   type Match,
   type Command,
   type PlayerGame,
   skills,
+  resultOf,
   roleLabels,
   ratingProfiles,
 } from "./model";
@@ -147,7 +150,7 @@ export function parseMatch(raw: string): Match {
           (s.rating === null ||
             (Number.isFinite(s.rating) && s.rating >= 0 && s.rating <= 10)) &&
           [s.count, s.points, s.errors].every(
-            (n) => Number.isInteger(n) && n >= 0,
+            (n) => n === null || (Number.isInteger(n) && n >= 0),
           ) &&
           Array.isArray(s.metrics) &&
           s.metrics.every(
@@ -205,6 +208,16 @@ export function parseMatch(raw: string): Match {
           invalid();
       }
       const playerIds = new Set<string>();
+      if (
+        game.videoMoments !== undefined &&
+        !validVideoMoments(game.videoMoments)
+      )
+        invalid();
+      if (
+        game.partnerships !== undefined &&
+        !validPartnerships(game.partnerships)
+      )
+        invalid();
       for (const row of game.players) {
         if (
           !row ||
@@ -398,6 +411,8 @@ export function parseMatch(raw: string): Match {
         (e.skill !== "opponent" && !ids.has(e.playerId ?? "")) ||
         (e.zone !== undefined && ![1, 2, 3, 4, 5, 6].includes(e.zone)) ||
         (e.touch !== undefined && ![1, 2, 3].includes(e.touch)) ||
+        (e.videoSource !== undefined &&
+          (typeof e.videoSource !== "string" || e.videoSource.length > 600)) ||
         (e.videoTimestampMs !== undefined &&
           (!Number.isFinite(e.videoTimestampMs) || e.videoTimestampMs < 0)) ||
         (e.winner !== undefined && !["ours", "theirs"].includes(e.winner)) ||
@@ -428,11 +443,23 @@ export function parseMatch(raw: string): Match {
       typeof entry.id !== "string" ||
       auditIds.has(entry.id) ||
       !Number.isFinite(Date.parse(entry.createdAt)) ||
-      !["action", "undo", "correction"].includes(entry.kind)
+      !["action", "undo", "correction", "insertion"].includes(entry.kind)
     )
       invalid();
-    if (entry.kind === "action" || entry.kind === "correction")
+    if (
+      entry.kind === "action" ||
+      entry.kind === "correction" ||
+      entry.kind === "insertion"
+    )
       checkCommand(entry.command!);
+    if (
+      entry.kind === "insertion" &&
+      (entry.command?.type !== "event" ||
+        !entry.reason?.trim() ||
+        entry.command.event.winner ||
+        resultOf(entry.command.event).winner)
+    )
+      invalid();
     if (
       entry.kind !== "action" &&
       (!entry.target || !auditIds.has(entry.target))

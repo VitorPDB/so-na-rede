@@ -18,9 +18,9 @@ function technical(
 
 const summary = (s: ReturnType<typeof stats>) => ({
   rating: s.rating,
-  count: s.count,
-  points: s.points,
-  errors: s.errors,
+  count: s.count as number | null,
+  points: s.points as number | null,
+  errors: s.errors as number | null,
   best: s.best ? { label: s.best.label, reason: s.reason(s.best) } : null,
   worst: s.worst ? { label: s.worst.label, reason: s.reason(s.worst) } : null,
   metrics: s.list,
