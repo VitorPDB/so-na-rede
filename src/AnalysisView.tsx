@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { Jersey } from "./Jersey";
 import { useState } from "react";
 import {
@@ -455,7 +456,8 @@ export function Analysis({
                 selected.events.map((e) => (
                   <span key={e.id}>
                     {e.playerId ? name(e.playerId) + " · " : ""}
-                    {skills[e.skill].label} · {resultOf(e).label}
+                    <SkillIcon skill={e.skill} /> {skills[e.skill].label} ·{" "}
+                    {resultOf(e).label}
                   </span>
                 ))
               ) : (

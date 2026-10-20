@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { Upload } from "lucide-react";
 import { CardSelect } from "./CardSelect";
 import { useMemo, useState } from "react";
@@ -291,6 +292,7 @@ export function PostGameTotals({
                 setDifficultySource("context");
               }}
             >
+              <SkillIcon skill={s} />
               {
                 {
                   serve: "Saque",

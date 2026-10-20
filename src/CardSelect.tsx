@@ -1,3 +1,4 @@
+import { SkillIcon, skillForLabel } from "./SkillIcon";
 import {
   Children,
   Fragment,
@@ -150,7 +151,11 @@ export function CardSelect({
             if (props.disabled) e.preventDefault();
           }}
         >
-          <Icon size={18} aria-hidden="true" />
+          {selected && skillForLabel(selected.label) ? (
+            <SkillIcon skill={skillForLabel(selected.label)} />
+          ) : (
+            <Icon size={18} aria-hidden="true" />
+          )}
           <strong>{selected?.label ?? "Escolher"}</strong>
           <ChevronDown
             size={18}
@@ -193,7 +198,11 @@ export function CardSelect({
                   close();
                 }}
               >
-                <ChoiceIcon size={19} aria-hidden="true" />
+                {skillForLabel(o.label) ? (
+                  <SkillIcon skill={skillForLabel(o.label)} />
+                ) : (
+                  <ChoiceIcon size={19} aria-hidden="true" />
+                )}
                 <span>{o.label}</span>
               </button>
             );

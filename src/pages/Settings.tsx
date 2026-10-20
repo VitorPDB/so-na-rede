@@ -1,3 +1,4 @@
+import { SkillIcon, skillForLabel } from "../SkillIcon";
 import { CardSelect } from "../CardSelect";
 import { useState, type ReactNode } from "react";
 import {
@@ -83,7 +84,10 @@ function WeightRow({
 }) {
   return (
     <div className="st-weight">
-      <span>{label}</span>
+      <span>
+        {skillForLabel(label) && <SkillIcon skill={skillForLabel(label)} />}{" "}
+        {label}
+      </span>
       <input
         type="range"
         min="0"

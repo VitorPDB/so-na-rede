@@ -348,3 +348,8 @@ Documentos complementares: `SEGURANCA.md`, `ONLINE.md`, `VERCEL.md`, `VIDEOS.md`
 ## Atualização: área dos jogadores (18/10/2026)
 
 Implementada localmente a rota `/?view=player`, login com PIN de quatro números, isolamento de dados por token no Supabase e perfis públicos dos colegas com vídeos. Ver `ACESSO-JOGADORES.md`. PINs e SQL de ativação estão em `.qa`, fora do Git/build. Migração e publicação online ainda não executadas: login real requer ativar o SQL e configurar Supabase. Publicação da comissão agora usa `publish_player_live`; aplicar a migração antes do deploy. A nova migração retira precisão e detalhes técnicos das tabelas públicas, preservando-os em tabelas privadas. Senhas são hashes BCrypt, não texto reversível. Não confundir implementação/testes locais com ativação em produção.
+
+
+## Ícones dos fundamentos — 19/10/2026
+
+Visual aprovado e aplicado via `SkillIcon.tsx`, com tokens dos três temas. Cartões de vídeo usam ícones e borda dourada para `pointWon`. Para área dos jogadores online, atualizar somente `supabase/video-point-marks.sql` e republicar partidas. Nenhuma senha deve ser recriada. Validação: 133 testes/build e conferência visual dos temas.

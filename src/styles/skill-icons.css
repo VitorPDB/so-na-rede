@@ -1,0 +1,111 @@
+/* Theme tokens keep the same gestures legible in Dark, Team and Light. */
+.skill-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: var(--c-accent);
+}
+.skill-icon circle:not(.ball) {
+  fill: currentColor;
+  stroke: none;
+}
+.skill-icon .ball {
+  stroke: var(--c-gold);
+  stroke-width: 2.5;
+}
+.skill-icon .detail {
+  stroke: var(--c-text-muted);
+  stroke-width: 1.5;
+}
+.card-select .skill-icon,
+.outcome-skill .skill-icon {
+  width: 30px;
+  height: 30px;
+}
+.moment-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 12px;
+}
+.moment-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  min-height: 132px;
+  border: 1px solid var(--c-border-control);
+  border-radius: 12px;
+  background: var(--c-surface-3);
+  color: var(--c-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.moment-card:hover,
+.moment-card[aria-pressed="true"] {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+}
+.moment-card:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 3px;
+}
+.moment-skill-badge {
+  background: var(--c-accent-soft);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 66px;
+  flex-shrink: 0;
+}
+.moment-card-body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+.moment-card-body strong {
+  font-size: 16px;
+}
+.moment-card-body > span {
+  font-size: 13px;
+}
+.moment-card-body small {
+  color: var(--c-text-muted);
+  font-size: 12px;
+}
+.moment-card-body em {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--c-gold);
+}
+.moment-card-time {
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 27px;
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.moment-card-time svg {
+  color: var(--c-accent);
+}
+.moment-card.is-point {
+  border: 2px solid var(--c-gold);
+  padding: 14px;
+}
+.moment-card.is-point:hover,
+.moment-card.is-point[aria-pressed="true"] {
+  border-color: var(--c-gold);
+}
+.moment-card-body .moment-point-label {
+  font-weight: 700;
+}

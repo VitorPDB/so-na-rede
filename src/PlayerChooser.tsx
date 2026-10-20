@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { useEffect, useRef, useState } from "react";
 import {
   type Match,
@@ -116,7 +117,8 @@ export function PlayerChooser({
               {correction ? "CORRIGIR ATRIBUIÇÃO" : "QUEM FEZ?"}
             </span>
             <h2 id="chooser-title">
-              {skills[current.skill].label} · {resultOf(current).label}
+              <SkillIcon skill={current.skill} /> {skills[current.skill].label}{" "}
+              · {resultOf(current).label}
             </h2>
           </div>
           <button

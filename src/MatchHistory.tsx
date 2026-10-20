@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { CardSelect } from "./CardSelect";
 import { useState } from "react";
 import { Clock3 } from "lucide-react";
@@ -266,7 +267,9 @@ export function MatchHistory({
                     .filter((m) => m.count)
                     .map((m) => (
                       <span key={m.skill}>
-                        <b>{m.label}</b>
+                        <b>
+                          <SkillIcon skill={m.skill} /> {m.label}
+                        </b>
                         {m.count} ações · {(m.quality * 100).toFixed(0)}% de
                         qualidade · {m.errors} erros
                       </span>

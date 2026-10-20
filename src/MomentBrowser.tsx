@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Play, Sparkles, Zap } from "lucide-react";
+import { SkillIcon, skillForLabel } from "./SkillIcon";
 import { CardSelect } from "./CardSelect";
 import { type Player, skills } from "./model";
 import {
@@ -140,14 +142,47 @@ export function MomentBrowser({
           </button>
         </>
       )}
-      <div className="video-review-actions">
+      <div className="moment-cards">
         {filtered.map((m) => (
-          <button className="ui-btn" key={m.id} onClick={() => setSelected(m)}>
-            Set {m.set} · Rally {m.rally} ·{" "}
-            {m.playerIds
-              .map((id) => players.find((p) => p.id === id)?.name ?? id)
-              .join(" + ")}{" "}
-            · {m.label} · {formatVideoTime(m.videoTimestampMs)}
+          <button
+            className={`moment-card${m.pointWon ? " is-point" : ""}`}
+            key={m.id}
+            aria-pressed={active?.id === m.id}
+            onClick={() => setSelected(m)}
+          >
+            <span className="moment-skill-badge">
+              <SkillIcon skill={m.skill ?? skillForLabel(m.label)} size={48} />
+            </span>
+            <span className="moment-card-body">
+              <strong>
+                {m.skill ? skills[m.skill].label : m.label.split(" · ")[0]}
+              </strong>
+              <span>
+                {m.playerIds
+                  .map((id) => players.find((p) => p.id === id)?.name ?? id)
+                  .join(" + ")}
+              </span>
+              <small>
+                Set {m.set} · Rally {m.rally}
+              </small>
+              {m.pointWon && (
+                <em className="moment-point-label">Ponto nosso</em>
+              )}
+              {(m.magic || m.label.includes("Tirou da cartola")) && (
+                <em>
+                  <Sparkles size={13} aria-hidden="true" /> Tirou da cartola
+                </em>
+              )}
+              {(m.emergency || m.label.includes("Emergência")) && (
+                <em>
+                  <Zap size={13} aria-hidden="true" /> Emergência
+                </em>
+              )}
+            </span>
+            <span className="moment-card-time">
+              {formatVideoTime(m.videoTimestampMs)}
+              <Play size={17} aria-hidden="true" />
+            </span>
           </button>
         ))}
       </div>

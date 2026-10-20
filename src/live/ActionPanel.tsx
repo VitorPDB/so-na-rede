@@ -1,28 +1,6 @@
-import {
-  Activity,
-  ArrowDownToLine,
-  BrickWall,
-  CircleDot,
-  Minus,
-  Plus,
-  ShieldCheck,
-  ShieldHalf,
-  ThumbsDown,
-  ThumbsUp,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react";
+import { SkillIcon } from "../SkillIcon";
+import { Trophy, Minus, Plus, ThumbsDown, ThumbsUp } from "lucide-react";
 import { type Projection, type Side, type Skill, skills } from "../model";
-
-export const skillIcons: Record<Skill, LucideIcon> = {
-  reception: ShieldHalf,
-  serve: CircleDot,
-  attack: Activity,
-  block: BrickWall,
-  defense: ShieldCheck,
-  set: ArrowDownToLine,
-  opponent: Trophy,
-};
 
 const outcomes = [
   {
@@ -93,7 +71,6 @@ export function ActionPanel({
       {
         <div className="outcome-list">
           {simpleSkills.map((key, row) => {
-            const Icon = skillIcons[key];
             const title = key === "attack" ? "Ataque" : skills[key].label;
             const options = outcomes;
             return (
@@ -103,7 +80,7 @@ export function ActionPanel({
                 style={{ "--i": row } as React.CSSProperties}
               >
                 <div className="outcome-skill">
-                  <Icon size={18} aria-hidden="true" />
+                  <SkillIcon skill={key} size={30} />
                   <strong>{title}</strong>
                 </div>
                 <div className="outcome-buttons">

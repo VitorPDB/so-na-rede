@@ -1,4 +1,4 @@
-import { type RecordedEvent, type SkillEvent, skills } from "./model";
+import { type RecordedEvent, type SkillEvent, resultOf, skills } from "./model";
 import { effectiveDifficulty } from "./criteria";
 
 export function specialMarks(event: SkillEvent) {
@@ -19,6 +19,7 @@ export type VideoMoment = {
   skill?: SkillEvent["skill"];
   magic?: boolean;
   emergency?: boolean;
+  pointWon?: boolean;
 };
 export function videoMoments(events: RecordedEvent[]): VideoMoment[] {
   const actors = new Map<string, Set<string>>();
@@ -37,6 +38,7 @@ export function videoMoments(events: RecordedEvent[]): VideoMoment[] {
     .map((e) => ({
       id: e.id,
       skill: e.skill,
+      pointWon: resultOf(e).winner === "ours",
       ...specialMarks(e),
       rallyPlayerIds: [...(actors.get(`${e.set}:${e.rally}`) ?? [])],
       playerIds: [
@@ -98,6 +100,7 @@ export function validVideoMoments(value: unknown): value is VideoMoment[] {
               (id: unknown) => typeof id === "string" && id.length <= 80,
             ))) &&
         (m.skill === undefined || Object.hasOwn(skills, m.skill)) &&
+        (m.pointWon === undefined || typeof m.pointWon === "boolean") &&
         (m.magic === undefined || typeof m.magic === "boolean") &&
         (m.emergency === undefined || typeof m.emergency === "boolean") &&
         (m.videoSource === undefined ||

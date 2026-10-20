@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { PublishedMatchPicker } from "./PublishedMatchPicker";
 import { useEffect, useState } from "react";
 import { cloud } from "./cloud";
@@ -302,7 +303,9 @@ export default function PlayerPortal() {
                     <div className="player-metrics">
                       {own.metrics.map((m) => (
                         <article className="ui-card" key={m.skill}>
-                          <h3>{m.label}</h3>
+                          <h3>
+                            <SkillIcon skill={m.skill} /> {m.label}
+                          </h3>
                           <strong>
                             {(m.quality * 100).toFixed(0)}% de qualidade
                           </strong>

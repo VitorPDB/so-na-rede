@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { useEffect, useRef, useState } from "react";
 import type { SkillEvent, MatchVideo } from "./model";
 import { MatchVideoPlayer } from "./MatchVideos";
@@ -168,7 +169,8 @@ export function VideoReview({
               key={m.id}
               onClick={() => seek(m.event)}
             >
-              {m.label} · {Math.floor(m.event.videoTimestampMs! / 60000)}:
+              <SkillIcon skill={m.event.skill} /> {m.label} ·{" "}
+              {Math.floor(m.event.videoTimestampMs! / 60000)}:
               {String(
                 Math.floor(m.event.videoTimestampMs! / 1000) % 60,
               ).padStart(2, "0")}

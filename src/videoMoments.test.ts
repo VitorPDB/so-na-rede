@@ -14,6 +14,22 @@ import { gameSnapshot } from "./career";
 import { parseMatch } from "./storage";
 import { filterVideoMoments } from "./videoMoments";
 
+test("borda de ponto usa o resultado da ação, não apenas o vencedor do rally", () => {
+  const moments = videoMoments([
+    event({ id: "good", result: "simple_good", videoTimestampMs: 1000 }),
+    event({ id: "point", result: "simple_ours", videoTimestampMs: 2000 }),
+    event({ id: "lost", result: "simple_theirs", videoTimestampMs: 3000 }),
+  ]);
+  assert.deepEqual(
+    moments.map((m) => m.pointWon),
+    [false, true, false],
+  );
+  assert.equal(validVideoMoments(moments), true);
+  assert.equal(validVideoMoments([{ ...moments[0], pointWon: "true" }]), false);
+  const { pointWon: _old, ...legacy } = moments[0];
+  assert.equal(validVideoMoments([legacy]), true);
+});
+
 test("dupla na mesma ação difere de dupla no mesmo rally; toque sem horário conta como participação", () => {
   const moments = videoMoments([
     event({ id: "set", skill: "set", playerId: "p2", videoTimestampMs: 1000 }),

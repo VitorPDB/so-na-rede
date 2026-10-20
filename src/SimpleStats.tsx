@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { MomentBrowser } from "./MomentBrowser";
 import { useState } from "react";
 import { type Match, type RecordedEvent, resultOf } from "./model";
@@ -108,21 +109,27 @@ export function SimpleStats({
         {specialCard("magic", "Tirou da cartola")}
         {specialCard("emergency", "Emergência")}
         <article className="ui-card">
-          <span>Pontos de ataque</span>
+          <span>
+            <SkillIcon skill="attack" /> Pontos de ataque
+          </span>
           <strong className="simple-number">
             {data.scorers.reduce((n, p) => n + p.attacks, 0)}
           </strong>
           {detail("attack")}
         </article>
         <article className="ui-card">
-          <span>Aces</span>
+          <span>
+            <SkillIcon skill="serve" /> Aces
+          </span>
           <strong className="simple-number">
             {data.scorers.reduce((n, p) => n + p.aces, 0)}
           </strong>
           {detail("serve")}
         </article>
         <article className="ui-card">
-          <span>Dupla com mais pontos de bloqueio</span>
+          <span>
+            <SkillIcon skill="block" /> Dupla com mais pontos de bloqueio
+          </span>
           {topPairs.length ? (
             topPairs.map((p) => (
               <p key={p.players.join("-")}>

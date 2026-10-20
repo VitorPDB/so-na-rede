@@ -1,3 +1,4 @@
+import { SkillIcon, skillForLabel } from "./SkillIcon";
 import { safePublicSnapshot } from "./playerPrivacy";
 import { useOpponentColor } from "./opponentColor";
 import { RallyStrip } from "./RallyStrip";
@@ -455,7 +456,12 @@ export function PublicLive() {
                 <Activity size={15} aria-hidden="true" />
                 Para evoluir
               </span>
-              <h3>{teamStats?.worst?.label ?? "Aguardando variedade"}</h3>
+              <h3>
+                {teamStats?.worst?.label && (
+                  <SkillIcon skill={skillForLabel(teamStats?.worst?.label)} />
+                )}{" "}
+                {teamStats?.worst?.label ?? "Aguardando variedade"}
+              </h3>
               <p>
                 {teamStats?.worst?.reason ??
                   "Mais fundamentos permitem uma análise melhor."}
@@ -466,7 +472,12 @@ export function PublicLive() {
                 <BarChart3 size={15} aria-hidden="true" />
                 Ponto forte
               </span>
-              <h3>{teamStats?.best?.label ?? "Aguardando ações"}</h3>
+              <h3>
+                {teamStats?.best?.label && (
+                  <SkillIcon skill={skillForLabel(teamStats?.best?.label)} />
+                )}{" "}
+                {teamStats?.best?.label ?? "Aguardando ações"}
+              </h3>
               <p>
                 {teamStats?.best?.reason ??
                   "Os fundamentos são atualizados a cada publicação."}
@@ -552,6 +563,11 @@ export function PublicLive() {
                       <div>
                         <dt>Melhor</dt>
                         <dd>
+                          {p.stats.best?.label && (
+                            <SkillIcon
+                              skill={skillForLabel(p.stats.best?.label)}
+                            />
+                          )}{" "}
                           {p.stats.best?.label ?? "—"}
                           <small>
                             {p.stats.best?.reason ?? "Sem dados suficientes"}
@@ -561,6 +577,11 @@ export function PublicLive() {
                       <div>
                         <dt>A melhorar</dt>
                         <dd>
+                          {p.stats.worst?.label && (
+                            <SkillIcon
+                              skill={skillForLabel(p.stats.worst?.label)}
+                            />
+                          )}{" "}
                           {p.stats.worst?.label ?? "—"}
                           <small>
                             {p.stats.worst?.reason ?? "Sem dados suficientes"}

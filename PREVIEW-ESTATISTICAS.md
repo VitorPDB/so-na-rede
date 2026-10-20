@@ -53,3 +53,13 @@ O build está em `dist`. Esta origem tem armazenamento separado do site publicad
 - Os lances do YouTube abrem dentro do site no horário marcado; há link externo alternativo se o canal bloquear a incorporação. Não há reconhecimento automático de ações por IA.
 - Política de mídia permite arquivos locais via `blob:`; o player do YouTube continua restrito ao domínio já autorizado.
 - 127 testes passaram e o build passou. Conferidos no navegador os novos cartões e a seção de vídeos no perfil. Nenhum vídeo do time estava anexado no armazenamento isolado do preview para validar a reprodução específica do canal.
+
+
+## Ícones e lances de ponto — 19/10/2026
+
+- Ícones SVG de bloqueio, ataque, levantamento, recepção, defesa e saque, usando as cores dos temas Escuro, Time e Claro.
+- Componentes compartilhados em scout, seletores, análise, perfis, histórico, pós-jogo e pesos dos fundamentos. Os nomes continuam visíveis e os SVGs são decorativos para leitores de tela.
+- Lista de lances em cartões com ícone, jogador, horário e marcações; ponto nosso recebe borda dourada e texto, sem depender somente da cor.
+- `pointWon` vem do resultado da própria ação. Uma ação boa antes do ponto não ganha borda automaticamente. Históricos sem a marca seguem compatíveis.
+- **Servidor já ativado:** executar `supabase/video-point-marks.sql` no SQL Editor, depois republicar a partida para transmitir as marcas à área dos jogadores. Esse SQL não altera PINs. Instalações novas já incluem a função em `players.sql`.
+- Validação: 133 testes passaram; build aprovado; temas conferidos em demonstração local com os componentes reais.

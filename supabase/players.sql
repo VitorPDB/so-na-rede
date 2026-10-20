@@ -119,7 +119,7 @@ begin
   update public.player_match_private set moments=coalesce((select jsonb_agg(jsonb_build_object(
     'id',m->'id','playerIds',m->'playerIds','rallyPlayerIds',m->'rallyPlayerIds',
     'label',m->'label','set',m->'set','rally',m->'rally','skill',m->'skill',
-    'magic',m->'magic','emergency',m->'emergency','videoTimestampMs',m->'videoTimestampMs','videoSource',m->'videoSource'))
+    'pointWon',coalesce(m->'pointWon','false'::jsonb),'magic',m->'magic','emergency',m->'emergency','videoTimestampMs',m->'videoTimestampMs','videoSource',m->'videoSource'))
     from jsonb_array_elements(publish_player_live.moments) m where m->>'videoSource' ~ '^youtube:[A-Za-z0-9_-]{11}$'),'[]')
     where match_id=publish_player_live.snapshot->>'matchId';
   return revision;

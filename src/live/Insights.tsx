@@ -1,3 +1,4 @@
+import { SkillIcon } from "../SkillIcon";
 import {
   ArrowRight,
   History,
@@ -171,7 +172,8 @@ export function RecentActions({
             {rally.events.length ? (
               rally.events.map((e) => (
                 <span key={e.id}>
-                  {skills[e.skill].label} · {resultOf(e).label}
+                  <SkillIcon skill={e.skill} /> {skills[e.skill].label} ·{" "}
+                  {resultOf(e).label}
                   {e.playerId ? " · " + playerName(e.playerId) : ""}
                 </span>
               ))

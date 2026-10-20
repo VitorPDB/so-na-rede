@@ -1,3 +1,4 @@
+import { SkillIcon } from "./SkillIcon";
 import { useState } from "react";
 import { ArrowLeft, Camera } from "lucide-react";
 import {
@@ -214,7 +215,9 @@ export function PlayerProfile({
                 .filter((m) => m.count)
                 .map((m) => (
                   <div className="rp-quality-row" key={m.skill}>
-                    <span>{m.label}</span>
+                    <span>
+                      <SkillIcon skill={m.skill} /> {m.label}
+                    </span>
                     <span className="ui-meter" aria-hidden="true">
                       <i style={{ width: `${m.quality * 100}%` }} />
                     </span>

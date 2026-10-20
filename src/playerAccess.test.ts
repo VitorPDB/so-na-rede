@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { newMatch } from "./model";
-import { append } from "./engine";
+import { videoMoments, validVideoMoments } from "./videoMoments";
+import { append, project } from "./engine";
 import { publicSnapshot } from "./publicSnapshot";
 import { safePublicSnapshot } from "./playerPrivacy";
 import { validPublicSnapshot } from "./publicValidation";
@@ -36,7 +37,13 @@ test("PIN, isolamento de jogador e remoção de detalhes de todos os endpoints p
     });
     m = append(m, {
       type: "event",
-      event: { skill: "attack", playerId: "p2", result: "simple_good" },
+      event: {
+        skill: "attack",
+        playerId: "p2",
+        result: "simple_ours",
+        videoTimestampMs: 1000,
+        videoSource: "youtube:M7lc1UVf-VE",
+      },
     });
     const snapshot = publicSnapshot(m);
     snapshot.finished = true;
@@ -59,7 +66,7 @@ test("PIN, isolamento de jogador e remoção de detalhes de todos os endpoints p
     await db.query("select public.publish_player_live(1,$1,null,$2,$3)", [
       snapshot,
       crypto.randomUUID(),
-      [],
+      videoMoments(project(m).events),
     ]);
     await db.exec("reset role; set role anon;");
     for (const table of ["live_public", "public_matches"]) {
@@ -109,6 +116,7 @@ test("PIN, isolamento de jogador e remoção de detalhes de todos os endpoints p
           playerId: string;
           games: {
             own: typeof snapshot.teamStats;
+            moments: ReturnType<typeof videoMoments>;
             public: typeof snapshot;
             technical: { players: { id: string }[] };
           }[];
@@ -116,6 +124,8 @@ test("PIN, isolamento de jogador e remoção de detalhes de todos os endpoints p
       }>("select public.player_dashboard($1) v", [token])
     ).rows[0].v;
     assert.equal(data.playerId, "p1");
+    assert.equal(validVideoMoments(data.games[0].moments), true);
+    assert.equal(data.games[0].moments[0].pointWon, true);
     assert.equal(data.games[0].own.count, 1);
     assert.ok(data.games[0].own.metrics.length);
     assert.ok(data.games[0].technical.players.every((p) => p.id === "p1"));

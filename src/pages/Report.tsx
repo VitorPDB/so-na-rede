@@ -1,3 +1,4 @@
+import { SkillIcon } from "../SkillIcon";
 import { useState } from "react";
 import { SimpleStats } from "../SimpleStats";
 import {
@@ -316,7 +317,9 @@ export function Report({
             <div className="rp-quality">
               {list.map((m) => (
                 <div className="rp-quality-row" key={m.skill}>
-                  <span>{m.label}</span>
+                  <span>
+                    <SkillIcon skill={m.skill} /> {m.label}
+                  </span>
                   <span className="ui-meter" aria-hidden="true">
                     <i style={{ width: `${m.quality * 100}%` }} />
                   </span>
