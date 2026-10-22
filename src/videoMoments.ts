@@ -141,7 +141,11 @@ export function filterVideoMoments(
       (!filter.set || m.set === filter.set) &&
       (!filter.skill || m.skill === filter.skill) &&
       (!filter.special ||
-        (filter.special === "magic" ? m.magic : m.emergency) === true)
+        (filter.special === "point"
+          ? m.pointWon
+          : filter.special === "magic"
+            ? m.magic
+            : m.emergency) === true)
     );
   });
 }

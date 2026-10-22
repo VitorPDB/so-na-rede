@@ -7,7 +7,16 @@ import {
   type VideoMoment,
 } from "./videoMoments";
 
-export function MomentPlayer({ moment }: { moment: VideoMoment }) {
+export function MomentPlayer({
+  moment,
+  before = 5,
+  after = 5,
+}: {
+  moment: VideoMoment;
+  before?: number;
+  after?: number;
+}) {
+  const [replay, setReplay] = useState(0);
   const [file, setFile] = useState<File>();
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -25,7 +34,7 @@ export function MomentPlayer({ moment }: { moment: VideoMoment }) {
         youtubeId: id,
         startSeconds: Math.max(
           0,
-          Math.floor(moment.videoTimestampMs / 1000) - 3,
+          Math.floor(moment.videoTimestampMs / 1000) - before,
         ),
         kind: "replay",
       }
@@ -34,13 +43,16 @@ export function MomentPlayer({ moment }: { moment: VideoMoment }) {
     return (
       <div className="video-viewer">
         <iframe
-          key={`${id}:${moment.videoTimestampMs}`}
+          key={`${id}:${moment.videoTimestampMs}:${replay}`}
           title={`${moment.label} em ${formatVideoTime(moment.videoTimestampMs)}`}
-          src={embedUrl(v)}
-          allow="encrypted-media; picture-in-picture; fullscreen"
+          src={`${embedUrl(v).replace("autoplay=0", "autoplay=1")}&end=${Math.ceil(moment.videoTimestampMs / 1000) + after}`}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
           referrerPolicy="strict-origin-when-cross-origin"
         />
+        <button className="ui-btn" onClick={() => setReplay((n) => n + 1)}>
+          Repetir trecho
+        </button>
         <a
           className="ui-btn"
           href={watchUrl(v)}
@@ -50,8 +62,9 @@ export function MomentPlayer({ moment }: { moment: VideoMoment }) {
           Abrir no YouTube
         </a>
         <p className="ui-note">
-          O vídeo abre três segundos antes do lance. Se o canal impedir
-          reprodução incorporada, use o link do YouTube.
+          Trecho automático: {before} s antes e {after} s depois. Se não
+          iniciar, toque em play. Se o canal impedir reprodução incorporada, use
+          o link do YouTube.
         </p>
       </div>
     );
@@ -86,10 +99,18 @@ export function MomentPlayer({ moment }: { moment: VideoMoment }) {
           key={`${url}:${moment.id}`}
           src={url}
           controls
+          playsInline
+          onTimeUpdate={(e) => {
+            if (
+              e.currentTarget.currentTime >=
+              moment.videoTimestampMs / 1000 + after
+            )
+              e.currentTarget.pause();
+          }}
           onLoadedMetadata={(e) => {
             e.currentTarget.currentTime = Math.max(
               0,
-              moment.videoTimestampMs / 1000 - 3,
+              moment.videoTimestampMs / 1000 - before,
             );
           }}
         />

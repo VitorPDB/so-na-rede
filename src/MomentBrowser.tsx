@@ -8,7 +8,7 @@ import {
   formatVideoTime,
   type VideoMoment,
 } from "./videoMoments";
-import { MomentPlayer } from "./MomentPlayer";
+import { MomentFeed } from "./MomentFeed";
 export function MomentBrowser({
   moments,
   players,
@@ -119,6 +119,7 @@ export function MomentBrowser({
             onChange={(e) => setSpecial(e.target.value)}
           >
             <option value="">Todos os lances</option>
+            <option value="point">Pontos nossos</option>
             <option value="magic">Tirou da cartola</option>
             <option value="emergency">Emergência</option>
           </CardSelect>
@@ -131,16 +132,21 @@ export function MomentBrowser({
           : "Filtra os participantes da própria ação."}{" "}
         Dados antigos sem detalhes não são inferidos.
       </p>
+      <button
+        className="ui-btn"
+        disabled={!filtered.length}
+        onClick={() => setSelected(filtered[0])}
+      >
+        <Play size={18} aria-hidden="true" /> Assistir jogadas em sequência
+      </button>
       {active && (
-        <>
-          <MomentPlayer
-            key={`${active.id}:${active.videoSource}`}
-            moment={active}
-          />
-          <button className="ui-btn" onClick={() => setSelected(undefined)}>
-            Fechar lance
-          </button>
-        </>
+        <MomentFeed
+          moments={filtered}
+          selectedId={active.id}
+          players={players}
+          onSelect={setSelected}
+          onClose={() => setSelected(undefined)}
+        />
       )}
       <div className="moment-cards">
         {filtered.map((m) => (

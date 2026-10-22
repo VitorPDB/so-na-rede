@@ -109,3 +109,128 @@
 .moment-card-body .moment-point-label {
   font-weight: 700;
 }
+.moment-feed {
+  width: min(100% - 24px, 760px);
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 16px;
+  border: 1px solid var(--c-border-control);
+  border-radius: 16px;
+  background: var(--c-surface-3);
+  color: var(--c-text);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.moment-feed::backdrop {
+  background: rgb(0 0 0 / 75%);
+}
+.moment-feed-header,
+.moment-feed-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.moment-feed .ui-btn {
+  min-height: 56px;
+}
+.moment-feed-header {
+  margin-bottom: 12px;
+}
+.moment-feed-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+}
+.moment-feed-info.is-point {
+  border-color: var(--c-gold);
+}
+.moment-feed-info p {
+  margin: 4px 0;
+}
+.moment-feed-info small {
+  color: var(--c-text-muted);
+}
+.moment-feed .video-viewer {
+  margin: 12px 0;
+}
+.moment-feed iframe,
+.moment-feed video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  min-height: 200px;
+  border: 0;
+  background: #000;
+  object-fit: contain;
+}
+.moment-feed-swipe {
+  display: none;
+  touch-action: none;
+  padding: 22px 10px;
+  text-align: center;
+  border-radius: 12px;
+  background: var(--c-accent-soft);
+  color: var(--c-text);
+  user-select: none;
+  margin: 10px 0;
+}
+.moment-feed-nav > button {
+  flex: 1;
+}
+.moment-feed-duration {
+  margin-top: 12px;
+}
+.moment-feed-duration summary {
+  min-height: 56px;
+  cursor: pointer;
+  padding: 16px 0;
+}
+.moment-feed-duration label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0;
+}
+.moment-feed-duration select {
+  min-height: 56px;
+  color: var(--c-text);
+  background: var(--c-surface-3);
+  border: 1px solid var(--c-border-control);
+  border-radius: 8px;
+  padding: 8px;
+}
+.moment-cards {
+  margin-top: 12px;
+}
+@media (max-width: 600px) {
+  .moment-feed {
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 12px;
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+}
+
+/* Compact phones and touch-first devices use the gesture area; desktop uses buttons. */
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
+  .moment-feed-swipe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 150px;
+    box-sizing: border-box;
+  }
+  .moment-feed-nav {
+    display: none;
+  }
+}

@@ -24,6 +24,10 @@ test("borda de ponto usa o resultado da ação, não apenas o vencedor do rally"
     moments.map((m) => m.pointWon),
     [false, true, false],
   );
+  assert.deepEqual(
+    filterVideoMoments(moments, { special: "point" }).map((m) => m.id),
+    ["point"],
+  );
   assert.equal(validVideoMoments(moments), true);
   assert.equal(validVideoMoments([{ ...moments[0], pointWon: "true" }]), false);
   const { pointWon: _old, ...legacy } = moments[0];

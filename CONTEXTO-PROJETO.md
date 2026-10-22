@@ -353,3 +353,12 @@ Implementada localmente a rota `/?view=player`, login com PIN de quatro números
 ## Ícones dos fundamentos — 19/10/2026
 
 Visual aprovado e aplicado via `SkillIcon.tsx`, com tokens dos três temas. Cartões de vídeo usam ícones e borda dourada para `pointWon`. Para área dos jogadores online, atualizar somente `supabase/video-point-marks.sql` e republicar partidas. Nenhuma senha deve ser recriada. Validação: 133 testes/build e conferência visual dos temas.
+
+
+## Feed de jogadas — 22/10/2026
+
+Implementado localmente `MomentFeed.tsx`, integrado ao `MomentBrowser` compartilhado por análise/perfis/área dos jogadores. Cartões abrem dialog modal, evitando subir a página no celular. Feed usa filtros existentes e novo filtro Pontos nossos; anterior/próxima e área de gesto vertical abaixo do vídeo. YouTube reproduz trechos delimitados (5 s antes/depois por padrão, ajustáveis), tenta autoplay com fallback manual e permite repetir. Não gera arquivos MP4 nem reconhecimento automático. Players anteriores são desmontados ao trocar/fechar. Temas e bordas douradas preservados. Não requer SQL novo.
+
+Sincronização entre dispositivos continua PROPOSTA, não implementada a pedido do usuário: lista privada de partidas completas (audit log incluído), acesso da comissão autorizada, revisão e posse de edição por partida, backups locais/offline e status de sincronização. Diferentes partidas podem ser editadas simultaneamente; a mesma deve ter transferência explícita de editor. A publicação pública atual também precisa separar a partida em transmissão das outras em edição para não sobrescrever o canal ao vivo.
+
+Ajuste aprovado: celular/telas até 600 px e dispositivos de toque usam somente área de deslize ampliada (150 px); desktop usa somente botões anterior/próxima. A área indica início/fim da sequência.
