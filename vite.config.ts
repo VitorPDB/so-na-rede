@@ -40,6 +40,10 @@ export default defineConfig({
         );
       },
       closeBundle() {
+        writeFileSync(
+          resolve(buildDirectory, "match-sync.sql"),
+          readFileSync("supabase/match-sync.sql", "utf8"),
+        );
         const path = resolve(buildDirectory, "sw.js");
         const assets = readdirSync(resolve(buildDirectory, "assets"))
           .filter((name) => /\.(js|css|woff2)$/.test(name))
@@ -58,7 +62,9 @@ export default defineConfig({
             "\n" +
             readFileSync("supabase/security.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/players.sql", "utf8"),
+            readFileSync("supabase/players.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/match-sync.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "security-setup.sql"),
@@ -66,7 +72,9 @@ export default defineConfig({
             "\n" +
             readFileSync("supabase/security.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/players.sql", "utf8"),
+            readFileSync("supabase/players.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/match-sync.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "ativar-online.md"),

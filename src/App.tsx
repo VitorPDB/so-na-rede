@@ -1,3 +1,5 @@
+import { MatchContinuity, useMatchContinuity } from "./MatchContinuity";
+import { keepMatchCopy } from "./matchShelf";
 import { CardSelect } from "./CardSelect";
 import { YoutubeScout, type VideoCapture } from "./YoutubeScout";
 import { initialAssessment } from "./actionQuality";
@@ -244,7 +246,40 @@ export default function App() {
   useEffect(() => {
     if (!s.lineup.includes(selected)) setSelected(s.lineup[0]);
   }, [s.lineup.join(","), selected]);
+  const continuity = useMatchContinuity(
+    match,
+    publication.session,
+    publication.authorized,
+    (next) => {
+      try {
+        saveMatch(next, match);
+        setMatch(next);
+        setSelected(next.initialLineup[0]);
+        setProfileId(next.players[0].id);
+        setLineupDraft([...next.initialLineup]);
+        setServerDraft(next.initialServer);
+        setPanel(undefined);
+        setReportSet(0);
+        setStorageError("");
+        setReadBlocked(false);
+        return true;
+      } catch {
+        setStorageError(
+          "Não foi possível abrir a partida. Exporte o JSON local antes de tentar novamente.",
+        );
+        return false;
+      }
+    },
+    publication.stop,
+  );
   const commit = (next: Match, replace = false) => {
+    if (!continuity.canEdit()) {
+      setFeedback({
+        message:
+          "Edição pausada durante a troca ou por conflito. Abra Continuidade nos Ajustes; sua cópia local permanece salva.",
+      });
+      return false;
+    }
     if (readBlocked && !replace) {
       setFeedback({
         message:
@@ -678,13 +713,20 @@ export default function App() {
       setFeedback({ message: "Backup inválido. O jogo atual foi preservado." });
     }
   };
-  const startNewMatch = () => {
+  const startNewMatch = async () => {
     if (
       !window.confirm(
         "Iniciar nova partida? O resumo deste jogo será preservado no histórico. Elenco, fotos, formações e pesos serão mantidos.",
       )
     )
       return;
+    if (!continuity.canEdit()) return;
+    try {
+      await keepMatchCopy(match);
+    } catch (e) {
+      setStorageError(String(e));
+      return;
+    }
     const lastFormation = [...s.active]
       .reverse()
       .find(
@@ -916,6 +958,28 @@ export default function App() {
             </button>
           </div>
         )}
+        <div className="continuity-bar" role="status">
+          <span>
+            {continuity.linked
+              ? continuity.status
+              : "Partida salva neste aparelho"}
+          </span>
+          <button
+            className="ui-btn ui-btn--sm"
+            onClick={() => {
+              setPage("settings");
+              setTimeout(
+                () =>
+                  document
+                    .getElementById("continuar-partidas")
+                    ?.scrollIntoView({ block: "start" }),
+                0,
+              );
+            }}
+          >
+            Continuar em outro aparelho
+          </button>
+        </div>
         {page === "live" && (
           <div className="lv">
             <div ref={scoreRef}>
@@ -1161,7 +1225,16 @@ export default function App() {
                 !s.libero
               )
             }
-            cloudPanel={<CloudPanel publication={publication} />}
+            cloudPanel={
+              <>
+                <MatchContinuity
+                  sync={continuity}
+                  session={publication.session}
+                  authorized={publication.authorized}
+                />
+                <CloudPanel publication={publication} />
+              </>
+            }
             onChange={commit}
             onTheme={setTheme}
             onVibrate={setVibrate}

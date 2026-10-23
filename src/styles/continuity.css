@@ -1,0 +1,44 @@
+.continuity-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  color: var(--c-text-muted);
+}
+.match-continuity {
+  padding: 20px;
+  margin-bottom: 20px;
+  scroll-margin-top: 80px;
+}
+.match-continuity h2 {
+  margin: 0 0 12px;
+}
+.match-continuity p {
+  margin: 12px 0;
+}
+.match-continuity summary {
+  cursor: pointer;
+  padding: 16px 0;
+  min-height: 56px;
+}
+.sync-games {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+.sync-games li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.sync-games small {
+  display: block;
+  color: var(--c-text-muted);
+  margin-top: 4px;
+}

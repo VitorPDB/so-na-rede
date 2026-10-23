@@ -1,3 +1,4 @@
+import { readSyncLink, matchDigest } from "./MatchContinuity";
 import { project } from "./engine";
 import { videoMoments } from "./videoMoments";
 import { useEffect, useRef, useState } from "react";
@@ -134,6 +135,35 @@ export function usePublication(match: Match) {
       busy.current = true;
       setStatus("Enviando atualização…");
       try {
+        const binding = readSyncLink(source.id);
+        if (binding) {
+          if (binding.owner !== session!.user.id) {
+            conflicted = true;
+            setStatus(
+              "Esta partida pertence a outra conta. Entre na conta original.",
+            );
+            return;
+          }
+          if (binding.digest !== (await matchDigest(JSON.stringify(source)))) {
+            setStatus("Aguardando sincronização privada antes de publicar…");
+            return;
+          }
+          const check = await cloud!.rpc("scout_match_sync", {
+            action: "status",
+            game_id: source.id,
+          });
+          if (
+            check.error ||
+            check.data?.device !== binding.device ||
+            check.data?.revision !== binding.revision
+          ) {
+            conflicted = true;
+            setStatus(
+              "Transmissão pausada: confira a posse desta partida em Continuidade.",
+            );
+            return;
+          }
+        }
         const { data, error } = await cloud!.rpc("publish_player_live", {
           expected_revision: revision,
           snapshot: request.snapshot,
@@ -199,13 +229,21 @@ export function usePublication(match: Match) {
     if (!cloud || !session || !authorized || busy.current) return;
     const { data, error } = await cloud
       .from("live_public")
-      .select("revision")
+      .select("revision,snapshot")
       .eq("slug", teamSlug)
       .maybeSingle();
     if (error) {
       setStatus("Não foi possível iniciar. Confira a configuração do banco.");
       return;
     }
+    if (
+      data?.snapshot?.matchId &&
+      data.snapshot.matchId !== match.id &&
+      !window.confirm(
+        "Há outra partida no canal público. Substituir a transmissão por esta partida?",
+      )
+    )
+      return;
     sent.current = "";
     mediaSent.current = "";
     persist({
@@ -297,7 +335,8 @@ export function CloudPanel({
         <>
           <p className="ui-note">
             O público só consulta. Fotos, nomes e estatísticas desta partida
-            serão publicados. Use um único tablet para marcar.
+            serão publicados. A transmissão pública é independente das partidas
+            privadas da sua conta.
           </p>
           {!publication.session ? (
             <form
@@ -355,7 +394,7 @@ export function CloudPanel({
                 disabled={busy}
                 type="submit"
               >
-                {busy ? "Entrando…" : "Entrar para publicar"}
+                {busy ? "Entrando…" : "Entrar na comissão"}
               </button>
             </form>
           ) : (
@@ -383,7 +422,7 @@ export function CloudPanel({
                     void cloud!.auth.signOut();
                   }}
                 >
-                  Sair da publicação
+                  Sair da conta
                 </button>
               </div>
             </>

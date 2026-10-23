@@ -362,3 +362,7 @@ Implementado localmente `MomentFeed.tsx`, integrado ao `MomentBrowser` compartil
 Sincronização entre dispositivos continua PROPOSTA, não implementada a pedido do usuário: lista privada de partidas completas (audit log incluído), acesso da comissão autorizada, revisão e posse de edição por partida, backups locais/offline e status de sincronização. Diferentes partidas podem ser editadas simultaneamente; a mesma deve ter transferência explícita de editor. A publicação pública atual também precisa separar a partida em transmissão das outras em edição para não sobrescrever o canal ao vivo.
 
 Ajuste aprovado: celular/telas até 600 px e dispositivos de toque usam somente área de deslize ampliada (150 px); desktop usa somente botões anterior/próxima. A área indica início/fim da sequência.
+
+
+## Continuidade privada — 23/10/2026
+Implementada em `codex/continuidade-e-acabamento`: RPC/tabela privadas por conta, sincronização da partida completa, transferência explícita de editor por partida, conflitos sem merge e cópias locais antes da troca/nova partida. Ver CONTINUIDADE.md e supabase/match-sync.sql. Publicação continua separada e verifica a versão privada antes de enviar jogos vinculados. Requer ativar SQL/deploy; não presumir que ocorreu.
