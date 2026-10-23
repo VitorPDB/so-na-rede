@@ -12,7 +12,7 @@ import {
   formatVideoTime,
   type VideoMoment,
 } from "./videoMoments";
-import { MomentPlayer } from "./MomentPlayer";
+import { MomentFeed } from "./MomentFeed";
 
 export function SimpleStats({
   match,
@@ -145,12 +145,13 @@ export function SimpleStats({
         </article>
       </div>
       {moment && (
-        <article className="ui-card">
-          <MomentPlayer key={moment.id} moment={moment} />
-          <button className="ui-btn" onClick={() => setMoment(undefined)}>
-            Fechar lance
-          </button>
-        </article>
+        <MomentFeed
+          moments={videoMoments(events)}
+          selectedId={moment.id}
+          players={match.players}
+          onSelect={setMoment}
+          onClose={() => setMoment(undefined)}
+        />
       )}
       <p className="ui-note">
         Um lance pode aparecer em Cartola e Emergência. Emergência acompanha a

@@ -366,3 +366,10 @@ Ajuste aprovado: celular/telas até 600 px e dispositivos de toque usam somente 
 
 ## Continuidade privada — 23/10/2026
 Implementada em `codex/continuidade-e-acabamento`: RPC/tabela privadas por conta, sincronização da partida completa, transferência explícita de editor por partida, conflitos sem merge e cópias locais antes da troca/nova partida. Ver CONTINUIDADE.md e supabase/match-sync.sql. Publicação continua separada e verifica a versão privada antes de enviar jogos vinculados. Requer ativar SQL/deploy; não presumir que ocorreu.
+
+## Acabamento da interface — 23/10/2026
+Aplicadas as correções da revisão Impeccable preservando temas, fontes e ícones: placar móvel em duas linhas sem sobreposição; painéis com dialog nativo, Escape e retorno de foco; PIN logo após escolher o jogador; filtros dos vídeos recolhíveis; resumo/detalhado com seleção explícita; detalhes técnicos montados apenas ao abrir e estados sem dados mais curtos. Lances especiais do resumo também abrem no feed modal.
+
+O feed decide gestos por dispositivo de toque (hover:none/pointer:coarse), não pela largura: PC estreito conserva botões; celular usa deslize e mantém alternativa acessível por teclado. Substitui a regra anterior de ocultar botões apenas por largura.
+
+Validação local: 134 testes e build aprovados; conferidos placar a 390 px, troca de jogador/foco na senha, foco/Escape do painel e avanço do feed em PC estreito. Sincronização testada em PostgreSQL local; ainda falta ativar SQL e validar em dois aparelhos reais. Sem push/deploy nesta tarefa.

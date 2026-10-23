@@ -1,0 +1,86 @@
+/* Refinement of the approved identity, loaded after identity overrides. */
+@media (max-width: 639px) {
+  .sb-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "ours theirs" "score score";
+    gap: 12px;
+  }
+  .sb-team.ours {
+    grid-area: ours;
+  }
+  .sb-team.theirs {
+    grid-area: theirs;
+  }
+  .sb-score {
+    grid-area: score;
+    justify-content: center;
+  }
+  .sb-team-text {
+    width: 100%;
+  }
+  .sb-team h2 {
+    font-size: 1rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .sb-digit {
+    font-size: clamp(3rem, 14vw, 4.5rem);
+  }
+}
+dialog.drawer {
+  margin: 0 0 0 auto;
+  max-height: 100dvh;
+  max-width: 100%;
+  color: var(--c-text);
+}
+dialog.drawer::backdrop {
+  background: var(--c-scrim);
+}
+.report-switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: flex-start;
+}
+.report-switches .ui-btn[aria-pressed="true"] {
+  background: var(--c-accent-soft);
+  border: 1px solid var(--c-accent);
+  color: var(--c-accent-strong);
+}
+.report-switches .ui-btn[aria-pressed="false"] {
+  border: 1px solid var(--c-border-control);
+}
+.moment-filter-panel {
+  margin: 12px 0;
+}
+.moment-filter-panel > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  min-height: 56px;
+  padding: 12px;
+  border: 1px solid var(--c-border-control);
+  border-radius: 12px;
+}
+.moment-filter-panel > summary::before {
+  content: "+";
+  color: var(--c-accent);
+}
+.moment-filter-panel[open] > summary::before {
+  content: "−";
+}
+.moment-filter-panel > summary span {
+  font-size: var(--fs-sm);
+  color: var(--c-text-muted);
+}
+.player-pin {
+  margin-top: 0;
+}
+@media (max-width: 639px) {
+  .simple-stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

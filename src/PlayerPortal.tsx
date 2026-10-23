@@ -192,34 +192,48 @@ export default function PlayerPortal() {
       )}
       {!dashboard ? (
         <form onSubmit={login} className="ui-card player-login">
-          <div
-            className="player-roster"
-            role="group"
-            aria-label="Escolha seu jogador"
-          >
-            {roster.map((p) => (
+          {!player && (
+            <div
+              className="player-roster"
+              role="group"
+              aria-label="Escolha seu jogador"
+            >
+              {roster.map((p) => (
+                <button
+                  className={`ui-btn ${player === p.id ? "ui-btn--primary" : "ui-btn--secondary"}`}
+                  aria-pressed={player === p.id}
+                  type="button"
+                  key={p.id}
+                  onClick={() => {
+                    setPlayer(p.id);
+                    setPin("");
+                  }}
+                >
+                  <span>#{String(p.number).padStart(2, "0")}</span>
+                  <strong>{p.name}</strong>
+                </button>
+              ))}
+            </div>
+          )}
+          {player && (
+            <div className="player-pin">
               <button
-                className={`ui-btn ${player === p.id ? "ui-btn--primary" : "ui-btn--secondary"}`}
-                aria-pressed={player === p.id}
                 type="button"
-                key={p.id}
+                className="ui-btn"
+                disabled={busy}
                 onClick={() => {
-                  setPlayer(p.id);
+                  setPlayer("");
                   setPin("");
                 }}
               >
-                <span>#{String(p.number).padStart(2, "0")}</span>
-                <strong>{p.name}</strong>
+                Trocar jogador
               </button>
-            ))}
-          </div>
-          {player && (
-            <div className="player-pin">
               <label htmlFor="player-pin">
                 Senha de {roster.find((p) => p.id === player)?.name}
               </label>
               <input
                 id="player-pin"
+                autoFocus
                 type="password"
                 inputMode="numeric"
                 pattern="[0-9]{4}"

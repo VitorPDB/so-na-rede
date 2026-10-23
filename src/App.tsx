@@ -1,5 +1,6 @@
 import { MatchContinuity, useMatchContinuity } from "./MatchContinuity";
 import { keepMatchCopy } from "./matchShelf";
+import { ModalDrawer } from "./ModalDrawer";
 import { CardSelect } from "./CardSelect";
 import { YoutubeScout, type VideoCapture } from "./YoutubeScout";
 import { initialAssessment } from "./actionQuality";
@@ -1246,27 +1247,18 @@ export default function App() {
           />
         )}
         {panel && (
-          <div
-            className="drawer-scrim"
-            onClick={() => setPanel(undefined)}
-            aria-hidden="true"
-          />
-        )}
-        {panel && (
-          <section
+          <ModalDrawer
             className={
               "panel drawer" + (panel === "formation" ? " drawer--wide" : "")
             }
-            role="dialog"
-            aria-modal="true"
-            aria-label={
+            label={
               panel === "sub"
                 ? "Substituições e líbero"
                 : panel === "history"
                   ? "Histórico e auditoria"
                   : "Formação"
             }
-            onKeyDown={(e) => e.key === "Escape" && setPanel(undefined)}
+            onClose={() => setPanel(undefined)}
           >
             <div className="panel-top">
               <div>
@@ -1552,7 +1544,7 @@ export default function App() {
                 </div>
               </>
             )}
-          </section>
+          </ModalDrawer>
         )}
         {pendingAction && (
           <PlayerChooser

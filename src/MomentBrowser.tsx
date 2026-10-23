@@ -40,91 +40,130 @@ export function MomentBrowser({
       {p.name}
     </option>
   ));
+  if (!moments.length)
+    return (
+      <p className="ui-note">
+        Ainda não há lances com horário neste recorte. Eles aparecem quando a
+        comissão marca as ações no vídeo e publica a partida.
+      </p>
+    );
+  const activeFilters = [
+    primary && players.find((p) => p.id === primary)?.name,
+    partner && `com ${players.find((p) => p.id === partner)?.name ?? partner}`,
+    set && `Set ${set}`,
+    skill && skills[skill as keyof typeof skills]?.label,
+    special &&
+      {
+        point: "Pontos nossos",
+        magic: "Tirou da cartola",
+        emergency: "Emergência",
+      }[special],
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const clear = () => {
+    setPlayer(fixedPlayer ?? "");
+    setPartner("");
+    setSet(0);
+    setSkill("");
+    setSpecial("");
+  };
   return (
     <section aria-label="Filtrar lances de vídeo">
-      <div className="moment-filters">
-        {!fixedPlayer && (
+      <details className="moment-filter-panel">
+        <summary>
+          Filtrar jogadas <span>{activeFilters || "Todos os lances"}</span>
+        </summary>
+        <div className="moment-filters">
+          {!fixedPlayer && (
+            <label>
+              Jogador
+              <CardSelect
+                value={primary}
+                onChange={(e) => {
+                  setPlayer(e.target.value);
+                  setPartner("");
+                }}
+              >
+                <option value="">Todos os jogadores</option>
+                {options}
+              </CardSelect>
+            </label>
+          )}
           <label>
-            Jogador
+            Com outro jogador
             <CardSelect
-              value={primary}
-              onChange={(e) => {
-                setPlayer(e.target.value);
-                setPartner("");
-              }}
+              value={partner}
+              disabled={!primary}
+              onChange={(e) => setPartner(e.target.value)}
             >
-              <option value="">Todos os jogadores</option>
-              {options}
+              <option value="">Sem filtro de dupla</option>
+              {players
+                .filter((p) => p.id !== primary)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
             </CardSelect>
           </label>
-        )}
-        <label>
-          Com outro jogador
-          <CardSelect
-            value={partner}
-            disabled={!primary}
-            onChange={(e) => setPartner(e.target.value)}
-          >
-            <option value="">Sem filtro de dupla</option>
-            {players
-              .filter((p) => p.id !== primary)
-              .map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
+          {partner && (
+            <label>
+              Participação da dupla
+              <CardSelect
+                value={mode}
+                onChange={(e) => setMode(e.target.value as typeof mode)}
+              >
+                <option value="action">Na mesma ação</option>
+                <option value="rally">No mesmo rally</option>
+              </CardSelect>
+            </label>
+          )}
+          <label>
+            Set
+            <CardSelect
+              value={set}
+              onChange={(e) => setSet(Number(e.target.value))}
+            >
+              <option value={0}>Todos os sets</option>
+              {[...new Set(moments.map((m) => m.set))].sort().map((n) => (
+                <option value={n} key={n}>
+                  Set {n}
                 </option>
               ))}
-          </CardSelect>
-        </label>
-        {partner && (
-          <label>
-            Participação da dupla
-            <CardSelect
-              value={mode}
-              onChange={(e) => setMode(e.target.value as typeof mode)}
-            >
-              <option value="action">Na mesma ação</option>
-              <option value="rally">No mesmo rally</option>
             </CardSelect>
           </label>
-        )}
-        <label>
-          Set
-          <CardSelect
-            value={set}
-            onChange={(e) => setSet(Number(e.target.value))}
-          >
-            <option value={0}>Todos os sets</option>
-            {[...new Set(moments.map((m) => m.set))].sort().map((n) => (
-              <option value={n} key={n}>
-                Set {n}
-              </option>
-            ))}
-          </CardSelect>
-        </label>
-        <label>
-          Fundamento
-          <CardSelect value={skill} onChange={(e) => setSkill(e.target.value)}>
-            <option value="">Todos os fundamentos</option>
-            {Object.entries(skills).map(([id, s]) => (
-              <option value={id} key={id}>
-                {s.label}
-              </option>
-            ))}
-          </CardSelect>
-        </label>
-        <label>
-          Destaque
-          <CardSelect
-            value={special}
-            onChange={(e) => setSpecial(e.target.value)}
-          >
-            <option value="">Todos os lances</option>
-            <option value="point">Pontos nossos</option>
-            <option value="magic">Tirou da cartola</option>
-            <option value="emergency">Emergência</option>
-          </CardSelect>
-        </label>
-      </div>
+          <label>
+            Fundamento
+            <CardSelect
+              value={skill}
+              onChange={(e) => setSkill(e.target.value)}
+            >
+              <option value="">Todos os fundamentos</option>
+              {Object.entries(skills).map(([id, s]) => (
+                <option value={id} key={id}>
+                  {s.label}
+                </option>
+              ))}
+            </CardSelect>
+          </label>
+          <label>
+            Destaque
+            <CardSelect
+              value={special}
+              onChange={(e) => setSpecial(e.target.value)}
+            >
+              <option value="">Todos os lances</option>
+              <option value="point">Pontos nossos</option>
+              <option value="magic">Tirou da cartola</option>
+              <option value="emergency">Emergência</option>
+            </CardSelect>
+          </label>
+        </div>
+        <button className="ui-btn" onClick={clear}>
+          Limpar filtros
+        </button>
+      </details>
       <p className="ui-note">
         {filtered.length} lances com horário.{" "}
         {partner && mode === "rally"
@@ -193,7 +232,12 @@ export function MomentBrowser({
         ))}
       </div>
       {!filtered.length && (
-        <p>Nenhum lance com horário corresponde aos filtros.</p>
+        <p>
+          Nenhum lance corresponde aos filtros.{" "}
+          <button className="ui-btn" onClick={clear}>
+            Ver todos os lances
+          </button>
+        </p>
       )}
     </section>
   );

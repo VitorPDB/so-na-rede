@@ -20,8 +20,17 @@
 - **Alvos de toque:** `--tap` e `--tap-sm` têm 56 px. Variações compactas reduzem texto e padding, sem reduzir o alvo de toque.
 - **Movimento:** `--dur-1…4` (90–320 ms) com `--ease-out` / `--ease-spring`. Nada atrasa o próximo toque. `prefers-reduced-motion` zera as durações.
 - **Breakpoints:** celular < 640 · tablet 640–959 · paisagem ≥ 960 (barra lateral compacta) · amplo ≥ 1280 (barra lateral completa). Ajustes extras para altura ≤ 700 px (Galaxy Tab A9 em paisagem).
-- **Fonte:** Inter Variable empacotada (`@fontsource-variable/inter`), pré-carregada pelo service worker para funcionar offline.
+- **Fonte:** Atkinson Hyperlegible Next Variable no texto e Big Shoulders Display Variable nos títulos/placares, ambas empacotadas localmente, pré-carregada pelo service worker para funcionar offline.
 
 ## Fora do escopo desta reestruturação
 
 Pós-jogo mantém sua ficha completa com cores por token. A página pública foi migrada para `src/styles/public.css`, compartilhando tokens, cartões e controles de 56 px. O CSS de compatibilidade está consolidado em `src/styles/legacy.css`; os dois arquivos antigos foram removidos. O Tailwind examina somente src, sem incluir backups ou cópias de revisão.
+
+## Refinamentos — 23/10/2026
+
+- Placar da comissão em celular: times em duas colunas; números em linha própria. Preservar as cores aprovadas.
+- Painéis modais usam dialog nativo, fundo inerte e retorno de foco.
+- Feed: capacidade de entrada define deslize ou botões; largura define somente composição. Controles de teclado continuam acessíveis no toque.
+- Alternadores usam grupo compacto com seleção explícita; filtros de vídeos ficam em expansor com resumo e limpeza.
+- Login dos jogadores separa escolha e senha em duas etapas.
+- Temas e tipografia existentes preservados; indicadores de foco usam tokens do tema.

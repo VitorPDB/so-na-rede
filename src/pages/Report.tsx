@@ -17,26 +17,85 @@ import { RatingBadge } from "../live/Insights";
 import { CriteriaReport } from "../CriteriaReport";
 import { criterionDistribution } from "../criteriaStats";
 
-export function Report({
-  match,
-  set,
-  onSet,
-  onExportSummary,
-  onExportEvents,
-  onProfile,
-}: {
+type ReportProps = {
   match: Match;
   set: number;
   onSet: (set: number) => void;
   onExportSummary: () => void;
   onExportEvents: () => void;
   onProfile: (id: string) => void;
-}) {
+};
+export function Report(props: ReportProps) {
+  const [view, setView] = useState<"simple" | "detailed">("simple");
+  const state = project(props.match);
+  return (
+    <div className="rp">
+      <div
+        className="report-switches"
+        role="group"
+        aria-label="Visualização das estatísticas"
+      >
+        <button
+          className="ui-btn"
+          aria-pressed={view === "simple"}
+          onClick={() => setView("simple")}
+        >
+          Resumo
+        </button>
+        <button
+          className="ui-btn"
+          aria-pressed={view === "detailed"}
+          onClick={() => setView("detailed")}
+        >
+          Detalhado
+        </button>
+      </div>
+      {view === "simple" ? (
+        <>
+          <div
+            className="report-switches"
+            role="group"
+            aria-label="Recorte das estatísticas"
+          >
+            {[0, ...Array.from({ length: state.set }, (_, i) => i + 1)].map(
+              (n) => (
+                <button
+                  className="ui-btn"
+                  key={n}
+                  aria-pressed={props.set === n}
+                  onClick={() => props.onSet(n)}
+                >
+                  {n ? `Set ${n}` : "Jogo completo"}
+                </button>
+              ),
+            )}
+          </div>
+          <SimpleStats
+            match={props.match}
+            events={state.events.filter(
+              (e) => !props.set || e.set === props.set,
+            )}
+            set={props.set}
+          />
+        </>
+      ) : (
+        <DetailedReport {...props} />
+      )}
+    </div>
+  );
+}
+function DetailedReport({
+  match,
+  set,
+  onSet,
+  onExportSummary,
+  onExportEvents,
+  onProfile,
+}: ReportProps) {
   const [sort, setSort] = useState<"rating" | "count" | "points" | "errors">(
     "rating",
   );
   const s = project(match);
-  const [view, setView] = useState<"simple" | "detailed">("simple");
   const events = s.events.filter((e) => !set || e.set === set);
   const collective = stats(events, match.weights);
   const rows = match.players
@@ -70,40 +129,7 @@ export function Report({
 
   return (
     <div className="rp">
-      <div className="an-toolbar">
-        <button
-          className="ui-btn"
-          aria-pressed={view === "simple"}
-          onClick={() => setView("simple")}
-        >
-          Resumo
-        </button>
-        <button
-          className="ui-btn"
-          aria-pressed={view === "detailed"}
-          onClick={() => setView("detailed")}
-        >
-          Detalhado
-        </button>
-      </div>
-      {view === "simple" && (
-        <>
-          <div className="an-toolbar">
-            {[0, ...Array.from({ length: s.set }, (_, i) => i + 1)].map((n) => (
-              <button
-                className="ui-btn"
-                aria-pressed={set === n}
-                key={n}
-                onClick={() => onSet(n)}
-              >
-                {n ? `Set ${n}` : "Jogo completo"}
-              </button>
-            ))}
-          </div>
-          <SimpleStats match={match} events={events} set={set} />
-        </>
-      )}
-      <div hidden={view === "simple"}>
+      <div>
         <p className="ui-note">
           {collective.ratingVersion === "mixed"
             ? "Avaliação mista: registros antigos mantêm a fórmula anterior; novas ações usam os critérios por fundamento."

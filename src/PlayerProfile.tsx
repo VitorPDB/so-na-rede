@@ -280,14 +280,20 @@ export function PlayerProfile({
 
       <CareerPartnerships match={match} playerId={player.id} />
       <PlayerVideos key={player.id} match={match} playerId={player.id} />
-      <CriteriaReport
-        events={playerEvents(project(match).events, player.id).filter(
-          (e) => roleFilter === "all" || e.role === roleFilter,
-        )}
-        players={match.players}
-        fixedPlayer={player.id}
-        title="Técnicas e contexto · partida atual"
-      />
+      {current.count > 0 ? (
+        <CriteriaReport
+          events={playerEvents(project(match).events, player.id).filter(
+            (e) => roleFilter === "all" || e.role === roleFilter,
+          )}
+          players={match.players}
+          fixedPlayer={player.id}
+          title="Técnicas e contexto · partida atual"
+        />
+      ) : (
+        <p className="ui-note">
+          Os detalhes técnicos aparecem após as primeiras ações deste jogador.
+        </p>
+      )}
       {player.photo && (
         <details className="ui-card pf-photo-edit">
           <summary>
