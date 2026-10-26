@@ -74,6 +74,44 @@ test("falha na cópia redundante não perde salvamento principal; dados ilegíve
   }
 });
 
+test("craque é salvo com quota cheia liberando somente o checkpoint idêntico", () => {
+  const key = "so-na-rede:match:v1", backup = key + ":backup";
+  const original = makeNewMatch();
+  const raw = JSON.stringify(original);
+  const next = { ...original, socialHighlightPlayerId: original.players[0].id };
+  const values = new Map([[key, raw], [backup, raw]]);
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+  let limit = raw.length * 2;
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
+    getItem: (k: string) => values.get(k) ?? null,
+    removeItem: (k: string) => values.delete(k),
+    setItem: (k: string, v: string) => {
+      const size = [...values].reduce((n, [id, s]) => n + (id === k ? 0 : s.length), v.length);
+      if (size > limit) throw new DOMException("quota", "QuotaExceededError");
+      values.set(k, v);
+    },
+  }});
+  try {
+    saveMatch(next, original);
+    assert.deepEqual(loadMatch(), next);
+    assert.equal(values.has(backup), false);
+    // If even the main copy cannot fit, the original primary copy survives.
+    values.set(key, raw); values.set(backup, raw);
+    limit = 1;
+    assert.throws(() => saveMatch(next, original), { name: "QuotaExceededError" });
+    assert.equal(values.get(key), raw);
+    assert.deepEqual(loadMatch(), original);
+    // A different recovery copy must never be discarded to free space.
+    const other = JSON.stringify(makeNewMatch());
+    values.set(backup, other);
+    assert.throws(() => saveMatch(next, original), { name: "QuotaExceededError" });
+    assert.equal(values.get(backup), other);
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
+    else Reflect.deleteProperty(globalThis, "localStorage");
+  }
+});
+
 test("totais pós-jogo calculam notas por função/set e entram no histórico sem alterar o jogo ao vivo", () => {
   const live = makeNewMatch();
   const draft = newPostGame(live);

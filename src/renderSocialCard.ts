@@ -106,14 +106,16 @@ export async function renderSocialCard(
     imageTop + imageHeight - 25,
     story ? 740 : 530,
     highlight ? "#bc8b37" : "#473052",
+    "Big Shoulders Display Variable",
+    440,
   );
   if (photo) {
     try {
       const img = await load(photo);
-      const scale = Math.min(800 / img.width, imageHeight / img.height);
+      const scale = Math.min(480 / img.width, imageHeight / img.height);
       c.drawImage(
         img,
-        (1080 - img.width * scale) / 2,
+        1016 - img.width * scale,
         imageTop + imageHeight - img.height * scale,
         img.width * scale,
         img.height * scale,

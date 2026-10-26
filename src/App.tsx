@@ -318,7 +318,9 @@ export default function App() {
       setStorageError(
         e instanceof Error && e.message.includes("outra aba")
           ? e.message
-          : "Não foi possível salvar. Exporte o JSON para proteger seus dados.",
+          : e instanceof DOMException && e.name === "QuotaExceededError"
+            ? "O armazenamento deste navegador está cheio. A alteração não foi salva; exporte o JSON para preservar as partidas."
+            : "Não foi possível salvar. Exporte o JSON para proteger seus dados.",
       );
       return false;
     }

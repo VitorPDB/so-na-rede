@@ -589,7 +589,31 @@ export function saveMatch(match: Match, expected?: Match) {
       "O jogo foi alterado em outra aba. Recarregue esta aba antes de continuar.",
     );
   const raw = JSON.stringify(match);
-  localStorage.setItem(KEY, raw);
+  try {
+    localStorage.setItem(KEY, raw);
+  } catch (error) {
+    // A redundant checkpoint can occupy half the quota. Release it only when
+    // the untouched primary copy contains exactly the same data.
+    const backup = localStorage.getItem(BACKUP_KEY);
+    if (
+      !(error instanceof DOMException) ||
+      error.name !== "QuotaExceededError" ||
+      !current ||
+      backup !== current
+    )
+      throw error;
+    localStorage.removeItem(BACKUP_KEY);
+    try {
+      localStorage.setItem(KEY, raw);
+    } catch (retryError) {
+      try {
+        localStorage.setItem(BACKUP_KEY, backup);
+      } catch {
+        /* Primary remains intact. */
+      }
+      throw retryError;
+    }
+  }
   try {
     localStorage.setItem(BACKUP_KEY, raw);
   } catch {

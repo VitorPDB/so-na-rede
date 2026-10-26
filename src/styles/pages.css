@@ -1166,6 +1166,12 @@
 }
 
 /* ---------- Time: perfil ---------- */
+.pf {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pf > * {
+  min-width: 0;
+}
 .pf-back {
   justify-self: start;
 }

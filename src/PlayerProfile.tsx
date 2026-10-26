@@ -162,16 +162,22 @@ export function PlayerProfile({
           </small>
         </div>
       </section>
-      <label className="ui-note">
-        <input
-          type="checkbox"
-          checked={match.socialHighlightPlayerId === player.id}
-          onChange={(e) =>
-            onHighlight(e.target.checked ? player.id : undefined)
-          }
-        />{" "}
-        Destaque da partida · escolhido pela comissão
-      </label>
+      <button
+        type="button"
+        className="ui-btn"
+        role="switch"
+        aria-checked={match.socialHighlightPlayerId === player.id}
+        onClick={() =>
+          onHighlight(
+            match.socialHighlightPlayerId === player.id ? undefined : player.id,
+          )
+        }
+      >
+        <span className="ui-switch" aria-hidden="true">
+          <i />
+        </span>
+        Craque da partida
+      </button>
       <SocialCardExport data={card} />
       {busy && <p className="ui-note">Preparando foto…</p>}
       {error && (
