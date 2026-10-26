@@ -172,3 +172,24 @@ test("histórico remove e restaura sem mudar a partida atual nem duplicar jogos"
   assert.deepEqual(restored.history, m.history);
   assert.equal(restoreArchivedMatch(restored, game).history?.length, 1);
 });
+
+test("portal agrega qualidade por volume sem NaN e não inventa dados ausentes", async () => {
+  const { playerRecap, parseOpenGames } = await import("./openPlayerData");
+  const { publicSnapshot } = await import("./publicSnapshot");
+  const m = append(newMatch(), {
+    type: "event",
+    event: { skill: "attack", result: "simple_good", playerId: "p1" },
+  });
+  const g = {
+    snapshot: publicSnapshot(m),
+    media: { photos: {}, opponentLogo: null },
+    moments: [],
+    cards: [],
+  };
+  const recap = playerRecap(parseOpenGames([g, g]), "p1");
+  assert.equal(recap.count, 2);
+  assert.equal(recap.metrics.length, 1);
+  assert.ok(Number.isFinite(recap.metrics[0].quality));
+  assert.equal(playerRecap([g], "missing").rating, null);
+  assert.throws(() => parseOpenGames([{ snapshot: {}, moments: [] }]));
+});

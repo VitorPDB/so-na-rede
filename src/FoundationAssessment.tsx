@@ -153,6 +153,25 @@ export function FoundationAssessment({
           onChange={setGroup}
         />
       )}
+      {event.skill === "attack" && (
+        <AssessmentSelect
+          label="Direção do ataque"
+          value={a.criteria?.attackDirection ?? ""}
+          options={{
+            "": "Não informado",
+            line: "Paralela",
+            cross: "Diagonal",
+            middle: "Meio",
+          }}
+          onChange={(value) => {
+            const criteria = { ...a.criteria };
+            if (value)
+              criteria.attackDirection = value as "line" | "cross" | "middle";
+            else delete criteria.attackDirection;
+            change({ criteria });
+          }}
+        />
+      )}
       <details className="foundation-context">
         <summary>
           <SlidersHorizontal size={18} /> Contexto do lance{" "}
@@ -167,6 +186,7 @@ export function FoundationAssessment({
           skill={event.skill}
           value={a.criteria}
           hideQuality
+          hideAttackDirection
           hideFaults
           hideIncomingPass={a.rallyContext === "auto"}
           hideSetType={event.skill === "attack" && a.setTypeSource === "rally"}

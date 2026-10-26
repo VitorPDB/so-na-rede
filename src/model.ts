@@ -261,6 +261,7 @@ export interface AssessmentCriteria {
   faultType?: "net_touch" | "invasion" | "attack_net" | "attack_out";
   approach?: "good" | "adjusted" | "poor";
   incomingPass?: "A" | "B" | "C";
+  attackDirection?: "line" | "cross" | "middle";
   setDirection?: "front" | "back" | "middle" | "backrow";
 }
 export type Command =

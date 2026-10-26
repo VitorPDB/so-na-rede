@@ -1,383 +1,668 @@
-import { PlayerSocialCard } from "./PlayerSocialCard";
-import { SkillIcon } from "./SkillIcon";
-import { PublishedMatchPicker } from "./PublishedMatchPicker";
 import { useEffect, useState } from "react";
+import { ArrowLeft, Globe, Play, ChevronRight } from "lucide-react";
 import { cloud } from "./cloud";
-import { CardSelect } from "./CardSelect";
+import { parseOpenGames, playerRecap, type OpenGame } from "./openPlayerData";
+import { SkillIcon } from "./SkillIcon";
+import { Photo } from "./PlayerPhoto";
 import { CriteriaReport } from "./CriteriaReport";
 import { MomentBrowser } from "./MomentBrowser";
-import type { PublicSnapshot } from "./publicSnapshot";
-import type { PublicCriteriaData } from "./criteriaStats";
-import { validVideoMoments, type VideoMoment } from "./videoMoments";
-import { safePublicSnapshot } from "./playerPrivacy";
-import { newMatch } from "./model";
 import { MatchVideoPlayer } from "./MatchVideos";
-
-type Roster = { id: string; name: string; number: number };
-type Game = {
-  opponentLogo?: string | null;
-  public: PublicSnapshot;
-  own: PublicSnapshot["teamStats"] | null;
-  technical: PublicCriteriaData;
-  moments: VideoMoment[];
-};
-type Dashboard = { playerId: string; games: Game[] };
-const grade = (n: number | null | undefined) =>
-  n == null ? "—" : n.toFixed(1);
-
+import { SocialCardExport } from "./SocialCardExport";
+import { distributionFromCube } from "./criteriaStats";
+import "./styles/open-players.css";
+const grade = (n: number | null) =>
+  n === null ? "—" : n.toFixed(1).replace(".", ",");
+const date = (g: OpenGame) =>
+  g.snapshot.playedAt
+    ? new Date(g.snapshot.playedAt).toLocaleDateString("pt-BR")
+    : "Data não informada";
 export default function PlayerPortal() {
-  const [roster, setRoster] = useState<Roster[]>(newMatch().players);
-  const [player, setPlayer] = useState("");
-  const [pin, setPin] = useState("");
-  const [token, setToken] = useState(""); // Never persist personal details or session in localStorage.
-  const [dashboard, setDashboard] = useState<Dashboard>();
-  const [gameIndex, setGameIndex] = useState("0");
-  const [person, setPerson] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState("");
+  const [games, GG] = useState<OpenGame[]>([]),
+    [busy, B] = useState(false),
+    [error, E] = useState(""),
+    [offset, O] = useState(0),
+    [more, M] = useState(true),
+    [id, I] = useState(""),
+    [tab, T] = useState("Resumo"),
+    [scope, S] = useState("recent"),
+    [matchId, G] = useState(""),
+    [clip, C] = useState(""),
+    [retry, R] = useState(0);
   useEffect(() => {
-    let alive = true;
+    let live = true;
+    B(true);
+    E("");
     if (!cloud) {
-      setError(
-        "Acesso ainda não ativado. A comissão precisa configurar o servidor dos jogadores.",
+      B(false);
+      E(
+        "A comissão precisa configurar a publicação para disponibilizar os jogadores.",
       );
       return;
     }
-    void cloud.rpc("player_roster").then(({ data, error }) => {
-      if (!alive) return;
-      if (error || !Array.isArray(data) || !data.length)
-        setError(
-          "Acesso ainda não ativado. Solicite a configuração à comissão.",
-        );
-      else {
-        setRoster(data);
-        setReady(true);
-      }
-    });
+    void Promise.resolve(
+      cloud.rpc("open_player_games", { page_offset: offset }),
+    )
+      .then(({ data, error }) => {
+        if (!live) return;
+        try {
+          if (error)
+            throw Error(
+              "Não foi possível carregar o portal. A comissão deve ativar abrir-jogadores.sql no Supabase.",
+            );
+          const rows = parseOpenGames(data);
+          GG((prev) =>
+            offset === 0
+              ? rows
+              : [
+                  ...prev,
+                  ...rows.filter(
+                    (g) =>
+                      !prev.some(
+                        (p) => p.snapshot.matchId === g.snapshot.matchId,
+                      ),
+                  ),
+                ],
+          );
+          M(rows.length === 20);
+        } catch (e) {
+          E(String((e as Error).message));
+        } finally {
+          B(false);
+        }
+      })
+      .catch(() => {
+        if (live) {
+          E("Sem conexão. Tente novamente.");
+          B(false);
+        }
+      });
     return () => {
-      alive = false;
+      live = false;
     };
-  }, []);
-  async function load(session: string) {
-    const { data, error } = await cloud!.rpc("player_dashboard", {
-      token: session,
-    });
-    if (error)
-      throw new Error("Sessão indisponível ou expirada. Entre novamente.");
-    const dashboard = data as Dashboard;
-    // Escudos já públicos; nenhuma mudança na autenticação ou no SQL é necessária.
-    const [archive, live, media] = await Promise.all([
-      dashboard.games.length
-        ? cloud!
-            .from("public_matches")
-            .select("match_id,logo:media->>opponentLogo")
-            .in(
-              "match_id",
-              dashboard.games.map((g) => g.public.matchId),
-            )
-        : Promise.resolve({ data: [] }),
-      cloud!
-        .from("live_public")
-        .select("matchId:snapshot->>matchId")
-        .eq("slug", "so-na-rede")
-        .maybeSingle(),
-      cloud!
-        .from("live_media")
-        .select("logo:media->>opponentLogo")
-        .eq("slug", "so-na-rede")
-        .maybeSingle(),
-    ]);
-    setDashboard({
-      ...dashboard,
-      games: dashboard.games.map((g) => ({
-        ...g,
-        opponentLogo:
-          archive.data?.find((row) => row.match_id === g.public.matchId)
-            ?.logo ??
-          (live.data?.matchId === g.public.matchId ? media.data?.logo : null),
-      })),
-    });
-  }
-  async function login(e: React.FormEvent) {
-    e.preventDefault();
-    if (!cloud || busy || !ready) return;
-    setBusy(true);
-    setError("");
-    try {
-      const { data, error } = await cloud.rpc("player_login", { player, pin });
-      setPin("");
-      if (error) throw new Error("Não foi possível entrar. Confira a conexão.");
-      if (!data?.token)
-        throw new Error(
-          data?.error === "locked"
-            ? "Muitas tentativas. Aguarde 15 minutos."
-            : "Jogador ou senha incorretos.",
-        );
-      await load(data.token);
-      setToken(data.token);
-      setPerson(data.playerId);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function logout() {
-    const previous = token;
-    setToken("");
-    setDashboard(undefined);
-    setPin("");
-    setError("");
-    setPerson("");
-    if (cloud && previous)
-      await cloud.rpc("player_logout", { token: previous });
-  }
-  // Clear private data after the server's maximum session lifetime, including background tabs.
-  useEffect(() => {
-    if (!token) return;
-    const expires = Date.now() + 8 * 60 * 60 * 1000;
-    const clear = () => {
-      if (Date.now() >= expires) void logout();
-    };
-    const timer = setInterval(clear, 30000);
-    window.addEventListener("focus", clear);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("focus", clear);
-    };
-  }, [token]);
-  const game = dashboard?.games[Number(gameIndex)];
-  const snapshot = game ? safePublicSnapshot(game.public) : undefined;
-  const selected = snapshot?.players.find((p) => p.id === person);
-  const self = person === dashboard?.playerId;
-  const own = self ? game?.own : null;
+  }, [offset, retry]);
+  const roster = [
+    ...new Map(
+      [...games]
+        .reverse()
+        .flatMap((g) => g.snapshot.players.map((p) => [p.id, p] as const)),
+    ).values(),
+  ];
+  const p = roster.find((p) => p.id === id);
+  const all = games
+    .filter((g) =>
+      g.snapshot.players.some((p) => p.id === id && (p.stats.count ?? 0) > 0),
+    )
+    .sort((a, b) =>
+      (a.snapshot.playedAt ?? "").localeCompare(b.snapshot.playedAt ?? ""),
+    );
+  const list =
+    scope === "match"
+      ? all.filter(
+          (g) =>
+            g.snapshot.matchId === (matchId || all.at(-1)?.snapshot.matchId),
+        )
+      : scope === "recent"
+        ? all.slice(-3)
+        : all;
+  const recap = playerRecap(list, id);
+  const latest = list.at(-1);
+  const card = latest?.cards.find((c) => c.player.id === id);
+  const photo = games.find((g) => g.media.photos[id])?.media.photos[id];
+  const direction = distributionFromCube(
+    list.flatMap(
+      (g) => g.snapshot.technical?.players.find((p) => p.id === id)?.data ?? [],
+    ),
+    "attackDirection",
+    "attack",
+  );
+  const reliable = recap.metrics.filter((m) => m.count >= 10),
+    best = reliable[0],
+    focus = reliable.at(-1);
+  const passes = distributionFromCube(
+    list.flatMap(
+      (g) => g.snapshot.technical?.players.find((p) => p.id === id)?.data ?? [],
+    ),
+    "passQuality",
+    "reception",
+  );
+  const libero = !!card?.player.libero;
+  const positivePass = passes.known
+    ? Math.round(
+        (100 *
+          passes.rows
+            .filter((r) => ["A", "B"].includes(r.id))
+            .reduce((s, r) => s + r.count, 0)) /
+          passes.known,
+      ) + "%"
+    : "—";
+  const attack = recap.metrics.find((m) => m.skill === "attack");
   return (
-    <main className="pub player-portal">
-      <header className="pub-header">
-        <a className="pub-brand" href="/?view=public">
+    <main className="open-portal portal">
+      <header className="brand">
+        <a href="/?view=public">
           <img src="/team-logo-transparent.png" alt="Só na Rede" />
-          <div>
-            <strong>SÓ NA REDE</strong>
-            <span>ÁREA DOS JOGADORES</span>
-          </div>
         </a>
-        {dashboard && (
-          <button
-            className="ui-btn ui-btn--secondary"
-            onClick={() => void logout()}
-          >
-            Sair
-          </button>
-        )}
+        <b>Só na Rede</b>
+        <span>
+          <Globe size={16} />
+          Estatísticas abertas
+        </span>
       </header>
-      <div className="pub-intro">
-        <div>
-          <span className="ui-eyebrow">Seu jogo, sua evolução</span>
+      {error && (
+        <div role="alert">
+          <p>{error}</p>
+          <button disabled={busy} onClick={() => R(retry + 1)}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
+      {!p ? (
+        <section className="entry">
           <h1>
-            {dashboard
-              ? `Olá, ${roster.find((p) => p.id === dashboard.playerId)?.name ?? "jogador"}`
-              : "Quem é você?"}
+            O jogo continua
+            <br />
+            fora da quadra.
           </h1>
           <p>
-            {dashboard
-              ? "Seus detalhes ficam só com você e a comissão. Acompanhe os destaques dos companheiros."
-              : "Escolha seu nome para acessar suas estatísticas e os vídeos do time."}
+            Escolha um atleta. Acompanhe os números, a evolução e as jogadas.
+            Sem senha.
           </p>
-        </div>
-      </div>
-      {error && (
-        <p className="ui-note" role="alert">
-          {error}
-        </p>
-      )}
-      {!dashboard ? (
-        <form onSubmit={login} className="ui-card player-login">
-          {!player && (
-            <div
-              className="player-roster"
-              role="group"
-              aria-label="Escolha seu jogador"
-            >
-              {roster.map((p) => (
-                <button
-                  className={`ui-btn ${player === p.id ? "ui-btn--primary" : "ui-btn--secondary"}`}
-                  aria-pressed={player === p.id}
-                  type="button"
-                  key={p.id}
-                  onClick={() => {
-                    setPlayer(p.id);
-                    setPin("");
-                  }}
-                >
-                  <span>#{String(p.number).padStart(2, "0")}</span>
-                  <strong>{p.name}</strong>
-                </button>
-              ))}
-            </div>
+          {busy && <p role="status">Carregando jogadores…</p>}
+          {!busy && !roster.length && !error && (
+            <p>Nenhuma partida publicada ainda.</p>
           )}
-          {player && (
-            <div className="player-pin">
+          <div className="athletes">
+            {roster.map((p) => (
               <button
-                type="button"
-                className="ui-btn"
-                disabled={busy}
+                key={p.id}
                 onClick={() => {
-                  setPlayer("");
-                  setPin("");
+                  I(p.id);
+                  S("recent");
+                  G("");
+                  T("Resumo");
+                  C("");
                 }}
               >
-                Trocar jogador
+                <span className="jersey">
+                  {String(p.number).padStart(2, "0")}
+                </span>
+                <strong>{p.name}</strong>
+                <small>Ver desempenho completo</small>
               </button>
-              <label htmlFor="player-pin">
-                Senha de {roster.find((p) => p.id === player)?.name}
-              </label>
-              <input
-                id="player-pin"
-                autoFocus
-                type="password"
-                inputMode="numeric"
-                pattern="[0-9]{4}"
-                minLength={4}
-                maxLength={4}
-                autoComplete="current-password"
-                value={pin}
-                onChange={(e) =>
-                  setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
-                }
-                placeholder="4 números"
-                required
-              />
-              <button
-                className="ui-btn ui-btn--primary"
-                disabled={!ready || busy || pin.length !== 4}
-              >
-                {busy ? "Entrando…" : "Entrar"}
-              </button>
-            </div>
-          )}
-        </form>
+            ))}
+          </div>
+          <p className="notice">
+            Estatísticas e detalhes técnicos disponíveis para qualquer pessoa.
+          </p>
+        </section>
       ) : (
         <>
-          <section className="ui-card pub-section">
-            <h2>Partidas publicadas</h2>
-            <p className="ui-note">
-              Até 50 partidas recentes. Os vídeos dependem dos lances marcados
-              pela comissão.
-            </p>
-            {!dashboard.games.length ? (
-              <p>A comissão ainda não publicou partidas.</p>
-            ) : (
-              <PublishedMatchPicker
-                games={dashboard.games}
-                value={gameIndex}
-                onChange={setGameIndex}
-              />
-            )}
+          <button className="back" onClick={() => I("")}>
+            <ArrowLeft size={16} />
+            Todos os jogadores
+          </button>
+          <section className="athlete">
+            <div className="portrait">
+              <Photo player={{ ...p, photo, positions: [], libero: false }} />
+            </div>
+            <div className="identity">
+              <h1>{p.name}</h1>
+              <p>
+                #{String(p.number).padStart(2, "0")} ·{" "}
+                {card?.player.libero
+                  ? "Líbero"
+                  : card?.player.positions.join(" / ") || "Só na Rede"}
+              </p>
+              <span>{latest?.snapshot.team ?? "Só na Rede"}</span>
+            </div>
+            <div className="rating">
+              <b>
+                {grade(recap.rating)}
+                <small>/10</small>
+              </b>
+              <span>Média das notas por partida</span>
+              <small>
+                {recap.rows.length} partidas · {recap.count} ações
+              </small>
+            </div>
           </section>
-          {snapshot && (
+          <section className="scope">
+            <label>
+              Ver desempenho
+              <select
+                value={scope}
+                onChange={(e) => {
+                  S(e.target.value);
+                  C("");
+                }}
+              >
+                <option value="recent">Recentes · últimas 3</option>
+                <option value="all">Geral · partidas carregadas</option>
+                <option value="match">Partida específica</option>
+              </select>
+            </label>
+            {scope === "match" && (
+              <label>
+                Partida
+                <select
+                  value={matchId || all.at(-1)?.snapshot.matchId || ""}
+                  onChange={(e) => {
+                    G(e.target.value);
+                    C("");
+                  }}
+                >
+                  {[...all].reverse().map((g) => (
+                    <option key={g.snapshot.matchId} value={g.snapshot.matchId}>
+                      {date(g)} · {g.snapshot.opponent}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <p>
+              Notas de partidas com ações registradas.
+              <br />
+              {more
+                ? "Há partidas anteriores para carregar."
+                : "Todas as publicações disponíveis carregadas."}
+            </p>
+          </section>
+          <nav aria-label="Seções do perfil">
+            {["Resumo", "Fundamentos", "Partidas"].map((t) => (
+              <button key={t} aria-pressed={tab === t} onClick={() => T(t)}>
+                {t}
+              </button>
+            ))}
+          </nav>
+          {!list.length ? (
+            <p>
+              Este jogador ainda não tem ações registradas no recorte
+              selecionado.
+            </p>
+          ) : (
             <>
-              <section className="ui-card pub-section">
-                <label>
-                  Perfil
-                  <CardSelect
-                    value={person}
-                    onChange={(e) => setPerson(e.target.value)}
-                  >
-                    {snapshot.players.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.id === dashboard.playerId ? " · Você" : ""}
-                      </option>
-                    ))}
-                  </CardSelect>
-                </label>
-                <h2>
-                  {selected?.name ?? "Selecione um jogador"}{" "}
-                  <span className="ui-rating">
-                    {grade(selected?.stats.rating)}
-                  </span>
-                </h2>
-                <p>
-                  {self
-                    ? "Seu perfil completo"
-                    : "Perfil público do companheiro"}
-                </p>
-                <p>
-                  Melhor fundamento:{" "}
-                  <strong>
-                    {selected?.stats.best?.label ?? "Ainda sem avaliação"}
-                  </strong>
-                </p>
-                {own && (
-                  <>
-                    <p>
-                      {own.count ?? 0} ações · {own.points ?? 0} pontos ·{" "}
-                      {own.errors ?? 0} erros
-                    </p>
-                    <div className="player-metrics">
-                      {own.metrics.map((m) => (
-                        <article className="ui-card" key={m.skill}>
-                          <h3>
-                            <SkillIcon skill={m.skill} /> {m.label}
-                          </h3>
-                          <strong>
-                            {(m.quality * 100).toFixed(0)}% de qualidade
-                          </strong>
-                          <p>
-                            {m.count} ações · {m.successes} acertos · {m.errors}{" "}
-                            erros
-                          </p>
-                        </article>
-                      ))}
+              {tab === "Resumo" && (
+                <div className="summary">
+                  <section>
+                    <h2>O jogo em números</h2>
+                    <div className="numbers">
+                      <div>
+                        <b>
+                          {libero
+                            ? (recap.metrics.find((m) => m.skill === "defense")
+                                ?.count ?? 0)
+                            : recap.points}
+                        </b>
+                        <span>{libero ? "Defesas registradas" : "Pontos"}</span>
+                      </div>
+                      <div>
+                        <b>
+                          {libero
+                            ? positivePass
+                            : attack?.count
+                              ? Math.round(
+                                  (100 * (attack.count - attack.errors)) /
+                                    attack.count,
+                                ) + "%"
+                              : "—"}
+                        </b>
+                        <span>
+                          {libero ? "Recepção positiva" : "Precisão de ataque"}
+                        </span>
+                        <small>
+                          {libero
+                            ? "A + B / recepções classificadas"
+                            : "Ataques sem erro / total"}
+                        </small>
+                      </div>
+                      <div>
+                        <b>{recap.count}</b>
+                        <span>Ações registradas</span>
+                      </div>
                     </div>
-                  </>
-                )}
-              </section>
-              {self && (
-                <PlayerSocialCard
-                  key={`${snapshot.matchId}:${token}`}
-                  token={token}
-                  matchId={snapshot.matchId}
-                />
+                    <section className="evolution">
+                      <h2>Evolução por partida</h2>
+                      {recap.rows.length < 2 ? (
+                        <p>
+                          São necessárias duas partidas avaliadas para comparar
+                          a evolução.
+                        </p>
+                      ) : (
+                        <>
+                          <svg
+                            viewBox="0 0 580 230"
+                            role="img"
+                            aria-label="Evolução das notas; valores completos na tabela abaixo"
+                          >
+                            {[0, 5, 10].map((v) => (
+                              <g key={v}>
+                                <line
+                                  x1="38"
+                                  x2="556"
+                                  y1={190 - v * 16}
+                                  y2={190 - v * 16}
+                                />
+                                <text x="12" y={195 - v * 16}>
+                                  {v}
+                                </text>
+                              </g>
+                            ))}
+                            {recap.rows.map((r, i) => {
+                              const prev = recap.rows[i - 1];
+                              return prev?.stats.rating != null &&
+                                r.stats.rating != null ? (
+                                <line
+                                  className="trend"
+                                  key={r.game.snapshot.matchId}
+                                  x1={
+                                    50 +
+                                    ((i - 1) * 490) / (recap.rows.length - 1)
+                                  }
+                                  y1={190 - prev.stats.rating * 16}
+                                  x2={50 + (i * 490) / (recap.rows.length - 1)}
+                                  y2={190 - r.stats.rating * 16}
+                                />
+                              ) : null;
+                            })}
+                            <text x="38" y="220">
+                              {date(recap.rows[0].game)}
+                            </text>
+                            <text x="556" textAnchor="end" y="220">
+                              {date(recap.rows.at(-1)!.game)}
+                            </text>
+                            <polyline
+                              className="average"
+                              points={recap.rows
+                                .flatMap((r, i) => {
+                                  const rated = recap.rows
+                                    .slice(Math.max(0, i - 2), i + 1)
+                                    .filter((x) => x.stats.rating !== null);
+                                  return rated.length
+                                    ? [
+                                        `${50 + (i * 490) / (recap.rows.length - 1)},${190 - (rated.reduce((s, x) => s + x.stats.rating!, 0) / rated.length) * 16}`,
+                                      ]
+                                    : [];
+                                })
+                                .join(" ")}
+                            />
+                            {recap.rows.map(
+                              (r, i) =>
+                                r.stats.rating !== null && (
+                                  <circle
+                                    key={r.game.snapshot.matchId}
+                                    className={
+                                      (r.stats.count ?? 0) < 15 ? "low" : ""
+                                    }
+                                    cx={
+                                      50 + (i * 490) / (recap.rows.length - 1)
+                                    }
+                                    cy={190 - r.stats.rating * 16}
+                                    r="6"
+                                  />
+                                ),
+                            )}
+                          </svg>
+                          <p className="muted">
+                            Pontos: notas dos jogos. Tracejado: média móvel de
+                            até 3 partidas. Círculo vazado: menos de 15 ações.
+                          </p>
+                        </>
+                      )}
+                      <details>
+                        <summary>Ver notas e amostras</summary>
+                        {recap.rows.map((r) => (
+                          <div
+                            className="table-row"
+                            key={r.game.snapshot.matchId}
+                          >
+                            <span>
+                              {date(r.game)} · {r.game.snapshot.opponent}
+                            </span>
+                            <b>{grade(r.stats.rating)}</b>
+                            <span>
+                              {r.stats.count} ações
+                              {(r.stats.count ?? 0) < 15
+                                ? " · baixa amostra"
+                                : ""}
+                            </span>
+                          </div>
+                        ))}
+                      </details>
+                    </section>
+                    <div className="insights">
+                      <section>
+                        <h3>Ponto forte</h3>
+                        <p>
+                          {best
+                            ? `${best.label}: maior qualidade média entre fundamentos com ao menos 10 ações (${best.count} registros).`
+                            : "Ainda faltam ações para apontar um fundamento consistente."}
+                        </p>
+                      </section>
+                      <section>
+                        <h3>Foco para o próximo jogo</h3>
+                        <p>
+                          {focus && focus !== best
+                            ? `Revise ${focus.label.toLowerCase()}: menor qualidade média entre os fundamentos com pelo menos 10 ações. Os lances ajudam a entender o contexto.`
+                            : "Registre mais fundamentos para comparar oportunidades de melhoria."}
+                        </p>
+                      </section>
+                    </div>
+                  </section>
+                  <aside>
+                    <h2>Fundamentos em destaque</h2>
+                    <p className="muted">
+                      Qualidade média, acompanhada do volume.
+                    </p>
+                    {recap.metrics.slice(0, 4).map((m) => (
+                      <button
+                        className="foundation"
+                        key={m.skill}
+                        onClick={() => T("Fundamentos")}
+                      >
+                        <SkillIcon skill={m.skill} size={28} />
+                        <div>
+                          <span>
+                            {m.label}
+                            <b>{Math.round(m.quality * 100)}%</b>
+                          </span>
+                          <div className="track">
+                            <i style={{ width: `${m.quality * 100}%` }} />
+                          </div>
+                          <small>{m.count} ações</small>
+                        </div>
+                        <ChevronRight size={16} />
+                      </button>
+                    ))}
+                    {latest && (
+                      <section className="latest">
+                        <h3>Última partida do recorte</h3>
+                        <strong>
+                          {latest.snapshot.team}{" "}
+                          {latest.snapshot.sets.join(" × ")}{" "}
+                          {latest.snapshot.opponent}
+                        </strong>
+                        <p>{date(latest)}</p>
+                        <button
+                          onClick={() => {
+                            T("Partidas");
+                            C(latest.snapshot.matchId);
+                          }}
+                        >
+                          <Play size={17} />
+                          Ver partida e lances
+                        </button>
+                      </section>
+                    )}
+                  </aside>
+                </div>
               )}
-              {self && game?.technical && (
-                <CriteriaReport
-                  key={`${snapshot.matchId}:${person}`}
-                  title="Seus detalhes técnicos"
-                  players={snapshot.players}
-                  aggregateData={game.technical}
-                  fixedPlayer={dashboard.playerId}
-                />
+              {tab === "Fundamentos" && (
+                <section>
+                  <h2>Entenda cada fundamento</h2>
+                  {recap.metrics.map((m) => (
+                    <section className="foundation-detail" key={m.skill}>
+                      <h3>
+                        <SkillIcon skill={m.skill} size={26} /> {m.label}
+                      </h3>
+                      <p>
+                        {m.count} ações · {Math.round(m.quality * 100)}% de
+                        qualidade média
+                      </p>
+                      <div
+                        className="stack"
+                        aria-label={`${m.successes} positivas, ${Math.max(0, m.count - m.successes - m.errors)} outras, ${m.errors} erros`}
+                      >
+                        <i style={{ flex: m.successes }} />
+                        <i
+                          style={{
+                            flex: Math.max(0, m.count - m.successes - m.errors),
+                          }}
+                        />
+                        <i style={{ flex: m.errors }} />
+                      </div>
+                      <div className="legend">
+                        <span>
+                          <i />
+                          {m.successes} positivas
+                        </span>
+                        <span>
+                          <i />
+                          {Math.max(0, m.count - m.successes - m.errors)} outras
+                          / neutras
+                        </span>
+                        <span>
+                          <i />
+                          {m.errors} erros
+                        </span>
+                      </div>
+                    </section>
+                  ))}
+                  <section className="latest">
+                    <h3>Direção mais usada no ataque</h3>
+                    <p>
+                      {direction.known
+                        ? direction.leaders
+                            .map((r) => `${r.label} (${r.count})`)
+                            .join(" · ")
+                        : "Sem direção registrada. A comissão pode marcar a direção nas próximas ações."}
+                    </p>
+                    <small>
+                      {direction.known} de {attack?.count ?? 0} ataques com direção
+                      marcada. Empates são exibidos juntos.
+                    </small>
+                  </section>
+                  <CriteriaReport
+                    title="Detalhes técnicos"
+                    players={roster}
+                    events={undefined}
+                    aggregateData={{
+                      version: 1,
+                      team: [],
+                      players: [
+                        {
+                          id,
+                          data: list.flatMap(
+                            (g) =>
+                              g.snapshot.technical?.players.find(
+                                (p) => p.id === id,
+                              )?.data ?? [],
+                          ),
+                        },
+                      ],
+                    }}
+                    fixedPlayer={id}
+                  />
+                </section>
               )}
-              <section className="ui-card pub-section">
-                <h2>Lances de {selected?.name}</h2>
-                <MomentBrowser
-                  key={`${snapshot.matchId}:${person}`}
-                  moments={
-                    validVideoMoments(game?.moments) ? game!.moments : []
-                  }
-                  fixedPlayer={person}
-                  players={snapshot.players.map((p) => ({
-                    ...p,
-                    positions: [],
-                    libero: false,
-                  }))}
-                />
-              </section>
-              {!!snapshot.videos?.length && (
-                <section className="ui-card pub-section">
-                  <h2>Vídeos da partida</h2>
-                  <MatchVideoPlayer videos={snapshot.videos} />
+              {tab === "Partidas" && (
+                <section>
+                  <h2>Partidas e jogadas</h2>
+                  {[...list].reverse().map((g) => {
+                    const s = g.snapshot,
+                      stats = s.players.find((p) => p.id === id)!.stats,
+                      c = g.cards.find((c) => c.player.id === id);
+                    return (
+                      <article className="match" key={s.matchId}>
+                        <div>
+                          <span>
+                            {date(g)}
+                            {!s.finished ? " · Parcial" : ""}
+                          </span>
+                          <h3>
+                            {s.team} <b>{s.sets.join(" × ")}</b> {s.opponent}
+                          </h3>
+                          <small>{stats.count ?? 0} ações</small>
+                        </div>
+                        <div className="match-grade">
+                          <b>{grade(stats.rating)}</b>
+                          <span>Nota</span>
+                        </div>
+                        <button
+                          aria-expanded={clip === s.matchId}
+                          onClick={() => C(clip === s.matchId ? "" : s.matchId)}
+                        >
+                          <Play size={17} />
+                          {clip === s.matchId ? "Fechar" : "Ver lances"}
+                        </button>
+                        {clip === s.matchId && (
+                          <section className="clips">
+                            <MomentBrowser
+                              moments={g.moments}
+                              fixedPlayer={id}
+                              players={s.players.map((p) => ({
+                                ...p,
+                                positions: [],
+                                libero: false,
+                              }))}
+                            />
+                            {!!s.videos?.length && (
+                              <MatchVideoPlayer videos={s.videos} />
+                            )}
+                            <button
+                              onClick={() => {
+                                G(s.matchId);
+                                S("match");
+                                T("Resumo");
+                              }}
+                            >
+                              Analisar só esta partida
+                            </button>
+                            {c ? (
+                              <SocialCardExport
+                                data={{
+                                  ...c,
+                                  player: {
+                                    ...c.player,
+                                    photo: g.media.photos[id],
+                                  },
+                                }}
+                              />
+                            ) : (
+                              <p className="muted">
+                                A comissão precisa republicar esta partida para
+                                disponibilizar o card.
+                              </p>
+                            )}
+                          </section>
+                        )}
+                      </article>
+                    );
+                  })}
                 </section>
               )}
             </>
           )}
         </>
       )}
-      <p>
-        <a href="/?view=public#reels">Ver Reels na página pública</a>
-      </p>
+      {more && (
+        <button disabled={busy || !!error} onClick={() => O(offset + 20)}>
+          {busy ? "Carregando…" : "Carregar partidas anteriores"}
+        </button>
+      )}
+      <footer>
+        Estatísticas públicas · apenas partidas publicadas pela comissão.{" "}
+        <a href="/?view=public#reels">Ver Reels</a>
+      </footer>
     </main>
   );
 }

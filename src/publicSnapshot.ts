@@ -37,7 +37,9 @@ export function publicSnapshot(match: Match) {
       ? { videos: match.videos }
       : {}),
     matchId: match.id,
-    playedAt: match.audit[0]?.createdAt ?? null,
+    playedAt: match.matchDate
+      ? `${match.matchDate}T12:00:00`
+      : (match.audit[0]?.createdAt ?? null),
     team: match.team,
     opponent: match.opponent,
     set: s.set,

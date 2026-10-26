@@ -257,3 +257,52 @@ test("publicação separa sets/jogadores, persiste no histórico e corrige/desfa
     "touch",
   );
 });
+
+test("direção de ataque permanece após backup e desfazer, sem alterar nota", () => {
+  let m = newMatch();
+  const a = normalAssessment();
+  a.criteria = { attackDirection: "cross" };
+  const action: SkillEvent = {
+    skill: "attack",
+    result: "simple_good",
+    playerId: "p1",
+    assessment: a,
+  };
+  m = append(m, { type: "event", event: action });
+  const loaded = parseMatch(JSON.stringify(m));
+  assert.equal(
+    project(loaded).events[0].assessment?.criteria?.attackDirection,
+    "cross",
+  );
+  const dist = distributionFromCube(
+    criteriaPublication(project(loaded).events, ["p1"]).players[0].data,
+    "attackDirection",
+    "attack",
+  );
+  assert.equal(dist.known, 1);
+  assert.equal(dist.leaders[0].id, "cross");
+  assert.equal(
+    criterionDistribution(
+      [{ ...action, assessment: { ...a, criteria: {} } }],
+      "attackDirection",
+    ).known,
+    0,
+  );
+  assert.equal(
+    criteriaPublication(project(undo(loaded)).events, [
+      "p1",
+    ]).players[0].data.find((c) => c.key === "attackDirection")?.total ?? 0,
+    0,
+  );
+  const other = append(newMatch(), {
+    type: "event",
+    event: {
+      ...action,
+      assessment: { ...a, criteria: { attackDirection: "line" } },
+    },
+  });
+  assert.equal(
+    publicSnapshot(other).players[0].stats.rating,
+    publicSnapshot(m).players[0].stats.rating,
+  );
+});

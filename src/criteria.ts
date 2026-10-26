@@ -39,6 +39,13 @@ export const criteriaFields: {
   options: Record<string, string>;
 }[] = [
   {
+    key: "attackDirection",
+    label: "Direção do ataque",
+    hint: "Destino da bola: paralela, diagonal ou meio. Não altera a nota; deixe sem marcar quando não souber.",
+    skills: ["attack"],
+    options: { line: "Paralela", cross: "Diagonal", middle: "Meio" },
+  },
+  {
     key: "ballConstraint",
     label: "Condição da construção",
     hint: "Contexto tático; não altera a nota",

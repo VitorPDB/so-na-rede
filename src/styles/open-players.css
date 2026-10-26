@@ -1,0 +1,756 @@
+.open-portal {
+  font-family: "Atkinson Hyperlegible Next Variable", sans-serif;
+  color: #efecf2;
+  background: #18161b;
+  font-synthesis: none;
+}
+.open-portal * {
+  box-sizing: border-box;
+}
+.open-portal {
+  margin: 0;
+}
+.open-portal button,
+.open-portal input,
+.open-portal select {
+  font: inherit;
+}
+.open-portal button,
+.open-portal select {
+  min-height: 44px;
+}
+.open-portal button {
+  cursor: pointer;
+  color: inherit;
+  background: #26212c;
+  border: 1px solid #655b70;
+  border-radius: 9px;
+  padding: 10px 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.open-portal button:hover {
+  background: #382b42;
+}
+.open-portal button:focus-visible,
+.open-portal input:focus-visible,
+.open-portal select:focus-visible,
+.open-portal summary:focus-visible {
+  outline: 3px solid #f0c66a;
+  outline-offset: 3px;
+}
+.open-portal button[aria-pressed="true"] {
+  background: #42304e;
+  border-color: #c79dd1;
+}
+.open-portal select {
+  padding: 9px 35px 9px 12px;
+  background: #26212c;
+  color: #efecf2;
+  border: 1px solid #655b70;
+  border-radius: 8px;
+  max-width: 100%;
+}
+.open-portal h1,
+.open-portal h2,
+.open-portal h3 {
+  font-family: "Big Shoulders Display Variable", sans-serif;
+  margin: 0;
+  font-weight: 750;
+}
+.open-portal h1 {
+  font-size: 76px;
+  line-height: 1.05;
+}
+.open-portal h2 {
+  font-size: 29px;
+}
+.open-portal h3 {
+  font-size: 24px;
+}
+.open-portal p {
+  line-height: 1.55;
+  margin: 10px 0 20px;
+}
+.open-portal small,
+.open-portal .muted {
+  color: #bbb3c4;
+}
+.open-portal small {
+  font-size: 13px;
+}
+.open-portal {
+  max-width: 1160px;
+  padding: 24px 32px 50px;
+  margin: auto;
+}
+.open-portal .prototype {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #bbb3c4;
+  margin-bottom: 24px;
+}
+.open-portal .brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #403747;
+}
+.open-portal .brand img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.open-portal .brand b {
+  font-size: 21px;
+}
+.open-portal .brand > span {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #cdb8d2;
+  font-size: 13px;
+}
+.open-portal .entry {
+  padding: 55px 0 20px;
+}
+.open-portal .entry > p {
+  max-width: 570px;
+  color: #bbb3c4;
+  font-size: 18px;
+}
+.open-portal .athletes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin: 35px 0;
+}
+.open-portal .athletes button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 26px;
+  background: #231c2a;
+}
+.open-portal .jersey {
+  font-family: "Big Shoulders Display Variable";
+  font-size: 100px;
+  line-height: 1;
+  color: #c79dd1;
+}
+.open-portal .athletes strong {
+  font-family: "Big Shoulders Display Variable";
+  font-size: 40px;
+  margin-top: 20px;
+}
+.open-portal .athletes .view {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-top: 28px;
+}
+.open-portal .entry .notice {
+  font-size: 14px;
+}
+.open-portal .back {
+  background: transparent;
+  border: 0;
+  margin: 16px 0;
+  padding-left: 0;
+  font-size: 14px;
+  color: #cdb8d2;
+}
+.open-portal .athlete {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin: 12px 0 32px;
+}
+.open-portal .portrait {
+  width: 138px;
+  height: 160px;
+  flex-shrink: 0;
+  position: relative;
+  background: #35243f;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+.open-portal .portrait > span {
+  font: 750 102px "Big Shoulders Display Variable";
+  color: #c79dd1;
+}
+.open-portal .portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.open-portal .portrait input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+.open-portal .portrait:focus-within {
+  outline: 3px solid #f0c66a;
+}
+.open-portal .portrait small {
+  position: absolute;
+  bottom: 0;
+  background: #21152fe6;
+  width: 100%;
+  padding: 6px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  color: #e3d7ea;
+  pointer-events: none;
+}
+.open-portal .identity p {
+  margin: 8px 0;
+  color: #cdb8d2;
+}
+.open-portal .identity > span {
+  font-size: 14px;
+  color: #bbb3c4;
+}
+.open-portal .rating {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.open-portal .rating > b {
+  font: 750 70px "Big Shoulders Display Variable";
+  color: #f0c66a;
+}
+.open-portal .rating b small {
+  font-size: 24px;
+  color: #bbb3c4;
+}
+.open-portal .rating > span {
+  font-size: 14px;
+}
+.open-portal .scope {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 1px solid #403747;
+  border-bottom: 1px solid #403747;
+}
+.open-portal .scope label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.open-portal .scope p {
+  margin: 0 0 0 auto;
+  font-size: 12px;
+  color: #bbb3c4;
+}
+.open-portal nav {
+  display: flex;
+  gap: 10px;
+  margin: 25px 0 32px;
+}
+.open-portal nav button {
+  min-width: 110px;
+}
+.open-portal .summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+  gap: 48px;
+}
+.open-portal .numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 24px 0 36px;
+}
+.open-portal .numbers > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.open-portal .numbers b {
+  font: 750 50px "Big Shoulders Display Variable";
+}
+.open-portal .numbers span {
+  font-size: 14px;
+}
+.open-portal .numbers small {
+  font-size: 11px;
+}
+.open-portal .section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.open-portal .section-title > span {
+  font-size: 12px;
+  color: #bbb3c4;
+}
+.open-portal .evolution svg {
+  width: 100%;
+  display: block;
+  margin-top: 8px;
+  overflow: visible;
+}
+.open-portal .evolution line {
+  stroke: #403747;
+  stroke-width: 1;
+}
+.open-portal .evolution svg text {
+  font-size: 13px;
+  fill: #bbb3c4;
+}
+.open-portal .trend {
+  stroke: #c79dd1;
+  stroke-width: 3;
+  fill: none;
+}
+.open-portal .evolution circle {
+  fill: #c79dd1;
+  stroke: #18161b;
+  stroke-width: 2;
+}
+.open-portal .evolution circle.low {
+  fill: #18161b;
+  stroke: #f0c66a;
+  stroke-width: 3;
+}
+.open-portal .chart-note {
+  font-size: 12px;
+  color: #f0c66a;
+  margin: 0 0 10px;
+}
+.open-portal summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+  font-size: 14px;
+  color: #cdb8d2;
+}
+.open-portal .table-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #403747;
+  font-size: 14px;
+}
+.open-portal .insights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  border-top: 1px solid #403747;
+  margin-top: 25px;
+  padding-top: 24px;
+}
+.open-portal .insights p {
+  font-size: 14px;
+  color: #bbb3c4;
+}
+.open-portal .foundation {
+  width: 100%;
+  display: flex;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #403747;
+  border-radius: 0;
+  padding: 19px 0;
+  gap: 14px;
+}
+.open-portal .foundation > div {
+  flex: 1;
+}
+.open-portal .foundation span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.open-portal .foundation span b {
+  font-size: 19px;
+}
+.open-portal .track {
+  height: 5px;
+  background: #382e40;
+  margin: 10px 0 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.open-portal .track i {
+  display: block;
+  height: 100%;
+  background: #c79dd1;
+}
+.open-portal .text-link {
+  color: #d8b6e2;
+  background: transparent;
+  border: 0;
+  padding-left: 0;
+  margin-top: 10px;
+}
+.open-portal .latest {
+  border-top: 1px solid #403747;
+  margin-top: 28px;
+  padding-top: 24px;
+}
+.open-portal .latest > strong {
+  display: block;
+  margin-top: 16px;
+}
+.open-portal .latest p {
+  color: #bbb3c4;
+  font-size: 14px;
+}
+.open-portal .skill-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 25px 0 32px;
+}
+.open-portal .detail-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 50px;
+}
+.open-portal .stack {
+  display: flex;
+  gap: 3px;
+  height: 28px;
+  margin-top: 25px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.open-portal .stack i {
+  background: #c79dd1;
+}
+.open-portal .stack i:nth-child(2) {
+  background: #786982;
+}
+.open-portal .stack i:nth-child(3) {
+  background: #d68b92;
+}
+.open-portal .legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 15px 0;
+}
+.open-portal .legend span {
+  font-size: 13px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.open-portal .legend i {
+  width: 9px;
+  height: 9px;
+  background: #c79dd1;
+}
+.open-portal .legend span:nth-child(2) i {
+  background: #786982;
+}
+.open-portal .legend span:nth-child(3) i {
+  background: #d68b92;
+}
+.open-portal .match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 0;
+  border-bottom: 1px solid #403747;
+}
+.open-portal .match > div:first-child {
+  flex: 1;
+}
+.open-portal .match > div > span {
+  font-size: 13px;
+  color: #bbb3c4;
+}
+.open-portal .match h3 {
+  margin: 9px 0;
+}
+.open-portal .match h3 b {
+  color: #f0c66a;
+  padding: 0 8px;
+}
+.open-portal .match-grade {
+  display: grid;
+  text-align: center;
+}
+.open-portal .match-grade b {
+  font: 750 37px "Big Shoulders Display Variable";
+}
+.open-portal .match-grade span {
+  font-size: 12px;
+  color: #bbb3c4;
+}
+.open-portal .clips {
+  flex-basis: 100%;
+  padding: 20px;
+  background: #211b27;
+  border-radius: 12px;
+}
+.open-portal .clips > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+.open-portal .clip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid #655b70;
+  padding: 15px 0;
+}
+.open-portal .clip span {
+  font-size: 12px;
+  color: #bbb3c4;
+}
+.open-portal .clips .muted {
+  font-size: 13px;
+  margin-top: 20px;
+}
+.open-portal footer {
+  font-size: 12px;
+  color: #bbb3c4;
+  border-top: 1px solid #403747;
+  margin-top: 45px;
+  padding-top: 22px;
+}
+.open-portal .mobile {
+  max-width: 390px;
+  padding: 16px;
+}
+.open-portal .mobile h1 {
+  font-size: 52px;
+}
+.open-portal .mobile .summary,
+.open-portal .mobile .detail-layout {
+  grid-template-columns: 1fr;
+  gap: 30px;
+}
+.open-portal .mobile .athlete {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.open-portal .mobile .portrait {
+  width: 100px;
+  height: 125px;
+}
+.open-portal .mobile .portrait > span {
+  font-size: 80px;
+}
+.open-portal .mobile .rating {
+  margin-left: 0;
+  flex-basis: 100%;
+  border-top: 1px solid #403747;
+  padding-top: 16px;
+}
+.open-portal .mobile .rating > b {
+  font-size: 52px;
+}
+.open-portal .mobile .scope {
+  flex-wrap: wrap;
+}
+.open-portal .mobile .scope label,
+.open-portal .mobile .scope select {
+  width: 100%;
+}
+.open-portal .mobile .scope p {
+  margin: 0;
+}
+.open-portal .mobile .brand > span {
+  font-size: 11px;
+}
+.open-portal .mobile .brand b {
+  font-size: 17px;
+}
+.open-portal .mobile .brand img {
+  width: 38px;
+  height: 38px;
+}
+.open-portal .mobile nav {
+  gap: 6px;
+}
+.open-portal .mobile nav button {
+  min-width: 0;
+  flex: 1;
+  padding: 10px;
+}
+.open-portal .mobile .insights {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.open-portal .mobile .athletes {
+  grid-template-columns: 1fr;
+}
+.open-portal .mobile .match {
+  gap: 14px;
+}
+.open-portal .mobile .match > button {
+  width: 100%;
+}
+.open-portal .mobile .clips > div {
+  grid-template-columns: 1fr;
+}
+.open-portal .mobile .numbers b {
+  font-size: 42px;
+}
+@media (max-width: 650px) {
+  .open-portal {
+    padding: 16px;
+  }
+  .open-portal h1 {
+    font-size: 52px;
+  }
+  .open-portal .summary,
+  .open-portal .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .open-portal .athlete {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .open-portal .portrait {
+    width: 100px;
+    height: 125px;
+  }
+  .open-portal .portrait > span {
+    font-size: 80px;
+  }
+  .open-portal .rating {
+    margin-left: 0;
+    flex-basis: 100%;
+    border-top: 1px solid #403747;
+    padding-top: 16px;
+  }
+  .open-portal .rating > b {
+    font-size: 52px;
+  }
+  .open-portal .scope {
+    flex-wrap: wrap;
+  }
+  .open-portal .scope label,
+  .open-portal .scope select {
+    width: 100%;
+  }
+  .open-portal .scope p {
+    margin: 0;
+  }
+  .open-portal .brand > span {
+    font-size: 11px;
+  }
+  .open-portal .brand b {
+    font-size: 17px;
+  }
+  .open-portal .brand img {
+    width: 38px;
+    height: 38px;
+  }
+  .open-portal nav {
+    gap: 6px;
+  }
+  .open-portal nav button {
+    min-width: 0;
+    flex: 1;
+    padding: 10px;
+  }
+  .open-portal .insights {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .open-portal .athletes {
+    grid-template-columns: 1fr;
+  }
+  .open-portal .match {
+    gap: 14px;
+  }
+  .open-portal .match > button {
+    width: 100%;
+  }
+  .open-portal .clips > div {
+    grid-template-columns: 1fr;
+  }
+  .open-portal .numbers b {
+    font-size: 42px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .open-portal .track i {
+    transition: width 200ms ease-out;
+  }
+}
+.open-portal ::selection {
+  background: #c79dd1;
+  color: #18161b;
+}
+.open-portal .average {
+  stroke: #aaa5b2;
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  fill: none;
+}
+
+.open-portal {
+  color: var(--c-text);
+  background: var(--c-bg);
+  font-family: var(
+    --font-body,
+    "Atkinson Hyperlegible Next Variable",
+    sans-serif
+  );
+}
+.open-portal .portrait .player-photo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.open-portal .portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.open-portal .foundation-detail {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.open-portal .foundation-detail h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.open-portal .clips {
+  min-width: 0;
+}
+.open-portal .clips > div {
+  display: block;
+}
+.open-portal .table-row {
+  flex-wrap: wrap;
+}
+
+.open-portal .evolution line.trend {
+  stroke: var(--c-accent, #c79dd1);
+  stroke-width: 3;
+}

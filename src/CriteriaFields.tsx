@@ -14,6 +14,7 @@ export function CriteriaFields({
   hideIncomingPass = false,
   hideSetType = false,
   hideFaults = false,
+  hideAttackDirection = false,
 }: {
   skill: Skill;
   value?: AssessmentCriteria;
@@ -26,6 +27,7 @@ export function CriteriaFields({
   hideIncomingPass?: boolean;
   hideSetType?: boolean;
   hideFaults?: boolean;
+  hideAttackDirection?: boolean;
 }) {
   return (
     <div className="criteria-fields">
@@ -33,6 +35,7 @@ export function CriteriaFields({
         .filter(
           (f) =>
             f.skills.includes(skill) &&
+            (!hideAttackDirection || f.key !== "attackDirection") &&
             (f.key !== "freeReason" || value.attackType === "free") &&
             (!hidePass || f.key !== "passQuality") &&
             (!hideIncomingPass || f.key !== "incomingPass") &&

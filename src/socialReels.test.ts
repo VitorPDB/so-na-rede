@@ -138,6 +138,34 @@ test("reels só públicos, cards só do jogador e publicação atômica", async 
       db.query("select public.player_social_card($1,$2)", [token, m.id]),
       /session_expired/,
     );
+    await db.exec("reset role");
+    await db.exec(
+      readFileSync(
+        new URL("../supabase/open-players.sql", import.meta.url),
+        "utf8",
+      ),
+    );
+    await db.exec("set role anon");
+    const open = (
+      await db.query<{ v: any[] }>("select public.open_player_games(0) v")
+    ).rows[0].v;
+    assert.equal(open.length, 1);
+    assert.equal(
+      open[0].snapshot.players.find((p: any) => p.id === "p1").stats.count,
+      1,
+    );
+    assert.ok(open[0].snapshot.technical);
+    assert.equal(JSON.stringify(open).includes("pin_hash"), false);
+    assert.equal(JSON.stringify(open).includes("token_hash"), false);
+    await assert.rejects(
+      db.query("select * from public.player_access"),
+      /permission denied/,
+    );
+    assert.deepEqual(
+      (await db.query<{ v: any[] }>("select public.open_player_games(20) v"))
+        .rows[0].v,
+      [],
+    );
   } finally {
     await db.close();
   }

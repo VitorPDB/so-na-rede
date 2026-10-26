@@ -68,7 +68,9 @@ export default defineConfig({
             "\n" +
             readFileSync("supabase/match-sync.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/social-reels.sql", "utf8"),
+            readFileSync("supabase/social-reels.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/open-players.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "security-setup.sql"),
@@ -80,7 +82,15 @@ export default defineConfig({
             "\n" +
             readFileSync("supabase/match-sync.sql", "utf8") +
             "\n" +
-            readFileSync("supabase/social-reels.sql", "utf8"),
+            readFileSync("supabase/social-reels.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/open-players.sql", "utf8"),
+        );
+        writeFileSync(
+          resolve(buildDirectory, "abrir-jogadores.sql"),
+          readFileSync("supabase/security-schema.sql", "utf8") +
+            "\n" +
+            readFileSync("supabase/open-players.sql", "utf8"),
         );
         writeFileSync(
           resolve(buildDirectory, "social-reels.sql"),
