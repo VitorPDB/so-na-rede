@@ -14,7 +14,7 @@ import {
 } from "./videoPosition";
 import { initialAssessment } from "./actionQuality";
 
-test("card ofensivo deriva pontos/aces/eficiência e respeita desfazer", () => {
+test("card ofensivo deriva pontos/aces/precisão e respeita desfazer", () => {
   let m = newMatch();
   const p = m.players[0];
   m = append(m, {
@@ -29,7 +29,7 @@ test("card ofensivo deriva pontos/aces/eficiência e respeita desfazer", () => {
   let card = socialCardData(m, p);
   assert.equal(validSocialCardData(card), true);
   assert.equal(card.metrics[1].value, "0");
-  assert.equal(card.metrics[3].value, "0%");
+  assert.equal(card.metrics[3].value, "50%");
   card = socialCardData(undo(m), p);
   assert.equal(card.metrics[3].value, "100%");
   const ace = newMatch();
@@ -101,4 +101,74 @@ test("posição do vídeo isolada por partida, set, fonte e início; zero é vá
   assert.equal(readVideoPosition(key), 363.25);
   saveVideoPosition(key, 0);
   assert.equal(readVideoPosition(key), 0);
+});
+
+test("precisão inclui bolas mantidas e destaque é exclusivamente manual", () => {
+  let m = newMatch();
+  const p = m.players[0];
+  for (const result of ["simple_ours", "simple_good", "simple_theirs"] as const)
+    m = append(m, {
+      type: "event",
+      event: { skill: "attack", result, playerId: p.id },
+    });
+  assert.equal(socialCardData(m, p).metrics[3].value, "67%");
+  assert.equal(socialCardData(m, p).highlight, false);
+  m.socialHighlightPlayerId = p.id;
+  assert.equal(socialCardData(m, p).highlight, true);
+  assert.equal(socialCardData(m, m.players[1]).highlight, false);
+});
+test("salvadas difíceis não contam erros nem duplicam tags, ace tem prioridade", () => {
+  let m = newMatch();
+  const p = m.players[0];
+  const a = initialAssessment("defense", "simple_good");
+  a.difficulty = "hard";
+  a.tags = ["save_extreme"];
+  m = append(m, {
+    type: "event",
+    event: {
+      skill: "defense",
+      result: "simple_good",
+      playerId: p.id,
+      assessment: a,
+    },
+  });
+  m = append(m, {
+    type: "event",
+    event: { skill: "defense", result: "simple_good", playerId: p.id },
+  });
+  const error = initialAssessment("defense", "simple_theirs");
+  error.difficulty = "emergency";
+  m = append(m, {
+    type: "event",
+    event: {
+      skill: "defense",
+      result: "simple_theirs",
+      playerId: p.id,
+      assessment: error,
+    },
+  });
+  const card = socialCardData(m, p);
+  assert.equal(card.metrics[1].label, "SALVADAS DIFÍCEIS");
+  assert.equal(card.metrics[1].value, "1");
+  assert.equal(socialCardData(undo(undo(undo(m))), p).metrics[1].value, "0");
+});
+
+test("histórico remove e restaura sem mudar a partida atual nem duplicar jogos", async () => {
+  const { removeArchivedMatch, restoreArchivedMatch } =
+    await import("./historyActions");
+  const { archiveGame } = await import("./career");
+  const old = append(newMatch(), {
+    type: "event",
+    event: { skill: "attack", result: "simple_good", playerId: "p1" },
+  });
+  const m = { ...newMatch(), history: archiveGame(old) };
+  const game = m.history[0];
+  const removed = removeArchivedMatch(m, game.id);
+  assert.equal(removed.history?.length, 0);
+  assert.equal(removed.id, m.id);
+  assert.equal(removed.audit, m.audit);
+  assert.equal(removeArchivedMatch(m, m.id), m);
+  const restored = restoreArchivedMatch(removed, game);
+  assert.deepEqual(restored.history, m.history);
+  assert.equal(restoreArchivedMatch(restored, game).history?.length, 1);
 });

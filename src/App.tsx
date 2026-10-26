@@ -1,3 +1,4 @@
+import { CommissionMatches } from "./CommissionMatches";
 import { MobileScout } from "./MobileScout";
 import { videoPositionKey } from "./videoPosition";
 import { MatchContinuity, useMatchContinuity } from "./MatchContinuity";
@@ -127,6 +128,7 @@ function Avatar({
 export default function App() {
   const [boot] = useState(initial);
   const [match, setMatch] = useState(boot.match);
+  const [historySelection, setHistorySelection] = useState("");
   const publication = usePublication(match);
   useOpponentColor(opponentTeam(match)?.logo);
   const [storageError, setStorageError] = useState(boot.error);
@@ -721,19 +723,22 @@ export default function App() {
       setFeedback({ message: "Backup inválido. O jogo atual foi preservado." });
     }
   };
-  const startNewMatch = async () => {
+  const startNewMatch = async (details?: {
+    opponent: string;
+    date: string;
+  }) => {
     if (
       !window.confirm(
         "Iniciar nova partida? O resumo deste jogo será preservado no histórico. Elenco, fotos, formações e pesos serão mantidos.",
       )
     )
-      return;
-    if (!continuity.canEdit()) return;
+      return false;
+    if (!continuity.canEdit()) return false;
     try {
       await keepMatchCopy(match);
     } catch (e) {
       setStorageError(String(e));
-      return;
+      return false;
     }
     const lastFormation = [...s.active]
       .reverse()
@@ -748,7 +753,8 @@ export default function App() {
       ...newMatch(),
       players: match.players,
       team: match.team,
-      opponent: match.opponent,
+      opponent: details?.opponent ?? match.opponent,
+      matchDate: details?.date,
       opponentTeams: match.opponentTeams,
       bestOf: match.bestOf,
       initialLineup: starting.lineup,
@@ -767,7 +773,9 @@ export default function App() {
     if (commit(next)) {
       setPage("live");
       setReportSet(0);
+      return true;
     }
+    return false;
   };
   const restartSet = () => {
     if (
@@ -909,6 +917,18 @@ export default function App() {
         </button>
       )}
       <main className="shell-main" id="conteudo">
+        <CommissionMatches
+          key={match.id}
+          match={match}
+          selected={page === "history" ? historySelection : ""}
+          onSelect={(id) => {
+            setHistorySelection(id);
+            setPage(id ? "history" : "analysis");
+          }}
+          onChange={commit}
+          onNew={startNewMatch}
+        />
+
         <header className="appbar">
           <div className="appbar-title">
             <span className="ui-eyebrow">
@@ -1195,7 +1215,13 @@ export default function App() {
           />
         )}
         {page === "history" && (
-          <MatchHistory match={match} onChange={(next) => commit(next)} />
+          <MatchHistory
+            key={historySelection}
+            match={match}
+            selected={historySelection}
+            onSelect={setHistorySelection}
+            onChange={(next) => commit(next)}
+          />
         )}
         {page === "roster" && (
           <Roster
@@ -1210,6 +1236,9 @@ export default function App() {
         {page === "profile" && (
           <PlayerProfile
             key={profileId}
+            onHighlight={(id) =>
+              commit({ ...match, socialHighlightPlayerId: id })
+            }
             match={match}
             player={player(profileId) ?? match.players[0]}
             onBack={() => setPage("roster")}

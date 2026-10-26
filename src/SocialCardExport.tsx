@@ -5,6 +5,7 @@ import { renderSocialCard } from "./renderSocialCard";
 export function SocialCardExport({ data }: { data: SocialCardData }) {
   const [open, setOpen] = useState(false),
     [story, setStory] = useState(false),
+    [hero, setHero] = useState(0),
     [url, setUrl] = useState(""),
     [blob, setBlob] = useState<Blob>(),
     [error, setError] = useState("");
@@ -15,7 +16,7 @@ export function SocialCardExport({ data }: { data: SocialCardData }) {
     setUrl("");
     setBlob(undefined);
     setError("");
-    void renderSocialCard(data, story)
+    void renderSocialCard(data, story, hero)
       .then((b) => {
         if (!active) return;
         object = URL.createObjectURL(b);
@@ -29,7 +30,7 @@ export function SocialCardExport({ data }: { data: SocialCardData }) {
       active = false;
       if (object) URL.revokeObjectURL(object);
     };
-  }, [open, story, data]);
+  }, [open, story, data, hero]);
   const fileName = `so-na-rede-${data.player.number}-${story ? "story" : "feed"}.png`;
   return (
     <>
@@ -48,6 +49,28 @@ export function SocialCardExport({ data }: { data: SocialCardData }) {
               Fechar
             </button>
           </header>
+          <label>
+            Conquista principal
+            <select
+              className="ui-select"
+              value={hero}
+              onChange={(e) => setHero(Number(e.target.value))}
+            >
+              {data.metrics
+                .filter((m) => !m.label.includes("ERROS"))
+                .map((m, i) => (
+                  <option key={m.label} value={i}>
+                    {m.value} · {m.label}
+                  </option>
+                ))}
+              <option value={-1}>Nota na partida</option>
+            </select>
+          </label>
+          {data.highlight && (
+            <p className="ui-note">
+              Destaque escolhido pela comissão · tema dourado
+            </p>
+          )}
           <div className="report-switches">
             <button
               className="ui-btn"
@@ -65,9 +88,9 @@ export function SocialCardExport({ data }: { data: SocialCardData }) {
             </button>
           </div>
           <p className="ui-note">
-            A foto usa o enquadramento do perfil. Sem foto, usamos a camisa. Ao
-            compartilhar, você torna estes números visíveis para quem receber a
-            imagem.
+            A foto do perfil aparece inteira. Sem foto, destacamos o número da
+            camisa. Ao compartilhar, você torna estes números visíveis para quem
+            receber a imagem.
           </p>
           {error ? (
             <p role="alert">{error}</p>

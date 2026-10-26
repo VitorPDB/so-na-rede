@@ -106,6 +106,8 @@ export function usePublication(match: Match) {
         const snapshot = publicSnapshot(source),
           serial = JSON.stringify([
             snapshot,
+            source.socialHighlightPlayerId,
+            source.matchDate,
             videoMoments(project(source).events),
             source.players.map(({ photo: _photo, ...p }) => p),
           ]);

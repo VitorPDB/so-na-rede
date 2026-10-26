@@ -21,14 +21,18 @@ function extremes(metrics: PlayerGame["metrics"]) {
 export function MatchHistory({
   match,
   onChange,
+  selected,
+  onSelect,
 }: {
   match: Match;
+  selected: string;
+  onSelect: (id: string) => void;
   onChange: (match: Match) => boolean;
 }) {
   const games = [...(match.history ?? [])]
     .filter((g) => g.id !== match.id)
     .reverse();
-  const [selected, setSelected] = useState("");
+  const setSelected = onSelect;
   const [period, setPeriod] = useState(0);
   const [videoStatus, setVideoStatus] = useState("");
   const [publishing, setPublishing] = useState(false);

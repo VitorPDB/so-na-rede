@@ -28,6 +28,18 @@ export function parseMatch(raw: string): Match {
   };
   if (!validVideos(data?.videos)) invalid();
   if (
+    data?.socialHighlightPlayerId !== undefined &&
+    (typeof data.socialHighlightPlayerId !== "string" ||
+      !data.players?.some((p) => p.id === data.socialHighlightPlayerId))
+  )
+    invalid();
+  if (
+    data?.matchDate !== undefined &&
+    (typeof data.matchDate !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(data.matchDate))
+  )
+    invalid();
+  if (
     !data ||
     data.schemaVersion !== 1 ||
     typeof data.id !== "string" ||

@@ -19,7 +19,9 @@ export function gameSnapshot(match: Match): ArchivedGame {
     videoMoments: videoMoments(state.events),
     ...(match.videos !== undefined ? { videos: match.videos } : {}),
     id: match.id,
-    date: match.audit.at(-1)?.createdAt ?? new Date().toISOString(),
+    date: match.matchDate
+      ? `${match.matchDate}T12:00:00`
+      : (match.audit.at(-1)?.createdAt ?? new Date().toISOString()),
     opponent: match.opponent,
     finished: state.finished,
     sets: [...state.sets],

@@ -376,3 +376,7 @@ Validação local: 134 testes e build aprovados; conferidos placar a 390 px, tro
 
 ## Scouting e compartilhamento — 25/10/2026
 Implementados após aprovação dos previews: modal de scouting com vídeo fixo e fluxo fundamento → qualidade → critérios/jogador; posição do vídeo preservada na sessão por partida/set/fonte; cards PNG com foto do perfil e fallback de camisa, templates ofensivo/líbero; cards privados exportáveis pelo próprio jogador; seção pública Reels com miniaturas lazy, lotes de cartões e deep links. Ver SCOUTING-SOCIAL.md. Requer `supabase/social-reels.sql` antes do deploy e republicação para gerar cards de jogos antigos. Sem alteração de PINs. Exclusão/reinício de sets e compactação do JSON permanecem fora desta entrega. O contexto acima registra estados históricos; esta seção descreve a implementação nova, ainda sem ativação remota.
+
+
+## Cards e seleção de partidas — 26/10/2026
+Implementados após aprovação do preview: seletor global da comissão para relatório de partidas arquivadas, criar partida com adversário/data e remover/restaurar relatórios locais (não apaga publicações ou backups). Cards em pôster com escolha de conquista, precisão de ataque e salvadas difíceis quando sem ace; destaque escolhido manualmente pela comissão no perfil, salvo por partida e publicado ao portal, com tema dourado/roxo. Ver SCOUTING-SOCIAL.md para alcance e ativação. Não requer novo SQL; republicação atualiza cards. Sem push/deploy nesta etapa.

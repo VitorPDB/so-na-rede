@@ -1,9 +1,12 @@
 import { project, stats } from "./engine";
+import { effectiveDifficulty } from "./criteria";
 import { playerEvents } from "./assessment";
 import { type Match, type Player, resultOf, ratingProfiles } from "./model";
 export type CardMetric = { label: string; value: string };
 export type SocialCardData = {
   player: Player;
+  highlight?: boolean;
+  date?: string;
   team: string;
   opponent: string;
   score: string;
@@ -43,6 +46,13 @@ export function socialCardData(
                 p.responsibility !== "wrong",
             ))),
     ).length;
+  const aces = winners("serve");
+  const saves = by("defense").filter(
+    (e) =>
+      !resultOf(e).error &&
+      e.assessment &&
+      ["hard", "emergency"].includes(effectiveDifficulty(e)),
+  ).length;
   const templates = {
     libero: (): CardMetric[] => [
       {
@@ -70,13 +80,15 @@ export function socialCardData(
     ],
     offensive: (): CardMetric[] => [
       { label: "PONTOS", value: String(summary.points) },
-      { label: "ACES", value: String(winners("serve")) },
+      {
+        label: aces ? "ACES" : "SALVADAS DIFÍCEIS",
+        value: String(aces || saves),
+      },
       { label: "BLOQUEIOS PONTUADOS", value: String(winners("block")) },
       {
-        label: "EFICIÊNCIA DE ATAQUE",
+        label: "PRECISÃO DE ATAQUE",
         value: pct(
-          attacks.filter((e) => resultOf(e).winner === "ours").length -
-            attacks.filter((e) => resultOf(e).error).length,
+          attacks.length - attacks.filter((e) => resultOf(e).error).length,
           attacks.length,
         ),
       },
@@ -84,6 +96,8 @@ export function socialCardData(
   };
   return {
     player,
+    highlight: match.socialHighlightPlayerId === player.id,
+    date: match.matchDate ?? match.audit[0]?.createdAt?.slice(0, 10),
     team: match.team,
     opponent: match.opponent,
     score: state.sets.join(" × "),
@@ -101,6 +115,8 @@ export function validSocialCardData(v: unknown): v is SocialCardData {
     typeof s === "string" && s.length <= max;
   return (
     !!x &&
+    (x.highlight === undefined || typeof x.highlight === "boolean") &&
+    (x.date === undefined || str(x.date, 30)) &&
     str(x.team) &&
     str(x.opponent) &&
     str(x.score, 40) &&

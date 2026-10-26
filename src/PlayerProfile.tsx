@@ -27,11 +27,13 @@ export function PlayerProfile({
   player,
   onChange,
   onBack,
+  onHighlight,
 }: {
   match: Match;
   player: Player;
   onChange: (player: Player) => boolean;
   onBack: () => void;
+  onHighlight: (id?: string) => boolean;
 }) {
   const card = useMemo(() => socialCardData(match, player), [match, player]);
   const [error, setError] = useState("");
@@ -160,6 +162,16 @@ export function PlayerProfile({
           </small>
         </div>
       </section>
+      <label className="ui-note">
+        <input
+          type="checkbox"
+          checked={match.socialHighlightPlayerId === player.id}
+          onChange={(e) =>
+            onHighlight(e.target.checked ? player.id : undefined)
+          }
+        />{" "}
+        Destaque da partida · escolhido pela comissão
+      </label>
       <SocialCardExport data={card} />
       {busy && <p className="ui-note">Preparando foto…</p>}
       {error && (

@@ -297,6 +297,8 @@ export interface Weights {
   errors: number;
 }
 export interface Match {
+  socialHighlightPlayerId?: string;
+  matchDate?: string;
   videos?: MatchVideo[];
   middleCoverage?: "auto" | "defense-only" | "standard";
   middleBackrowWeights?: RoleWeights;

@@ -1,202 +1,225 @@
 import type { SocialCardData } from "./socialCardData";
-async function loadImage(src: string) {
-  const img = new Image();
-  img.src = src;
-  await img.decode();
-  return img;
-}
 export async function renderSocialCard(
   data: SocialCardData,
   story: boolean,
-): Promise<Blob> {
+  hero = 0,
+) {
+  const highlight = !!data.highlight,
+    photo = data.player.photo?.dataUrl ?? "";
+  const choices = data.metrics.filter((m) => !m.label.includes("ERROS"));
+  const principal =
+    hero === -1
+      ? {
+          label: "NOTA NA PARTIDA",
+          value:
+            data.rating === null
+              ? "—"
+              : data.rating.toFixed(1).replace(".", ","),
+        }
+      : (choices[hero] ?? choices[0]);
+  const secondary = choices.filter((m) => m !== principal).slice(0, 2);
   await document.fonts.ready;
   await Promise.all([
-    document.fonts.load('750 138px "Big Shoulders Display Variable"'),
-    document.fonts.load('550 30px "Atkinson Hyperlegible Next Variable"'),
+    document.fonts.load('750 120px "Big Shoulders Display Variable"'),
+    document.fonts.load('500 28px "Atkinson Hyperlegible Next Variable"'),
   ]);
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = story ? 1920 : 1350;
-  const c = canvas.getContext("2d");
-  if (!c) throw new Error("Não foi possível gerar a imagem.");
-  const h = canvas.height,
-    top = story ? 330 : 240,
-    white = "#efecf2",
-    gold = "#f0c66a",
-    bg = "#18161b";
+  const c = canvas.getContext("2d")!,
+    h = canvas.height,
+    top = story ? 170 : 70,
+    white = highlight ? "#23162e" : "#efecf2",
+    gold = highlight ? "#35203f" : "#f0c66a",
+    muted = highlight ? "#503747" : "#c9c2ce",
+    bg = highlight ? "#e6bd66" : "#18161b";
+  c.fillStyle = bg;
+  c.fillRect(0, 0, 1080, h);
+  if (highlight) {
+    c.fillStyle = "#35203f";
+    c.fillRect(0, 0, 1080, top + 78);
+    c.fillStyle = "#c99a43";
+    c.beginPath();
+    c.moveTo(780, top + 78);
+    c.lineTo(1080, top + 78);
+    c.lineTo(1080, h);
+    c.lineTo(500, h);
+    c.closePath();
+    c.fill();
+  }
+  c.strokeStyle = highlight ? "#b1863b" : "#32283b";
+  c.lineWidth = 2;
+  c.strokeRect(60, top + 125, 960, story ? 1070 : 700);
+  c.beginPath();
+  c.moveTo(60, top + 430);
+  c.lineTo(1020, top + 430);
+  c.stroke();
+  if (highlight) {
+    c.strokeStyle = "#e6bd66";
+    c.lineWidth = 3;
+    c.strokeRect(16, 16, 1048, h - 32);
+  }
   const text = (
-    t: string,
+    s: string,
     x: number,
     y: number,
     size: number,
     color = white,
-    display = false,
-    max = 950,
+    font = "Big Shoulders Display Variable",
+    max = 960,
   ) => {
     c.fillStyle = color;
-    c.textBaseline = "top";
-    let actual = size;
-    do {
-      c.font = `${display ? 750 : 550} ${actual}px "${display ? "Big Shoulders Display Variable" : "Atkinson Hyperlegible Next Variable"}", sans-serif`;
-      if (c.measureText(t).width <= max) break;
-      actual--;
-    } while (actual > 14);
-    c.fillText(t, x, y);
-  };
-  c.fillStyle = bg;
-  c.fillRect(0, 0, 1080, h);
-  c.fillStyle = "#0f0e11";
-  c.fillRect(0, 0, 1080, 175);
-  try {
-    const logo = await loadImage("/team-logo-transparent.png");
-    c.drawImage(logo, 62, 36, 102, 102);
-  } catch {
-    /* The card remains readable without the decorative crest. */
-  }
-  text(data.team.toLocaleUpperCase("pt-BR"), 188, 50, 58, white, true, 510);
-  text(
-    data.finished ? "FIM DE JOGO" : "PARCIAL",
-    760,
-    70,
-    26,
-    gold,
-    false,
-    260,
-  );
-  text(
-    data.player.name.toLocaleUpperCase("pt-BR"),
-    64,
-    top,
-    138,
-    white,
-    true,
-    570,
-  );
-  text(
-    `${String(data.player.number).padStart(2, "0")} / ${data.player.libero ? "LÍBERO" : (data.player.positions[0] ?? "JOGADOR")}`,
-    68,
-    top + 160,
-    30,
-    gold,
-    false,
-    560,
-  );
-  let photo: HTMLImageElement | undefined;
-  if (data.player.photo?.dataUrl.startsWith("data:image/"))
-    try {
-      photo = await loadImage(data.player.photo.dataUrl);
-    } catch {
-      /* Shirt fallback for corrupt local image. */
+    c.font = `750 ${size}px "${font}"`;
+    while (c.measureText(s).width > max && size > 14) {
+      size -= 2;
+      c.font = `750 ${size}px "${font}"`;
     }
-  if (photo) {
-    const { x, y, zoom } = data.player.photo!;
-    const px = 690,
-      py = top + 12,
-      w = 326,
-      ph = 360;
-    const scale =
-      Math.max(w / photo.naturalWidth, ph / photo.naturalHeight) *
-      Math.max(1, Math.min(3, zoom));
-    const dw = photo.naturalWidth * scale,
-      dh = photo.naturalHeight * scale;
-    c.save();
-    c.beginPath();
-    c.roundRect(px, py, w, ph, 16);
-    c.clip();
-    c.drawImage(
-      photo,
-      px - ((dw - w) * Math.max(0, Math.min(100, x))) / 100,
-      py - ((dh - ph) * Math.max(0, Math.min(100, y))) / 100,
-      dw,
-      dh,
-    );
-    c.restore();
-  } else {
-    const x = 700,
-      y = top + 20;
-    c.fillStyle = data.player.libero ? "#e7ddeb" : "#573066";
-    c.beginPath();
-    [
-      [44, 0],
-      [112, 18],
-      [180, 0],
-      [244, 58],
-      [214, 112],
-      [180, 94],
-      [180, 285],
-      [44, 285],
-      [44, 94],
-      [10, 112],
-      [-20, 58],
-    ].forEach(([a, b], i) =>
-      i ? c.lineTo(x + a, y + b) : c.moveTo(x + a, y + b),
-    );
-    c.closePath();
-    c.fill();
-    text(
-      String(data.player.number).padStart(2, "0"),
-      x + 74,
-      y + 100,
-      100,
-      data.player.libero ? "#573066" : white,
-      true,
-      130,
-    );
+    c.fillText(s, x, y);
+  };
+  const load = async (src: string) => {
+    const i = new Image();
+    i.src = src;
+    await i.decode();
+    return i;
+  };
+  try {
+    const logo = await load("/team-logo-transparent.png");
+    c.drawImage(logo, 64, top - 12, 76, 76);
+  } catch {
+    /* Export remains available offline without the crest. */
   }
+  text("SÓ NA REDE", 158, top + 36, 36, highlight ? "#f3d894" : white);
   text(
-    data.rating === null ? "—" : data.rating.toFixed(1).replace(".", ","),
+    highlight ? "DESTAQUE DA PARTIDA" : "MOMENTO SÓ NA REDE",
+    660,
+    top + 29,
+    24,
+    highlight ? "#f3d894" : muted,
+    "Atkinson Hyperlegible Next Variable",
+    350,
+  );
+  const imageTop = top + 100,
+    imageHeight = story ? 800 : 490;
+  text(
+    String(data.player.number).padStart(2, "0"),
+    85,
+    imageTop + imageHeight - 25,
+    story ? 740 : 530,
+    highlight ? "#bc8b37" : "#473052",
+  );
+  if (photo) {
+    try {
+      const img = await load(photo);
+      const scale = Math.min(800 / img.width, imageHeight / img.height);
+      c.drawImage(
+        img,
+        (1080 - img.width * scale) / 2,
+        imageTop + imageHeight - img.height * scale,
+        img.width * scale,
+        img.height * scale,
+      );
+    } catch {
+      /* The large jersey number is the fallback. */
+    }
+  }
+  const nameY = imageTop + imageHeight + 80;
+  c.fillStyle = highlight ? "#35203f" : bg;
+  c.fillRect(0, nameY - 65, 1080, 150);
+  text(
+    data.player.name.toUpperCase(),
     64,
-    top + 260,
-    148,
+    nameY,
+    110,
+    highlight ? "#f3d894" : white,
+  );
+  text(
+    data.player.libero
+      ? "LÍBERO"
+      : (data.player.positions[0] ?? "JOGADOR").toUpperCase(),
+    68,
+    nameY + 43,
+    24,
+    highlight ? "#e1cce9" : muted,
+    "Atkinson Hyperlegible Next Variable",
+  );
+  const primaryY = nameY + 195,
+    metric = [principal.value, principal.label];
+  text(
+    metric[0],
+    64,
+    primaryY,
+    150,
     gold,
-    true,
-    220,
+    "Big Shoulders Display Variable",
+    290,
   );
-  text("NOTA NA", 300, top + 315, 27);
-  text("PARTIDA", 300, top + 352, 27);
-  const base = top + 475,
-    row = story ? 245 : 190;
-  data.metrics.slice(0, 4).forEach((m, i) => {
-    const x = 64 + (i % 2) * 500,
-      y = base + Math.floor(i / 2) * row;
-    c.fillStyle = "#514759";
-    c.fillRect(x, y, 448, 2);
-    text(m.value, x, y + 18, 89, i === 0 ? gold : white, true, 445);
-    text(m.label, x, y + 122, 24, "#c2bac8", false, 445);
+  text(
+    metric[1],
+    380,
+    primaryY - 10,
+    36,
+    white,
+    "Big Shoulders Display Variable",
+    630,
+  );
+  if (principal.label === "PRECISÃO DE ATAQUE")
+    text(
+      "Ataques sem erro / total de ataques",
+      380,
+      primaryY + 26,
+      22,
+      muted,
+      "Atkinson Hyperlegible Next Variable",
+      630,
+    );
+  const bottom = primaryY + 112;
+  c.strokeStyle = highlight ? "#805a2e" : "#625b6b";
+  c.lineWidth = 1;
+  c.beginPath();
+  c.moveTo(64, bottom - 55);
+  c.lineTo(1016, bottom - 55);
+  c.stroke();
+  secondary.forEach((m, i) => {
+    const x = 64 + i * 500;
+    text(
+      m.value,
+      x,
+      bottom + 5,
+      58,
+      white,
+      "Big Shoulders Display Variable",
+      120,
+    );
+    text(
+      m.label,
+      x + 130,
+      bottom,
+      22,
+      white,
+      "Atkinson Hyperlegible Next Variable",
+      340,
+    );
   });
-  const foot = h - 194;
+  const footer = h - (story ? 180 : 88);
   text(
-    data.note,
+    `${data.team} ${data.score} ${data.opponent}`,
     64,
-    story ? base + row * 2 + 28 : foot - 49,
-    story ? 28 : 21,
-    "#c2bac8",
-    false,
-    950,
-  );
-  c.fillStyle = "#573066";
-  c.fillRect(0, foot, 1080, 194);
-  text(
-    `${data.team}  ${data.score}  ${data.opponent}`,
-    64,
-    foot + 26,
-    43,
+    footer,
+    31,
     white,
-    true,
-    950,
+    "Big Shoulders Display Variable",
   );
   text(
-    "DESEMPENHO INDIVIDUAL · SÓ NA REDE",
+    `${data.date ? new Date(data.date + "T12:00:00").toLocaleDateString("pt-BR") : ""}${data.finished ? " · FIM DE JOGO" : " · PARCIAL"}`,
     64,
-    foot + 104,
-    23,
-    white,
-    false,
-    950,
+    footer + 40,
+    20,
+    muted,
+    "Atkinson Hyperlegible Next Variable",
   );
-  return new Promise((resolve, reject) =>
+  return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("Falha ao exportar PNG."))),
+      (b) => (b ? resolve(b) : reject(Error("Não foi possível gerar o card."))),
       "image/png",
     ),
   );
