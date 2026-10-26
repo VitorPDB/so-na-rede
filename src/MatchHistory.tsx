@@ -1,3 +1,7 @@
+import { HistoricalAnalysis } from "./HistoricalAnalysis";
+import { project } from "./engine";
+import { CriteriaReport } from "./CriteriaReport";
+import { MomentBrowser } from "./MomentBrowser";
 import { SkillIcon } from "./SkillIcon";
 import { CardSelect } from "./CardSelect";
 import { useState } from "react";
@@ -36,7 +40,7 @@ export function MatchHistory({
   const [period, setPeriod] = useState(0);
   const [videoStatus, setVideoStatus] = useState("");
   const [publishing, setPublishing] = useState(false);
-  const game = games.find((g) => g.id === selected);
+  const game = games.find((g) => g.id === selected && g.finished);
   const snapshot = game?.publicData;
   const bySet = snapshot?.periods?.find((p) => p.set === period);
   const data = bySet ?? snapshot;
@@ -66,6 +70,16 @@ export function MatchHistory({
     : [...rows]
         .filter((p) => p.rating !== null)
         .sort((a, b) => b.rating! - a.rating!)[0];
+  if (!project(match).finished)
+    return (
+      <section className="ui-card">
+        <h2>Finalize a partida atual</h2>
+        <p>
+          As estatísticas das outras partidas serão liberadas depois que o jogo
+          atual terminar. Os dados do histórico continuam salvos.
+        </p>
+      </section>
+    );
   return (
     <section
       className="ui-card pub-section"
@@ -96,7 +110,7 @@ export function MatchHistory({
         >
           <option value="">Selecione uma partida</option>
           {games.map((g) => (
-            <option value={g.id} key={g.id}>
+            <option value={g.id} key={g.id} disabled={!g.finished}>
               {new Date(g.date).toLocaleDateString("pt-BR")} · {g.opponent} ·{" "}
               {g.sets[0]}–{g.sets[1]}
               {g.finished ? "" : " · incompleta"}
@@ -111,6 +125,18 @@ export function MatchHistory({
       )}
       {game && (
         <>
+          <HistoricalAnalysis
+            key={game.id}
+            game={game}
+            onSave={(full) =>
+              onChange({
+                ...match,
+                history: match.history?.map((g) =>
+                  g.id === game.id ? { ...g, fullMatch: full } : g,
+                ),
+              })
+            }
+          />
           <MatchVideoEditor
             key={game.id}
             videos={archiveVideos(game)}
@@ -247,6 +273,26 @@ export function MatchHistory({
               </>
             )}
           </div>
+          {snapshot && data?.technical && (
+            <CriteriaReport
+              key={game.id + ":" + period}
+              title="Detalhes técnicos salvos"
+              players={snapshot.players}
+              aggregateData={data.technical}
+            />
+          )}
+          {!!game.videoMoments?.length && (
+            <MomentBrowser
+              moments={game.videoMoments.filter(
+                (m) => !period || m.set === period,
+              )}
+              players={(snapshot?.players ?? match.players).map((p) => ({
+                ...p,
+                positions: [],
+                libero: false,
+              }))}
+            />
+          )}
           <div className="pub-players">
             {rows.map((p) => (
               <article className="ui-card pub-player" key={p.id}>

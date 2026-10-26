@@ -138,7 +138,9 @@
   padding: 26px;
   background: #231c2a;
 }
-.open-portal .jersey {
+.open-portal .portal-player-number {
+  display: block;
+  flex-shrink: 0;
   font-family: "Big Shoulders Display Variable";
   font-size: 100px;
   line-height: 1;

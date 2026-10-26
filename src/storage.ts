@@ -139,6 +139,15 @@ export function parseMatch(raw: string): Match {
     if (!Array.isArray(data.history)) invalid();
     const historyIds = new Set<string>();
     for (const game of data.history) {
+      if (game.fullMatch !== undefined) {
+        if (
+          game.fullMatch.history !== undefined ||
+          game.fullMatch.id !== game.id
+        )
+          invalid();
+        const full = parseMatch(JSON.stringify(game.fullMatch));
+        if (!project(full).finished) invalid();
+      }
       if (
         !game ||
         typeof game.id !== "string" ||

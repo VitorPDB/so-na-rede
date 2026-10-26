@@ -195,8 +195,10 @@ export function Analysis({
   match,
   onTimeout,
   onProfile,
+  readOnly = false,
 }: {
   match: Match;
+  readOnly?: boolean;
   onTimeout: (side: Side) => void;
   onProfile: (id: string) => void;
 }) {
@@ -364,7 +366,11 @@ export function Analysis({
             {a.recentErrors} falhas nessa janela. Ações ruins que continuam o
             rally não equivalem a pontos perdidos.
           </small>
-          <TimeoutControls match={match} onTimeout={onTimeout} />
+          <TimeoutControls
+            match={match}
+            onTimeout={onTimeout}
+            disabled={readOnly}
+          />
         </section>
       </div>
 

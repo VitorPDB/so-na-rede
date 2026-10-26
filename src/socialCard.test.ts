@@ -193,3 +193,42 @@ test("portal agrega qualidade por volume sem NaN e não inventa dados ausentes",
   assert.equal(playerRecap([g], "missing").rating, null);
   assert.throws(() => parseOpenGames([{ snapshot: {}, moments: [] }]));
 });
+
+test("histórico completo preserva eventos sem aninhar partidas e rejeita jogo incompleto", async () => {
+  const { archiveGame } = await import("./career");
+  const { parseMatch } = await import("./storage");
+  const { project } = await import("./engine");
+  let finished = newMatch();
+  finished.bestOf = 3;
+  for (let set = 0; set < 2; set++) {
+    for (let point = 0; point < 25; point++)
+      finished = append(finished, { type: "point", winner: "ours" });
+    if (set === 0)
+      finished = append(finished, {
+        type: "nextSet",
+        lineup: finished.initialLineup,
+        server: "ours",
+      });
+  }
+  assert.equal(project(finished).finished, true);
+  finished.history = [{ ...archiveGame(finished)[0], id: "older" }];
+  const saved = archiveGame(finished).find((g) => g.id === finished.id)!;
+  assert.equal(saved.fullMatch?.history, undefined);
+  assert.deepEqual(saved.fullMatch?.audit, finished.audit);
+  const next = { ...newMatch(), history: [saved] };
+  const restored = parseMatch(JSON.stringify(next));
+  assert.deepEqual(restored.history?.[0].fullMatch?.audit, finished.audit);
+  assert.throws(() =>
+    parseMatch(
+      JSON.stringify({
+        ...next,
+        history: [
+          {
+            ...saved,
+            fullMatch: { ...finished, audit: [], history: undefined },
+          },
+        ],
+      }),
+    ),
+  );
+});

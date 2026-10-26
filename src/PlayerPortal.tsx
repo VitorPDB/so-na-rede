@@ -158,11 +158,7 @@ export default function PlayerPortal() {
       )}
       {!p ? (
         <section className="entry">
-          <h1>
-            O jogo continua
-            <br />
-            fora da quadra.
-          </h1>
+          <h1>Acompanhe os jogadores</h1>
           <p>
             Escolha um atleta. Acompanhe os números, a evolução e as jogadas.
             Sem senha.
@@ -183,7 +179,7 @@ export default function PlayerPortal() {
                   C("");
                 }}
               >
-                <span className="jersey">
+                <span className="portal-player-number">
                   {String(p.number).padStart(2, "0")}
                 </span>
                 <strong>{p.name}</strong>
@@ -547,8 +543,8 @@ export default function PlayerPortal() {
                         : "Sem direção registrada. A comissão pode marcar a direção nas próximas ações."}
                     </p>
                     <small>
-                      {direction.known} de {attack?.count ?? 0} ataques com direção
-                      marcada. Empates são exibidos juntos.
+                      {direction.known} de {attack?.count ?? 0} ataques com
+                      direção marcada. Empates são exibidos juntos.
                     </small>
                   </section>
                   <CriteriaReport

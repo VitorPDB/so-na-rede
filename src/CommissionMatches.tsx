@@ -143,6 +143,14 @@ export function CommissionMatches({
                 <button
                   className="ui-btn match-choice"
                   aria-pressed={selected === g.id}
+                  disabled={!state.finished || !g.finished}
+                  title={
+                    !state.finished
+                      ? "Finalize a partida atual para consultar outra."
+                      : !g.finished
+                        ? "Esta partida ainda não foi finalizada."
+                        : "Analisar partida concluída"
+                  }
                   onClick={() => {
                     onSelect(g.id);
                     setOpen(false);
@@ -191,8 +199,9 @@ export function CommissionMatches({
               </p>
             )}
           <p className="ui-note">
-            A seleção abre o relatório salvo. O jogo atual permanece disponível
-            para continuar a marcação.
+            {state.finished
+              ? "Selecione uma partida concluída para consultar os dados salvos."
+              : "Finalize a partida atual para liberar a análise de outras partidas."}
           </p>
         </div>
       )}

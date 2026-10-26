@@ -922,6 +922,12 @@ export default function App() {
           match={match}
           selected={page === "history" ? historySelection : ""}
           onSelect={(id) => {
+            if (
+              id &&
+              (!s.finished ||
+                !match.history?.find((g) => g.id === id)?.finished)
+            )
+              return;
             setHistorySelection(id);
             setPage(id ? "history" : "analysis");
           }}

@@ -161,6 +161,7 @@ export interface PlayerGame {
   }[];
 }
 export interface ArchivedGame {
+  fullMatch?: Match;
   videoMoments?: import("./videoMoments").VideoMoment[];
   partnerships?: {
     setter: string;

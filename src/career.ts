@@ -73,7 +73,13 @@ export function archiveGame(match: Match) {
   return match.audit.length
     ? [
         ...previous,
-        { ...gameSnapshot(match), publicData: publicSnapshot(match) },
+        {
+          ...gameSnapshot(match),
+          publicData: publicSnapshot(match),
+          ...(project(match).finished
+            ? { fullMatch: { ...match, history: undefined } }
+            : {}),
+        },
       ]
     : previous;
 }
