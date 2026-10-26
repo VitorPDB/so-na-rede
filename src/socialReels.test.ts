@@ -145,6 +145,12 @@ test("reels só públicos, cards só do jogador e publicação atômica", async 
         "utf8",
       ),
     );
+    // Old partial publications must remain stored, but not appear as separate games.
+    await db.query(
+      "insert into public.public_matches(match_id,revision,snapshot) select 'stale-partial',revision,jsonb_set(snapshot,'{matchId}','\"stale-partial\"') from public.public_matches where match_id=$1",
+      [m.id],
+    );
+    await db.query("insert into public.player_match_private(match_id,snapshot) select 'stale-partial',jsonb_set(snapshot,'{matchId}','\"stale-partial\"') from public.player_match_private where match_id=$1 on conflict(match_id) do nothing",[m.id]);
     await db.exec("set role anon");
     const open = (
       await db.query<{ v: any[] }>("select public.open_player_games(0) v")

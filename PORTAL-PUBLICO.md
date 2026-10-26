@@ -22,4 +22,6 @@ A migração libera somente o DTO estatístico de partidas publicadas e seus car
 
 ## Validação
 
+Atualização de 26/10: o portal mostra partidas finalizadas e somente a publicação parcial da transmissão atual. Publicações parciais antigas ficam ocultas, sem exclusão de registros. O frontend já aplica a regra; reaplique supabase/open-players.sql ou o arquivo combinado dist/abrir-jogadores.sql para filtrar também no banco antes da paginação. Jogos finalizados distintos não são agrupados por adversário/data. Suíte atual: 147 testes e build aprovados; banco remoto não alterado nesta etapa.
+
 144 testes passaram e build de produção validado. Cobertos direção em backup/desfazer, neutralidade da direção na nota, agregação por volume, dados ausentes e acesso anônimo às estatísticas publicadas sem acesso às tabelas de credenciais. A ativação remota e a conferência visual interativa final ainda não foram executadas. Não confundir o preview .qa com dados reais do portal.

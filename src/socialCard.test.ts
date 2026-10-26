@@ -232,3 +232,68 @@ test("histórico completo preserva eventos sem aninhar partidas e rejeita jogo i
     ),
   );
 });
+
+test("seleção substitui todo o contexto sem modificar nenhuma partida salva", async () => {
+  const { analysisWorkspace } = await import("./analysisWorkspace");
+  const { archiveGame } = await import("./career");
+  function finish(name: string) {
+    let m: ReturnType<typeof newMatch> = { ...newMatch(), bestOf: 3, opponent: name };
+    for (let set = 0; set < 2; set++) {
+      for (let n = 0; n < 25; n++)
+        m = append(m, { type: "point", winner: "ours" });
+      if (!set)
+        m = append(m, {
+          type: "nextSet",
+          lineup: m.initialLineup,
+          server: "ours",
+        });
+    }
+    return m;
+  }
+  const z = finish("Zodíaco"),
+    m = { ...finish("Moocana"), history: archiveGame(z) };
+  const before = JSON.stringify(m);
+  const view = analysisWorkspace(m, z);
+  assert.equal(view.id, z.id);
+  assert.equal(view.opponent, "Zodíaco");
+  assert.deepEqual(view.audit, z.audit);
+  assert.equal(view.history?.find((g) => g.id === m.id)?.fullMatch?.id, m.id);
+  assert.equal(
+    view.history?.some((g) => g.id === z.id),
+    false,
+  );
+  assert.equal(JSON.stringify(m), before);
+  assert.throws(() => analysisWorkspace(newMatch(), z), /Finalize/);
+  assert.throws(() => analysisWorkspace(m, newMatch()), /finalizada/);
+});
+test("portal oculta versões parciais antigas sem agrupar jogos distintos pelo adversário", async () => {
+  const { visiblePlayerGames } = await import("./openPlayerData");
+  const { publicSnapshot } = await import("./publicSnapshot");
+  const make = (id: string, finished: boolean) => ({
+    snapshot: {
+      ...publicSnapshot(newMatch()),
+      matchId: id,
+      opponent: "Moocana",
+      finished,
+    },
+    media: { photos: {}, opponentLogo: null },
+    moments: [],
+    cards: [],
+  });
+  const games = [
+    make("old1", false),
+    make("old2", false),
+    make("live", false),
+    make("complete1", true),
+    make("complete2", true),
+  ];
+  assert.deepEqual(
+    visiblePlayerGames(games, "live").map((g) => g.snapshot.matchId),
+    ["live", "complete1", "complete2"],
+  );
+  assert.deepEqual(
+    visiblePlayerGames(games, null).map((g) => g.snapshot.matchId),
+    ["complete1", "complete2"],
+  );
+  assert.equal(games.length, 5);
+});

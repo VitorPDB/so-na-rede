@@ -1,3 +1,4 @@
+import { analysisWorkspace, completeArchivedMatch } from "./analysisWorkspace";
 import { CommissionMatches } from "./CommissionMatches";
 import { MobileScout } from "./MobileScout";
 import { videoPositionKey } from "./videoPosition";
@@ -127,9 +128,14 @@ function Avatar({
 
 export default function App() {
   const [boot] = useState(initial);
-  const [match, setMatch] = useState(boot.match);
+  const [liveMatch, setMatch] = useState(boot.match);
+  const [analysisMatch, setAnalysisMatch] = useState<Match>();
+  const [switchingMatch, setSwitchingMatch] = useState(false);
+  const match = analysisMatch ?? liveMatch;
+  const liveMatchRef = useRef(liveMatch);
+  liveMatchRef.current = liveMatch;
   const [historySelection, setHistorySelection] = useState("");
-  const publication = usePublication(match);
+  const publication = usePublication(liveMatch);
   useOpponentColor(opponentTeam(match)?.logo);
   const [storageError, setStorageError] = useState(boot.error);
   const [readBlocked, setReadBlocked] = useState(Boolean(boot.error));
@@ -253,12 +259,13 @@ export default function App() {
     if (!s.lineup.includes(selected)) setSelected(s.lineup[0]);
   }, [s.lineup.join(","), selected]);
   const continuity = useMatchContinuity(
-    match,
+    liveMatch,
     publication.session,
     publication.authorized,
     (next) => {
       try {
-        saveMatch(next, match);
+        saveMatch(next, liveMatch);
+        setAnalysisMatch(undefined);
         setMatch(next);
         setSelected(next.initialLineup[0]);
         setProfileId(next.players[0].id);
@@ -279,6 +286,13 @@ export default function App() {
     publication.stop,
   );
   const commit = (next: Match, replace = false) => {
+    if (analysisMatch) {
+      setFeedback({
+        message:
+          "Modo de análise: os dados originais estão preservados. Volte à partida atual para editar.",
+      });
+      return false;
+    }
     if (!continuity.canEdit()) {
       setFeedback({
         message:
@@ -723,10 +737,82 @@ export default function App() {
       setFeedback({ message: "Backup inválido. O jogo atual foi preservado." });
     }
   };
+  const selectAnalysisMatch = async (id: string) => {
+    if (switchingMatch) return;
+    if (!id) {
+      setPage("report");
+      return;
+    }
+    if (!project(liveMatch).finished) {
+      setFeedback({
+        message: "Finalize a partida atual antes de analisar outra.",
+      });
+      return;
+    }
+    if (id === liveMatch.id) {
+      setAnalysisMatch(undefined);
+      setPage("report");
+      return;
+    }
+    const game = liveMatch.history?.find((g) => g.id === id);
+    if (!game?.finished) return;
+    const source = liveMatch;
+    setSwitchingMatch(true);
+    try {
+      const target = await completeArchivedMatch(game);
+      if (liveMatchRef.current !== source)
+        throw Error("A partida atual mudou. Selecione o jogo novamente.");
+      // Save the recovered complete copy before changing only the analysis view.
+      if (!game.fullMatch) {
+        const saved = {
+          ...source,
+          history: source.history?.map((g) =>
+            g.id === id
+              ? { ...g, fullMatch: { ...target, history: undefined } }
+              : g,
+          ),
+        };
+        if (!continuity.canEdit())
+          throw Error(
+            "Aguarde a sincronização terminar para recuperar esta partida.",
+          );
+        saveMatch(saved, source);
+        setMatch(saved);
+      }
+      setAnalysisMatch(analysisWorkspace(source, target));
+      setHistorySelection("");
+      setPage("report");
+    } catch (e) {
+      setFeedback({ message: (e as Error).message });
+      setAnalysisMatch(undefined);
+      setHistorySelection(id);
+      setPage("history");
+    } finally {
+      setSwitchingMatch(false);
+    }
+  };
+  useEffect(() => {
+    setReportSet(0);
+    setScoutVideoId("");
+    setMobileScout(false);
+    setProfileId(match.players[0].id);
+    setSelected(match.initialLineup[0]);
+    setLineupDraft([...match.initialLineup]);
+    setServerDraft(match.initialServer);
+    setEditingRoster(false);
+    setEditing(undefined);
+    setPanel(undefined);
+  }, [match.id]);
   const startNewMatch = async (details?: {
     opponent: string;
     date: string;
   }) => {
+    if (analysisMatch) {
+      setFeedback({
+        message: "Volte à partida atual antes de iniciar um novo jogo.",
+      });
+      return false;
+    }
     if (
       !window.confirm(
         "Iniciar nova partida? O resumo deste jogo será preservado no histórico. Elenco, fotos, formações e pesos serão mantidos.",
@@ -921,20 +1007,32 @@ export default function App() {
           key={match.id}
           match={match}
           selected={page === "history" ? historySelection : ""}
-          onSelect={(id) => {
-            if (
-              id &&
-              (!s.finished ||
-                !match.history?.find((g) => g.id === id)?.finished)
-            )
-              return;
-            setHistorySelection(id);
-            setPage(id ? "history" : "analysis");
-          }}
+          onSelect={(id) => void selectAnalysisMatch(id)}
+          busy={switchingMatch}
           onChange={commit}
           onNew={startNewMatch}
         />
 
+        {analysisMatch && (
+          <div className="ui-card" role="status">
+            <strong>
+              Analisando {match.team} × {match.opponent}
+            </strong>
+            <p>
+              Todas as telas mostram esta partida. Consulta somente; os jogos
+              permanecem salvos separadamente.
+            </p>
+            <button
+              className="ui-btn"
+              onClick={() => {
+                setAnalysisMatch(undefined);
+                setPage("report");
+              }}
+            >
+              Voltar à partida atual · {liveMatch.opponent}
+            </button>
+          </div>
+        )}
         <header className="appbar">
           <div className="appbar-title">
             <span className="ui-eyebrow">
@@ -1225,7 +1323,7 @@ export default function App() {
             key={historySelection}
             match={match}
             selected={historySelection}
-            onSelect={setHistorySelection}
+            onSelect={(id) => void selectAnalysisMatch(id)}
             onChange={(next) => commit(next)}
           />
         )}
@@ -1258,7 +1356,13 @@ export default function App() {
             }
           />
         )}
-        {page === "postgame" && (
+        {analysisMatch && ["settings", "postgame"].includes(page) && (
+          <p className="ui-note">
+            Configurações e lançamentos ficam disponíveis na partida atual. Use
+            o botão acima para voltar.
+          </p>
+        )}
+        {page === "postgame" && !analysisMatch && (
           <PostGameView
             match={match}
             onChange={commit}
@@ -1270,7 +1374,7 @@ export default function App() {
             }}
           />
         )}
-        {page === "settings" && (
+        {page === "settings" && !analysisMatch && (
           <Settings
             match={match}
             theme={theme}

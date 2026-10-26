@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Globe, Play, ChevronRight } from "lucide-react";
-import { cloud } from "./cloud";
-import { parseOpenGames, playerRecap, type OpenGame } from "./openPlayerData";
+import { cloud, teamSlug } from "./cloud";
+import {
+  parseOpenGames,
+  playerRecap,
+  visiblePlayerGames,
+  type OpenGame,
+} from "./openPlayerData";
 import { SkillIcon } from "./SkillIcon";
 import { Photo } from "./PlayerPhoto";
 import { CriteriaReport } from "./CriteriaReport";
@@ -39,29 +44,42 @@ export default function PlayerPortal() {
       );
       return;
     }
-    void Promise.resolve(
+    void Promise.all([
       cloud.rpc("open_player_games", { page_offset: offset }),
-    )
-      .then(({ data, error }) => {
+      cloud
+        .from("live_public")
+        .select("matchId:snapshot->>matchId")
+        .eq("slug", teamSlug)
+        .maybeSingle(),
+    ])
+      .then(([{ data, error }, currentLive]) => {
         if (!live) return;
         try {
           if (error)
             throw Error(
               "Não foi possível carregar o portal. A comissão deve ativar abrir-jogadores.sql no Supabase.",
             );
+          if (currentLive.error)
+            throw Error(
+              "Não foi possível conferir a transmissão atual. Tente novamente.",
+            );
+          const liveId = currentLive.data?.matchId ?? null;
           const rows = parseOpenGames(data);
           GG((prev) =>
-            offset === 0
-              ? rows
-              : [
-                  ...prev,
-                  ...rows.filter(
-                    (g) =>
-                      !prev.some(
-                        (p) => p.snapshot.matchId === g.snapshot.matchId,
-                      ),
-                  ),
-                ],
+            visiblePlayerGames(
+              offset === 0
+                ? rows
+                : [
+                    ...prev,
+                    ...rows.filter(
+                      (g) =>
+                        !prev.some(
+                          (p) => p.snapshot.matchId === g.snapshot.matchId,
+                        ),
+                    ),
+                  ],
+              liveId,
+            ),
           );
           M(rows.length === 20);
         } catch (e) {

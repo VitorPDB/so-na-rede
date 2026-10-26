@@ -65,3 +65,18 @@ export function playerRecap(games: OpenGame[], id: string) {
     metrics: [...metrics.values()].sort((a, b) => b.quality - a.quality),
   };
 }
+
+// A finished fixture is an independent game even when its date/opponent match.
+// Only the explicitly selected live game may appear as an unfinished publication.
+export function visiblePlayerGames(
+  games: OpenGame[],
+  liveId: string | null,
+): OpenGame[] {
+  return [
+    ...new Map(
+      games
+        .filter((g) => g.snapshot.finished || g.snapshot.matchId === liveId)
+        .map((g) => [g.snapshot.matchId, g]),
+    ).values(),
+  ];
+}

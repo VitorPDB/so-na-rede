@@ -387,3 +387,10 @@ Após aprovação explícita de estatísticas públicas para todos, o portal nã
 
 ## Análise integral do histórico — 26/10/2026
 Comissão bloqueia consulta de outras partidas enquanto a atual não está finalizada; históricos incompletos também não são selecionáveis. Após encerrar, selecionar jogo concluído abre relatório e análise tática em modo consulta, sem trocar a partida ativa. Novos arquivamentos de jogos finalizados incluem fullMatch sem history aninhado: eventos, pesos, elenco e configurações preservados no JSON/sincronização. Cópias antigas podem ser recuperadas do aparelho/conta ou JSON correspondente, validadas e anexadas ao histórico. Sem cópia integral, continuam disponíveis os agregados efetivamente salvos, sem reconstrução fictícia de ações. Não requer SQL adicional. Correção visual pendente do portal também incluída localmente: classe exclusiva para número do atleta e título Acompanhe os jogadores. Sem commit/push nesta etapa.
+
+## Troca integral da tela e publicações parciais — 26/10/2026
+Substitui o comportamento de consulta acima: selecionar uma partida finalizada agora troca o contexto de toda a comissão (placar, elenco, relatórios, perfis e vídeos). A partida original permanece salva e vinculada à sincronização/publicação; a consulta histórica é somente leitura, com botão para retornar. A troca continua bloqueada enquanto a partida original não terminou. Históricos antigos sem fonte integral exigem recuperação de cópia do aparelho/conta ou JSON, sem inventar dados.
+
+O portal filtrava apenas IDs repetidos, mas o RPC também retornava publicações parciais antigas com IDs diferentes. Agora exibe jogos finalizados e somente a parcial identificada como transmissão atual em live_public. Nenhum registro é apagado; partidas finalizadas diferentes com mesmo adversário/data são preservadas. Há filtro no frontend e em supabase/open-players.sql; reaplicar este SQL (ou dist/abrir-jogadores.sql gerado pelo build) filtra também antes da paginação. Não houve alteração no Supabase remoto.
+
+Validação desta etapa: 147 testes passaram, build e git diff --check aprovados. Sem conferência visual interativa, commit ou push nesta etapa.

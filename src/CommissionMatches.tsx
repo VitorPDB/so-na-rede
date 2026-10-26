@@ -9,8 +9,10 @@ export function CommissionMatches({
   onSelect,
   onChange,
   onNew,
+  busy: switching = false,
 }: {
   match: Match;
+  busy?: boolean;
   selected: string;
   onSelect: (id: string) => void;
   onChange: (m: Match) => boolean;
@@ -52,7 +54,11 @@ export function CommissionMatches({
               : `Partida atual · ${state.finished ? "Finalizada" : "Em andamento"} · ${state.sets.join(" × ")}`}
           </small>
         </span>
-        <ChevronDown size={20} />
+        {switching ? (
+          <span role="status">Carregando partida…</span>
+        ) : (
+          <ChevronDown size={20} />
+        )}
       </button>
       {open && (
         <div className="match-options">
@@ -143,7 +149,7 @@ export function CommissionMatches({
                 <button
                   className="ui-btn match-choice"
                   aria-pressed={selected === g.id}
-                  disabled={!state.finished || !g.finished}
+                  disabled={switching || !state.finished || !g.finished}
                   title={
                     !state.finished
                       ? "Finalize a partida atual para consultar outra."
