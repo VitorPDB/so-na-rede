@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Play, Sparkles, Zap } from "lucide-react";
 import { SkillIcon, skillForLabel } from "./SkillIcon";
 import { CardSelect } from "./CardSelect";
@@ -7,16 +7,21 @@ import {
   filterVideoMoments,
   formatVideoTime,
   type VideoMoment,
+  youtubeSourceId,
 } from "./videoMoments";
 import { MomentFeed } from "./MomentFeed";
 export function MomentBrowser({
   moments,
   players,
   fixedPlayer,
+  publicMatchId,
+  thumbnails = false,
 }: {
   moments: VideoMoment[];
   players: Player[];
   fixedPlayer?: string;
+  publicMatchId?: string;
+  thumbnails?: boolean;
 }) {
   const [player, setPlayer] = useState(fixedPlayer ?? "");
   const [partner, setPartner] = useState("");
@@ -25,6 +30,23 @@ export function MomentBrowser({
   const [skill, setSkill] = useState("");
   const [special, setSpecial] = useState("");
   const [selected, setSelected] = useState<VideoMoment>();
+  const [limit, setLimit] = useState(36);
+  useEffect(() => {
+    if (!publicMatchId) return;
+    const id = new URLSearchParams(location.search).get("moment");
+    if (id) setSelected(moments.find((m) => m.id === id));
+  }, [publicMatchId, moments]);
+  const select = (m: VideoMoment) => {
+    setSelected(m);
+    if (publicMatchId) {
+      const url = new URL(location.href);
+      url.searchParams.set("view", "public");
+      url.searchParams.set("match", publicMatchId);
+      url.searchParams.set("moment", m.id);
+      url.hash = "reels";
+      window.history.replaceState(null, "", url);
+    }
+  };
   const primary = fixedPlayer ?? player;
   const filtered = filterVideoMoments(moments, {
     player: primary,
@@ -174,27 +196,44 @@ export function MomentBrowser({
       <button
         className="ui-btn"
         disabled={!filtered.length}
-        onClick={() => setSelected(filtered[0])}
+        onClick={() => select(filtered[0])}
       >
         <Play size={18} aria-hidden="true" /> Assistir jogadas em sequência
       </button>
+      {active && publicMatchId && (
+        <a
+          className="ui-btn"
+          href={`/?view=public&match=${encodeURIComponent(publicMatchId)}&moment=${encodeURIComponent(active.id)}#reels`}
+        >
+          Link deste lance
+        </a>
+      )}
       {active && (
         <MomentFeed
           moments={filtered}
           selectedId={active.id}
           players={players}
-          onSelect={setSelected}
+          onSelect={select}
           onClose={() => setSelected(undefined)}
         />
       )}
-      <div className="moment-cards">
-        {filtered.map((m) => (
+      <div className={"moment-cards" + (thumbnails ? " reel-cards" : "")}>
+        {filtered.slice(0, limit).map((m) => (
           <button
             className={`moment-card${m.pointWon ? " is-point" : ""}`}
             key={m.id}
             aria-pressed={active?.id === m.id}
-            onClick={() => setSelected(m)}
+            onClick={() => select(m)}
           >
+            {thumbnails && youtubeSourceId(m.videoSource) && (
+              <img
+                className="reel-thumbnail"
+                loading="lazy"
+                decoding="async"
+                alt=""
+                src={`https://i.ytimg.com/vi/${youtubeSourceId(m.videoSource)}/hqdefault.jpg`}
+              />
+            )}
             <span className="moment-skill-badge">
               <SkillIcon skill={m.skill ?? skillForLabel(m.label)} size={48} />
             </span>
@@ -231,6 +270,11 @@ export function MomentBrowser({
           </button>
         ))}
       </div>
+      {filtered.length > limit && (
+        <button className="ui-btn" onClick={() => setLimit(limit + 36)}>
+          Mostrar mais jogadas
+        </button>
+      )}
       {!filtered.length && (
         <p>
           Nenhum lance corresponde aos filtros.{" "}

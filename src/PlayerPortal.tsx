@@ -1,3 +1,4 @@
+import { PlayerSocialCard } from "./PlayerSocialCard";
 import { SkillIcon } from "./SkillIcon";
 import { PublishedMatchPicker } from "./PublishedMatchPicker";
 import { useEffect, useState } from "react";
@@ -333,6 +334,13 @@ export default function PlayerPortal() {
                   </>
                 )}
               </section>
+              {self && (
+                <PlayerSocialCard
+                  key={`${snapshot.matchId}:${token}`}
+                  token={token}
+                  matchId={snapshot.matchId}
+                />
+              )}
               {self && game?.technical && (
                 <CriteriaReport
                   key={`${snapshot.matchId}:${person}`}
@@ -368,7 +376,7 @@ export default function PlayerPortal() {
         </>
       )}
       <p>
-        <a href="/?view=public">Ver página pública do time</a>
+        <a href="/?view=public#reels">Ver Reels na página pública</a>
       </p>
     </main>
   );

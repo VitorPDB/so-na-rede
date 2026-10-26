@@ -1,3 +1,6 @@
+import { useMemo } from "react";
+import { SocialCardExport } from "./SocialCardExport";
+import { socialCardData } from "./socialCardData";
 import { SkillIcon } from "./SkillIcon";
 import { useState } from "react";
 import { ArrowLeft, Camera } from "lucide-react";
@@ -30,6 +33,7 @@ export function PlayerProfile({
   onChange: (player: Player) => boolean;
   onBack: () => void;
 }) {
+  const card = useMemo(() => socialCardData(match, player), [match, player]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
@@ -156,6 +160,7 @@ export function PlayerProfile({
           </small>
         </div>
       </section>
+      <SocialCardExport data={card} />
       {busy && <p className="ui-note">Preparando foto…</p>}
       {error && (
         <p className="ui-alert" role="alert">

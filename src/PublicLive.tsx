@@ -1,3 +1,4 @@
+import { PublicReels } from "./PublicReels";
 import { SkillIcon, skillForLabel } from "./SkillIcon";
 import { safePublicSnapshot } from "./playerPrivacy";
 import { useOpponentColor } from "./opponentColor";
@@ -152,6 +153,9 @@ export function PublicLive() {
         <button aria-pressed={archiveOpen} onClick={() => navigate(true)}>
           <Clock3 size={18} aria-hidden="true" /> Partidas anteriores
         </button>
+        <a className="ui-btn" href="#reels">
+          Reels
+        </a>
       </nav>
       {demo && (
         <div className="pub-demo" role="status">
@@ -397,6 +401,15 @@ export function PublicLive() {
             key={s.matchId}
             videos={s.videos}
             finished={s.finished}
+          />
+          <PublicReels
+            key={s.matchId}
+            matchId={s.matchId}
+            players={s.players.map((p) => ({
+              ...p,
+              positions: [],
+              libero: false,
+            }))}
           />
           {pending && !demo && (
             <p className="ui-note pub-notice" role="status">

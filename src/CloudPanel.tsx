@@ -1,3 +1,4 @@
+import { socialCardData, publicationCards } from "./socialCardData";
 import { readSyncLink, matchDigest } from "./MatchContinuity";
 import { project } from "./engine";
 import { videoMoments } from "./videoMoments";
@@ -88,6 +89,7 @@ export function usePublication(match: Match) {
       snapshot: ReturnType<typeof publicSnapshot>;
       media: ReturnType<typeof publicMedia> | null;
       moments: ReturnType<typeof videoMoments>;
+      cards: ReturnType<typeof socialCardData>[];
       serial: string;
       mediaSerial: string;
       requestId: string;
@@ -105,6 +107,7 @@ export function usePublication(match: Match) {
           serial = JSON.stringify([
             snapshot,
             videoMoments(project(source).events),
+            source.players.map(({ photo: _photo, ...p }) => p),
           ]);
         const media = publicMedia(source),
           mediaSerial = JSON.stringify(media);
@@ -112,6 +115,7 @@ export function usePublication(match: Match) {
           return;
         pending = {
           snapshot,
+          cards: publicationCards(source),
           moments: videoMoments(project(source).events).filter((m) =>
             m.videoSource?.startsWith("youtube:"),
           ),
@@ -164,10 +168,11 @@ export function usePublication(match: Match) {
             return;
           }
         }
-        const { data, error } = await cloud!.rpc("publish_player_live", {
+        const { data, error } = await cloud!.rpc("publish_player_bundle", {
           expected_revision: revision,
           snapshot: request.snapshot,
           moments: request.moments,
+          cards: request.cards,
           media: request.media,
           request_id: request.requestId,
         });
@@ -176,6 +181,10 @@ export function usePublication(match: Match) {
             conflicted = true;
             setStatus(
               "Outra aba ou pessoa publicou. Pause e publique novamente para assumir.",
+            );
+          } else if (error.message.includes("publish_player_bundle")) {
+            setStatus(
+              "Ative social-reels.sql no Supabase para publicar esta atualização. A partida local está salva.",
             );
           } else if (error.message.includes("not_authorized")) {
             conflicted = true;
