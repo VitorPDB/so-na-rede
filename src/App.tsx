@@ -1,3 +1,5 @@
+import { MobileScout } from "./MobileScout";
+import { videoPositionKey } from "./videoPosition";
 import { MatchContinuity, useMatchContinuity } from "./MatchContinuity";
 import { keepMatchCopy } from "./matchShelf";
 import { ModalDrawer } from "./ModalDrawer";
@@ -185,6 +187,7 @@ export default function App() {
   }, [theme]);
   const [formationZone, setFormationZone] = useState<Zone>(1);
   const [pendingAction, setPendingAction] = useState<SkillEvent>();
+  const [mobileScout, setMobileScout] = useState(false);
   const [scoutVideoId, setScoutVideoId] = useState("");
   const scoutCapture = useRef<VideoCapture | undefined>(undefined);
   const scoutVideo = match.videos?.find((v) => v.id === scoutVideoId);
@@ -343,9 +346,13 @@ export default function App() {
       return false;
     }
   };
-  const record = (key: Skill, result: string) => {
-    let stamp: ReturnType<VideoCapture> = {};
-    if (scoutVideo) {
+  const record = (
+    key: Skill,
+    result: string,
+    captured?: ReturnType<VideoCapture>,
+  ) => {
+    let stamp: ReturnType<VideoCapture> = captured ?? {};
+    if (scoutVideo && !captured) {
       try {
         if (!scoutCapture.current)
           throw new Error("Aguarde o player do vídeo ficar pronto.");
@@ -786,12 +793,14 @@ export default function App() {
   const isDisabled = s.setFinished || s.finished;
   const canUndo = s.active.length > 0;
   const doUndo = () => {
-    if (!canUndo) return;
+    if (!canUndo) return false;
     const next = undo(match);
     if (commit(next)) {
       setPendingAction(undefined);
       setFeedback({ message: "Última ação desfeita. Histórico preservado." });
+      return true;
     }
+    return false;
   };
   const openSubs = (incoming = "") => {
     setPanel("sub");
@@ -1034,13 +1043,28 @@ export default function App() {
                       ))}
                     </CardSelect>
                   </label>
-                  {scoutVideo && (
+                  {scoutVideo && !mobileScout && (
                     <YoutubeScout
                       key={scoutVideo.id}
                       video={scoutVideo}
+                      positionKey={videoPositionKey(
+                        match.id,
+                        s.set,
+                        scoutVideo.youtubeId,
+                        scoutVideo.startSeconds,
+                      )}
                       captureRef={scoutCapture}
                       disabled={!!pendingAction}
                     />
+                  )}
+                  {scoutVideo && (
+                    <button
+                      className="ui-btn ui-btn--primary"
+                      disabled={isDisabled}
+                      onClick={() => setMobileScout(true)}
+                    >
+                      Abrir scouting em tela cheia
+                    </button>
                   )}
                 </section>
               )}
@@ -1546,7 +1570,27 @@ export default function App() {
             )}
           </ModalDrawer>
         )}
-        {pendingAction && (
+        {mobileScout && scoutVideo && (
+          <MobileScout
+            key={`${match.id}:${s.set}:${scoutVideo.id}`}
+            match={match}
+            state={s}
+            video={scoutVideo}
+            pending={pendingAction}
+            onRecord={record}
+            onSelect={assignAction}
+            onCancel={() => setPendingAction(undefined)}
+            onClose={() => {
+              setMobileScout(false);
+              setPendingAction(undefined);
+            }}
+            onUndo={doUndo}
+            canUndo={canUndo}
+            disabled={isDisabled}
+            feedback={feedback?.message}
+          />
+        )}
+        {pendingAction && !mobileScout && (
           <PlayerChooser
             match={match}
             state={s}

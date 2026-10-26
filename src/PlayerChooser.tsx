@@ -33,6 +33,7 @@ export function PlayerChooser({
   state,
   event,
   correction = false,
+  embedded = false,
   onSelect,
   onClose,
 }: {
@@ -40,12 +41,14 @@ export function PlayerChooser({
   state: Projection;
   event: SkillEvent;
   correction?: boolean;
+  embedded?: boolean;
   onSelect: (id: string, event?: SkillEvent) => void;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLElement>(null);
   const [current, setCurrent] = useState(event);
   useEffect(() => {
+    if (embedded) return;
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -64,6 +67,7 @@ export function PlayerChooser({
     }
   });
   useEffect(() => {
+    if (embedded) return;
     const close = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "Tab") {
@@ -103,12 +107,12 @@ export function PlayerChooser({
     };
   });
   return (
-    <div className="chooser-backdrop">
+    <div className={embedded ? "scout-embedded" : "chooser-backdrop"}>
       <section
         ref={dialog}
         className="player-chooser"
-        role="dialog"
-        aria-modal="true"
+        role={embedded ? undefined : "dialog"}
+        aria-modal={embedded ? undefined : true}
         aria-labelledby="chooser-title"
       >
         <header>
