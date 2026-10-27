@@ -31,6 +31,7 @@ export function usePublication(match: Match) {
   const [status, setStatus] = useState("Transmissão desligada");
   const latest = useRef(match),
     busy = useRef(false),
+    starting = useRef(false),
     sent = useRef(""),
     mediaSent = useRef("");
   latest.current = match;
@@ -83,7 +84,13 @@ export function usePublication(match: Match) {
       return;
     }
     let alive = true;
-    let revision = publication.revision;
+    // Authentication and device transfers can restart the effect after successful
+    // sends. React's original publication value may still have an older revision.
+    const checkpoint = loadPublication();
+    let revision =
+      checkpoint?.matchId === publication.matchId
+        ? checkpoint.revision
+        : publication.revision;
     let conflicted = false;
     let pending: {
       snapshot: ReturnType<typeof publicSnapshot>;
@@ -158,18 +165,21 @@ export function usePublication(match: Match) {
             action: "status",
             game_id: source.id,
           });
+          if (!alive) return;
           if (
             check.error ||
             check.data?.device !== binding.device ||
             check.data?.revision !== binding.revision
           ) {
             conflicted = true;
+            persist({ ...publication!, enabled: false });
             setStatus(
               "Transmissão pausada: confira a posse desta partida em Continuidade.",
             );
             return;
           }
         }
+        if (!alive) return;
         const { data, error } = await cloud!.rpc("publish_player_bundle", {
           expected_revision: revision,
           snapshot: request.snapshot,
@@ -178,11 +188,13 @@ export function usePublication(match: Match) {
           media: request.media,
           request_id: request.requestId,
         });
+        if (!alive) return;
         if (error) {
           if (error.message.includes("revision_conflict")) {
             conflicted = true;
+            persist({ ...publication!, enabled: false });
             setStatus(
-              "Outra aba ou pessoa publicou. Pause e publique novamente para assumir.",
+              "A versão publicada mudou desde o último envio deste aparelho. Toque em Publicar para retomar com a versão atual do canal.",
             );
           } else if (error.message.includes("publish_player_bundle")) {
             setStatus(
@@ -229,40 +241,46 @@ export function usePublication(match: Match) {
       clearInterval(timer);
       window.removeEventListener("online", flush);
     };
-  }, [
-    publication?.enabled,
-    publication?.matchId,
-    session?.user.id,
-    authorized,
-    match.id,
-  ]);
+  }, [publication, session?.user.id, authorized, match.id]);
   async function start() {
-    if (!cloud || !session || !authorized || busy.current) return;
-    const { data, error } = await cloud
-      .from("live_public")
-      .select("revision,snapshot")
-      .eq("slug", teamSlug)
-      .maybeSingle();
-    if (error) {
-      setStatus("Não foi possível iniciar. Confira a configuração do banco.");
+    if (!cloud || !session || !authorized || busy.current || starting.current)
       return;
-    }
-    if (
-      data?.snapshot?.matchId &&
-      data.snapshot.matchId !== match.id &&
-      !window.confirm(
-        "Há outra partida no canal público. Substituir a transmissão por esta partida?",
+    starting.current = true;
+    const sourceId = match.id;
+    try {
+      const { data, error } = await cloud
+        .from("live_public")
+        .select("revision,snapshot")
+        .eq("slug", teamSlug)
+        .maybeSingle();
+      if (latest.current.id !== sourceId) return;
+      if (error) {
+        setStatus("Não foi possível iniciar. Confira a configuração do banco.");
+        return;
+      }
+      if (
+        data?.snapshot?.matchId &&
+        data.snapshot.matchId !== match.id &&
+        !window.confirm(
+          "Há outra partida no canal público. Substituir a transmissão por esta partida?",
+        )
       )
-    )
-      return;
-    sent.current = "";
-    mediaSent.current = "";
-    persist({
-      enabled: true,
-      revision: data?.revision ?? 0,
-      matchId: match.id,
-    });
-    setStatus("Preparando transmissão…");
+        return;
+      sent.current = "";
+      mediaSent.current = "";
+      persist({
+        enabled: true,
+        revision: data?.revision ?? 0,
+        matchId: match.id,
+      });
+      setStatus("Preparando transmissão…");
+    } catch {
+      setStatus(
+        "Não foi possível iniciar. Confira a conexão e tente novamente.",
+      );
+    } finally {
+      starting.current = false;
+    }
   }
   return {
     session,

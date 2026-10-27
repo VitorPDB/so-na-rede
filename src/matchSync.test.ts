@@ -125,6 +125,12 @@ test("continuidade: isolamento, retry, transferência de aparelho e partidas ind
     await call("save", match.id, match, 0, device1, crypto.randomUUID());
     await login(a);
     assert.equal((await call("status", match.id)).revision, 3);
+    // Round trip: the first device may reclaim the same match, while the former
+    // owner must stop writing even if it still has a valid session.
+    assert.equal((await call("claim", match.id, null, 3, device1, crypto.randomUUID())).revision, 4);
+    assert.equal((await call("status", match.id)).device, device1);
+    assert.deepEqual((await call("read", match.id)).body, match);
+    await assert.rejects(call("save", match.id, match, 3, device2, crypto.randomUUID()), /device_conflict/);
     await login(outsider);
     await assert.rejects(call("list"), /not_authorized/);
     await db.exec("reset role; set role anon");
