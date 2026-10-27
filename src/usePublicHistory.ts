@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cloud } from "./cloud";
+import { savePublicCache } from "./publicCache";
 import type { PublicMedia } from "./publicSnapshot";
 import type { PublicRow } from "./usePublicLive";
 import {
@@ -29,11 +30,7 @@ function read<T>(key: string): T | null {
   }
 }
 function save(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* Reading the public archive does not require persistent storage. */
-  }
+  savePublicCache(key, value);
 }
 export function usePublicHistory(
   enabled: boolean,

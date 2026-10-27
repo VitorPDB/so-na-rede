@@ -16,9 +16,66 @@ import { validDetailedDraft } from "./postgameDetailed";
 import { assessmentError } from "./assessment";
 import { mirrorMatch, recoveryCopies } from "./matchBackup";
 import { validVideos } from "./videos";
+import {
+  readDatabaseMatch,
+  writeDatabaseMatch,
+  compactMatchDatabase,
+  expandMatch,
+  sameStoredContent,
+  databaseToken,
+} from "./matchDatabase";
+export { expandMatch } from "./matchDatabase";
 const KEY = "so-na-rede:match:v1";
 const BACKUP_KEY = KEY + ":backup";
 export let recoveryNotice = "";
+let databaseReady = false;
+let databaseFailure: unknown;
+let memoryMatch: Match | undefined;
+let token: string | undefined;
+let writes = Promise.resolve();
+let unsaved = 0;
+let writeError = "";
+let fatalConflict = false;
+let writeCount = 0;
+let unloadRegistered = false;
+export function matchStorageStatus() {
+  return { pending: unsaved > 0, error: writeError };
+}
+function storageChanged() {
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new Event("match-storage"));
+}
+export async function flushMatchStorage() {
+  await writes;
+  if (writeError) throw Error(writeError);
+}
+export function localMatchBackup() {
+  return memoryMatch
+    ? expandMatch(memoryMatch).then((m) => JSON.stringify(m))
+    : Promise.resolve(localStorage.getItem(KEY) ?? "{}");
+}
+export async function restoreMatchStorage(match: Match) {
+  const valid = parseMatch(JSON.stringify(match));
+  if (typeof indexedDB === "undefined") {
+    saveMatch(valid);
+    return valid;
+  }
+  await writes;
+  const head = await writeDatabaseMatch(valid, await databaseToken());
+  const check = await readDatabaseMatch();
+  if (!check || !sameStoredContent(await expandMatch(check.match), valid))
+    throw Error("Não foi possível conferir o backup importado.");
+  token = head.token;
+  memoryMatch = parseMatch(JSON.stringify(check.match));
+  databaseReady = true;
+  databaseFailure = undefined;
+  writeError = "";
+  fatalConflict = false;
+  localStorage.removeItem(KEY);
+  localStorage.removeItem(BACKUP_KEY);
+  storageChanged();
+  return memoryMatch;
+}
 export function parseMatch(raw: string): Match {
   const data = JSON.parse(raw) as Match;
   const invalid = () => {
@@ -139,6 +196,12 @@ export function parseMatch(raw: string): Match {
     if (!Array.isArray(data.history)) invalid();
     const historyIds = new Set<string>();
     for (const game of data.history) {
+      if (
+        game.localSource !== undefined &&
+        (typeof game.localSource !== "string" ||
+          !/^[a-f0-9]{64}$/.test(game.localSource))
+      )
+        invalid();
       if (game.fullMatch !== undefined) {
         if (
           game.fullMatch.history !== undefined ||
@@ -536,9 +599,15 @@ export function parseMatch(raw: string): Match {
     if (validate(replay, project(replay), entry.command!)) invalid();
     replay.audit.push(entry);
   }
+  // Older exports included derived reports. They can be rebuilt from the source
+  // events and must not be carried into every future checkpoint/synchronization.
+  delete (data as Match & { projection?: unknown }).projection;
+  delete (data as Match & { report?: unknown }).report;
   return data;
 }
 export function loadMatch(): Match | undefined {
+  if (databaseFailure) throw databaseFailure;
+  if (databaseReady) return memoryMatch;
   const raw = localStorage.getItem(KEY);
   if (raw) {
     try {
@@ -557,6 +626,107 @@ export function loadMatch(): Match | undefined {
   if (raw) return parseMatch(raw); // Preserve the original and block edits on invalid data.
 }
 export async function initializeMatchStorage() {
+  if (typeof window !== "undefined" && !unloadRegistered) {
+    unloadRegistered = true;
+    window.addEventListener("beforeunload", (e) => {
+      if (unsaved || writeError) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    });
+  }
+  if (typeof indexedDB !== "undefined") {
+    try {
+      const saved = await readDatabaseMatch();
+      if (saved) {
+        const legacyRaw = localStorage.getItem(KEY);
+        if (
+          legacyRaw &&
+          !sameStoredContent(
+            await expandMatch(saved.match),
+            parseMatch(legacyRaw),
+          )
+        )
+          throw Error(
+            "Outra aba ou versão do app deixou uma cópia diferente. Exporte a cópia local e importe o JSON que deseja continuar; os dados foram preservados.",
+          );
+        memoryMatch = parseMatch(JSON.stringify(saved.match));
+        token = saved.head.token;
+        if (saved.recovered)
+          recoveryNotice =
+            "Partida recuperada do checkpoint anterior deste aparelho.";
+      } else {
+        let legacy: Match | undefined;
+        for (const key of [KEY, BACKUP_KEY]) {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          try {
+            legacy = parseMatch(raw);
+            databaseFailure = undefined;
+            break;
+          } catch (error) {
+            databaseFailure = error;
+          }
+        }
+        if (!legacy)
+          for (const raw of await recoveryCopies()) {
+            try {
+              legacy = parseMatch(raw);
+              databaseFailure = undefined;
+              break;
+            } catch {
+              /* Next independent copy. */
+            }
+          }
+        if (databaseFailure) throw databaseFailure;
+        if (legacy) {
+          let priorCopy: Match | undefined;
+          try {
+            const raw = localStorage.getItem(BACKUP_KEY);
+            if (raw) priorCopy = parseMatch(raw);
+          } catch {
+            /* Invalid checkpoint must not replace a valid source. */
+          }
+          const head = await writeDatabaseMatch(
+            legacy,
+            undefined,
+            priorCopy && !sameStoredContent(priorCopy, legacy)
+              ? priorCopy
+              : undefined,
+          );
+          const check = await readDatabaseMatch();
+          if (
+            !check ||
+            !sameStoredContent(await expandMatch(check.match), legacy)
+          )
+            throw Error(
+              "Não foi possível verificar a migração. Os dados antigos foram preservados.",
+            );
+          memoryMatch = parseMatch(JSON.stringify(check.match));
+          token = head.token;
+          recoveryNotice =
+            "Partidas migradas para o armazenamento ampliado deste aparelho.";
+        }
+      }
+      databaseReady = true;
+      // Remove legacy primary/checkpoint only after a durable, verified migration.
+      if (memoryMatch) {
+        localStorage.removeItem(KEY);
+        localStorage.removeItem(BACKUP_KEY);
+      }
+      // Public cache is replaceable and must not compete with editing metadata.
+      for (const key of [
+        "so-na-rede:public-last",
+        "so-na-rede:public-history",
+        "so-na-rede:public-history-game",
+      ])
+        localStorage.removeItem(key);
+      void compactMatchDatabase().catch(() => {});
+    } catch (error) {
+      databaseFailure = error;
+    }
+    return;
+  }
   try {
     const match = loadMatch();
     if (match) {
@@ -579,6 +749,56 @@ export async function initializeMatchStorage() {
   }
 }
 export function saveMatch(match: Match, expected?: Match) {
+  if (databaseFailure) throw databaseFailure;
+  if (databaseReady) {
+    if (localStorage.getItem(KEY))
+      throw Error(
+        "O jogo foi alterado em outra aba com uma versão antiga do app. Exporte as cópias antes de recarregar.",
+      );
+    if (
+      fatalConflict ||
+      (expected &&
+        memoryMatch &&
+        JSON.stringify(expected) !== JSON.stringify(memoryMatch))
+    )
+      throw Error(
+        "O jogo foi alterado em outra aba. Recarregue esta aba antes de continuar.",
+      );
+    memoryMatch = match;
+    // Optimistic UI, durable queued transactions, explicit pending/error status.
+    // Capture the source now so later UI changes cannot mutate the queued write.
+    const candidate = JSON.parse(JSON.stringify(match)) as Match;
+    unsaved++;
+    storageChanged();
+    writes = writes
+      .then(async () => {
+        if (localStorage.getItem(KEY))
+          throw Error(
+            "O jogo foi alterado em outra aba com uma versão antiga do app. Exporte as cópias antes de recarregar.",
+          );
+        if (fatalConflict)
+          throw Error(
+            "O jogo foi alterado em outra aba. Exporte sua cópia e recarregue.",
+          );
+        const head = await writeDatabaseMatch(candidate, token);
+        token = head.token;
+        writeError = "";
+        if (++writeCount % 20 === 0)
+          void compactMatchDatabase().catch(() => {});
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        fatalConflict ||= message.includes("outra aba");
+        writeError = message.includes("outra aba")
+          ? message
+          : "Não foi possível salvar no aparelho. Mantenha esta aba aberta e exporte o JSON; as últimas alterações ainda estão na memória.";
+      })
+      .finally(() => {
+        unsaved--;
+        storageChanged();
+      });
+    return;
+  }
   const current = localStorage.getItem(KEY);
   if (
     current &&

@@ -1,5 +1,5 @@
 import type { Match } from "./model";
-import { parseMatch } from "./storage";
+import { parseMatch, expandMatch, flushMatchStorage } from "./storage";
 export type ShelfCopy = {
   id: string;
   label: string;
@@ -21,15 +21,25 @@ function database(): Promise<IDBDatabase> {
   });
 }
 export async function keepMatchCopy(match: Match) {
+  await flushMatchStorage();
+  const raw = JSON.stringify(await expandMatch(match));
+  // Reopening an unchanged game must not create another identical full backup.
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(raw),
+  );
+  const id = Array.from(new Uint8Array(digest), (b) =>
+    b.toString(16).padStart(2, "0"),
+  ).join("");
   const db = await database();
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction("copies", "readwrite");
       tx.objectStore("copies").put({
-        id: crypto.randomUUID(),
+        id,
         label: `${match.team} × ${match.opponent}`,
         savedAt: new Date().toISOString(),
-        raw: JSON.stringify(match),
+        raw,
       });
       tx.oncomplete = () => resolve();
       tx.onerror = tx.onabort = () =>

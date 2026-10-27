@@ -11,6 +11,7 @@ import { PlayerVideos } from "./PlayerVideos";
 import { playerEvents } from "./assessment";
 import { SocialCardExport } from "./SocialCardExport";
 import { socialCardData } from "./socialCardData";
+import { readMatchDocument } from "./matchDatabase";
 export function HistoricalAnalysis({
   game,
   onSave,
@@ -49,6 +50,12 @@ export function HistoricalAnalysis({
     B(true);
     E("");
     try {
+      if (game.localSource) {
+        accept(
+          parseMatch(JSON.stringify(await readMatchDocument(game.localSource))),
+        );
+        return;
+      }
       let local: Match | undefined;
       try {
         for (const c of await matchCopies()) {

@@ -58,6 +58,11 @@ import {
   parseMatch,
   saveMatch,
   recoveryNotice,
+  matchStorageStatus,
+  localMatchBackup,
+  expandMatch,
+  flushMatchStorage,
+  restoreMatchStorage,
 } from "./storage";
 import { CloudPanel, usePublication } from "./CloudPanel";
 import { PostGameView } from "./PostGameView";
@@ -138,6 +143,13 @@ export default function App() {
   const publication = usePublication(liveMatch);
   useOpponentColor(opponentTeam(match)?.logo);
   const [storageError, setStorageError] = useState(boot.error);
+  const [disk, setDisk] = useState(matchStorageStatus);
+  useEffect(() => {
+    const update = () => setDisk(matchStorageStatus());
+    window.addEventListener("match-storage", update);
+    update();
+    return () => window.removeEventListener("match-storage", update);
+  }, []);
   const [readBlocked, setReadBlocked] = useState(Boolean(boot.error));
   const [page, setPage] = useState<Page>("live");
   const [editingRoster, setEditingRoster] = useState(false);
@@ -474,20 +486,26 @@ export default function App() {
       setFeedback({ message: (e as Error).message });
     }
   };
-  const exportJson = () =>
-    download(
-      `so-na-rede-${match.id.slice(0, 8)}.json`,
-      JSON.stringify(
-        {
-          ...match,
-          projection: s,
-          report: { team: teamStats, players: playerStats },
-        },
-        null,
-        2,
-      ),
-      "application/json",
-    );
+  const exportJson = async () => {
+    try {
+      const full = await expandMatch(match);
+      download(
+        `so-na-rede-${match.id.slice(0, 8)}.json`,
+        JSON.stringify(
+          {
+            ...full,
+            projection: s,
+            report: { team: teamStats, players: playerStats },
+          },
+          null,
+          2,
+        ),
+        "application/json",
+      );
+    } catch (e) {
+      setFeedback({ message: String(e) });
+    }
+  };
   const exportCsv = () => {
     download(
       "so-na-rede-eventos.csv",
@@ -733,8 +751,20 @@ export default function App() {
         window.confirm(
           "Substituir o jogo atual por este backup? Exporte o atual antes, se necessário.",
         )
-      )
-        commit(data, true);
+      ) {
+        if (!continuity.canEdit()) {
+          setFeedback({
+            message:
+              "Resolva a troca ou o conflito em Continuidade antes de importar.",
+          });
+          return;
+        }
+        const restored = await restoreMatchStorage(data);
+        setAnalysisMatch(undefined);
+        setMatch(restored);
+        setStorageError("");
+        setReadBlocked(false);
+      }
     } catch {
       setFeedback({ message: "Backup inválido. O jogo atual foi preservado." });
     }
@@ -765,7 +795,7 @@ export default function App() {
       if (liveMatchRef.current !== source)
         throw Error("A partida atual mudou. Selecione o jogo novamente.");
       // Save the recovered complete copy before changing only the analysis view.
-      if (!game.fullMatch) {
+      if (!game.fullMatch && !game.localSource) {
         const saved = {
           ...source,
           history: source.history?.map((g) =>
@@ -780,6 +810,7 @@ export default function App() {
           );
         saveMatch(saved, source);
         setMatch(saved);
+        await flushMatchStorage();
       }
       setAnalysisMatch(analysisWorkspace(source, target));
       setHistorySelection("");
@@ -1076,18 +1107,18 @@ export default function App() {
             </span>
           </div>
         </header>
-        {storageError && (
+        {(storageError || disk.error) && (
           <div className="ui-alert" role="alert">
-            <span>{storageError}</span>
+            <span>{disk.error || storageError}</span>
             <button
               type="button"
               className="ui-btn ui-btn--secondary ui-btn--sm"
               onClick={() =>
-                download(
-                  "copia-local.json",
-                  localStorage.getItem("so-na-rede:match:v1") ?? "{}",
-                  "application/json",
-                )
+                void localMatchBackup()
+                  .then((raw) =>
+                    download("copia-local.json", raw, "application/json"),
+                  )
+                  .catch((e) => setFeedback({ message: String(e) }))
               }
             >
               Exportar cópia local
@@ -1096,9 +1127,13 @@ export default function App() {
         )}
         <div className="continuity-bar" role="status">
           <span>
-            {continuity.linked
-              ? continuity.status
-              : "Partida salva neste aparelho"}
+            {disk.error
+              ? "Alterações aguardando salvamento · exporte uma cópia"
+              : disk.pending
+                ? "Salvando no aparelho…"
+                : continuity.linked
+                  ? continuity.status
+                  : "Partida salva neste aparelho"}
           </span>
           <button
             className="ui-btn ui-btn--sm"

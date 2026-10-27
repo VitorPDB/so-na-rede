@@ -8,6 +8,7 @@ import type { Match } from "./model";
 import { cloud, cloudIssue, publicLink, teamSlug } from "./cloud";
 import { publicMedia, publicSnapshot } from "./publicSnapshot";
 import { validPublicSnapshot, validPublicMedia } from "./publicValidation";
+import { flushMatchStorage } from "./storage";
 
 const publicationKey = "so-na-rede:publication";
 type Publication = { enabled: boolean; revision: number; matchId: string };
@@ -148,6 +149,8 @@ export function usePublication(match: Match) {
       busy.current = true;
       setStatus("Enviando atualização…");
       try {
+        await flushMatchStorage();
+        if (!alive) return;
         const binding = readSyncLink(source.id);
         if (binding) {
           if (binding.owner !== session!.user.id) {

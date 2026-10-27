@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { cloud } from "./cloud";
 import type { Match } from "./model";
-import { download, parseMatch } from "./storage";
+import {
+  download,
+  parseMatch,
+  expandMatch,
+  flushMatchStorage,
+} from "./storage";
 import { keepMatchCopy, matchCopies, type ShelfCopy } from "./matchShelf";
 
 type Link = {
@@ -42,6 +47,8 @@ export function readSyncLink(id: string): Link | null {
   }
 }
 export async function matchDigest(raw: string) {
+  if (raw.includes('"localSource"'))
+    raw = JSON.stringify(await expandMatch(JSON.parse(raw)));
   const result = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(raw),
@@ -169,7 +176,8 @@ export function useMatchContinuity(
     setBusy(true);
     const generation = epoch.current;
     try {
-      const raw = JSON.stringify(c.match),
+      await flushMatchStorage();
+      const raw = JSON.stringify(await expandMatch(c.match)),
         hash = await matchDigest(raw);
       if (!pending.current && hash === c.link.digest) {
         const remote: Reply = await rpc("status", { game_id: c.match.id });
@@ -199,7 +207,9 @@ export function useMatchContinuity(
       if (generation !== epoch.current) return;
       persist({ ...c.link, revision: remote.revision, digest: request.digest });
       pending.current = null;
-      dirty.current = JSON.stringify(current.current.match) !== request.raw;
+      dirty.current =
+        JSON.stringify(await expandMatch(current.current.match)) !==
+        request.raw;
       setStatus(
         dirty.current
           ? "Últimas ações aguardando envio…"
@@ -250,7 +260,8 @@ export function useMatchContinuity(
       if (!c.session || !c.authorized) return;
       // Never silently attach an existing remote game or someone else's local binding.
       if (c.link) throw new Error("revision_conflict");
-      const raw = JSON.stringify(c.match);
+      await flushMatchStorage();
+      const raw = JSON.stringify(await expandMatch(c.match));
       parseMatch(raw);
       const device = deviceId();
       const reply: Reply = await rpc("save", {
@@ -304,6 +315,7 @@ export function useMatchContinuity(
         throw new Error(
           "Não foi possível salvar a partida recebida. Sua cópia anterior está protegida.",
         );
+      await flushMatchStorage();
       persist({
         owner: c.session.user.id,
         id,
@@ -325,6 +337,7 @@ export function useMatchContinuity(
       const next = { ...c.match, id: crypto.randomUUID() };
       if (!c.onOpen(next))
         throw new Error("Não foi possível salvar a cópia independente.");
+      await flushMatchStorage();
       pending.current = null;
       setLink(null);
       setBlocked(false);

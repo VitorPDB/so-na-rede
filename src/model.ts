@@ -161,6 +161,8 @@ export interface PlayerGame {
   }[];
 }
 export interface ArchivedGame {
+  /** Local database reference; expanded into fullMatch on export/sync. */
+  localSource?: string;
   fullMatch?: Match;
   videoMoments?: import("./videoMoments").VideoMoment[];
   partnerships?: {

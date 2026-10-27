@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { savePublicCache } from "./publicCache";
 import { cloud, cloudIssue, teamSlug } from "./cloud";
 import type { PublicMedia, PublicSnapshot } from "./publicSnapshot";
 import { validPublicSnapshot, validPublicMedia } from "./publicValidation";
@@ -180,7 +181,7 @@ export function usePublicLive() {
   useEffect(() => {
     if (!row) return;
     try {
-      localStorage.setItem(cacheKey, JSON.stringify({ row, media }));
+      savePublicCache(cacheKey, { row, media });
     } catch {
       /* Reading still works when browser storage is full. */
     }

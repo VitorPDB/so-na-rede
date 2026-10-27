@@ -3,6 +3,7 @@ import { project } from "./engine";
 import { archiveGame } from "./career";
 import { parseMatch } from "./storage";
 import { matchCopies, readShelfCopy } from "./matchShelf";
+import { readMatchDocument } from "./matchDatabase";
 export function analysisWorkspace(current: Match, target: Match): Match {
   if (!project(current).finished)
     throw Error("Finalize a partida atual antes de analisar outra.");
@@ -19,6 +20,13 @@ export async function completeArchivedMatch(
   const accept = (m: Match) => m.id === game.id && project(m).finished;
   if (game.fullMatch && accept(game.fullMatch))
     return { ...game.fullMatch, videos: game.videos ?? game.fullMatch.videos };
+  if (game.localSource) {
+    const stored = parseMatch(
+      JSON.stringify(await readMatchDocument(game.localSource)),
+    );
+    if (accept(stored))
+      return { ...stored, videos: game.videos ?? stored.videos };
+  }
   let local: Match | undefined;
   try {
     for (const copy of await matchCopies()) {

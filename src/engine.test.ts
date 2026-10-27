@@ -112,6 +112,13 @@ test("craque é salvo com quota cheia liberando somente o checkpoint idêntico",
   }
 });
 
+test("importação preserva eventos e descarta relatórios derivados do JSON antigo", () => {
+  const match = append(makeNewMatch(), { type: "point", winner: "ours" });
+  const loaded = parseMatch(JSON.stringify({ ...match, projection: project(match), report: { redundant: "x".repeat(10000) } }));
+  assert.deepEqual(loaded, match);
+  assert.deepEqual(project(loaded), project(match));
+});
+
 test("totais pós-jogo calculam notas por função/set e entram no histórico sem alterar o jogo ao vivo", () => {
   const live = makeNewMatch();
   const draft = newPostGame(live);
