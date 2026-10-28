@@ -77,6 +77,14 @@ export function Report(props: ReportProps) {
             )}
             set={props.set}
           />
+          <CriteriaReport
+            events={state.events.filter(
+              (e) => !props.set || e.set === props.set,
+            )}
+            players={props.match.players}
+            title="Fundamentos do time"
+            period={props.set ? `Set ${props.set}` : "Jogo completo"}
+          />
         </>
       ) : (
         <DetailedReport {...props} />

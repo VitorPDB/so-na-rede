@@ -1,0 +1,14 @@
+// Approved vector poses. Static artwork only; no user content.
+export const foundationFigures: Record<string, string> = {
+  attack:
+    '<path class="limb leg" d="M48 100Q51 116 40 125L20 127M63 103Q69 123 57 137L34 140"/><path class="limb" d="m53 61-15 8-14-12M72 61 86 44 81 22"/><circle class="head" cx="64" cy="42" r="10.5"/><path class="shirt" d="m54 54 20 5-8 33-24-6 8-24Z"/><path class="shorts" d="m43 85 24 6-1 16-11-2-6-7-7 6-9-7Z"/><path class="cuff" d="m57 56 8 5 7-3m-25 22 18 5"/><ellipse class="palm" cx="80" cy="19" rx="4.8" ry="7" transform="rotate(-12 80 19)"/>',
+  block:
+    '<path class="limb leg" d="M51 99 49 121 44 141M69 99 72 122 78 141"/><path class="limb" d="M47 60 48 20M73 60 72 20"/><circle class="head" cx="60" cy="43" r="10"/><path class="shirt" d="M46 56Q60 52 74 56L77 91H43Z"/><path class="shorts" d="M43 88h34l-2 17H63l-3-7-3 7H45Z"/><path class="cuff" d="m53 55 7 6 7-6M47 83h26"/><path class="palm" d="M43 23 43 15Q43 11 47 13L54 19Q57 23 53 26L48 27ZM67 23 67 15Q67 11 71 13L78 19Q81 23 77 26L72 27Z"/>',
+  set: '<path class="limb leg" d="M49 102 44 125 32 145M71 102 79 125 90 145"/><path class="limb" d="M46 67 35 47 46 29M74 67 85 47 74 29"/><circle class="head" cx="60" cy="49" r="10"/><path class="shirt" d="M46 62q14-5 28 0l3 34H43Z"/><path class="shorts" d="M43 93h34l-2 16H63l-3-6-3 6H45Z"/><path class="cuff" d="m53 61 7 6 7-6M47 88h26"/><ellipse class="palm" cx="47" cy="26" rx="4.5" ry="7" transform="rotate(30 47 26)"/><ellipse class="palm" cx="73" cy="26" rx="4.5" ry="7" transform="rotate(-30 73 26)"/>',
+  serve:
+    '<path class="limb leg" d="M49 101 36 124 29 145M67 102 74 126 86 145"/><path class="limb" d="M45 65 31 45 38 28M71 62 84 43 80 20"/><circle class="head" cx="57" cy="46" r="10"/><path class="shirt" d="m45 60 25-4 5 37-30 4-5-26Z"/><path class="shorts" d="m45 91 30-3 2 16-14 4-4-6-9 8-11-6Z"/><path class="cuff" d="m50 58 8 7 6-7m-17 28 24-3"/><ellipse class="palm" cx="38" cy="25" rx="4.5" ry="7"/><ellipse class="palm" cx="80" cy="17" rx="4.5" ry="7" transform="rotate(-12 80 17)"/>',
+  reception:
+    '<path class="limb leg" d="M46 103 26 122 16 146M64 106 83 123 98 145"/><circle class="head" cx="51" cy="53" r="10"/><path class="shirt" d="m43 65 18-2 15 34-29 13-11-29Z"/><path class="shorts" d="m45 100 28-11 10 14-12 9-9-4-7 10-15-4Z"/><path class="limb" d="M46 73 97 90M61 71 100 86"/><path class="cuff" d="m44 65 9 7 7-7m-14 29 22-9"/><ellipse class="palm" cx="101" cy="89" rx="7" ry="4.5" transform="rotate(12 101 89)"/>',
+  defense:
+    '<path class="limb leg" d="m48 108-22 12-16-15m44 6-13 24-21 1"/><circle class="head" cx="77" cy="84" r="10"/><path class="shirt" d="m48 94 21-4 9 22-30 9-10-13Z"/><path class="shorts" d="m43 94 10 23-12 9-9-9 4-8-13 1-2-13Z"/><path class="limb" d="m64 101 29 14 20-7m-42-8 23 10 19-4"/><path class="cuff" d="m69 94-2 11 7 6m-25-15 8 19"/><ellipse class="palm" cx="115" cy="107" rx="7" ry="4"/>',
+};

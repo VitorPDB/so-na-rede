@@ -1,0 +1,378 @@
+.fv-athlete {
+  --jersey: var(--c-accent);
+  --skin: var(--c-text-2);
+  --shorts: var(--c-accent-border);
+  --trim: var(--c-bg);
+  --boot: var(--c-accent-strong);
+}
+.fv-opponent {
+  --jersey: var(--c-info);
+  --shorts: var(--c-info-border);
+  --skin: var(--c-text-muted);
+  --trim: var(--c-bg);
+  --boot: var(--c-info);
+}
+.fv-athlete .limb {
+  fill: none;
+  stroke: var(--skin);
+  stroke-width: 11;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fv-athlete .leg {
+  stroke-width: 13;
+}
+.fv-athlete .head {
+  fill: var(--skin);
+}
+.fv-athlete .shirt {
+  fill: var(--jersey);
+}
+.fv-athlete .shorts {
+  fill: var(--shorts);
+}
+.fv-athlete .cuff {
+  stroke: var(--trim);
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+}
+.fv-athlete .boot {
+  stroke: var(--boot);
+  stroke-width: 9;
+  fill: none;
+  stroke-linecap: round;
+}
+.fv-athlete .hands {
+  stroke: var(--skin);
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+}
+.fv-athlete .palm {
+  fill: var(--skin);
+}
+.fv-atlas {
+  display: grid;
+  gap: 32px;
+  margin-top: 28px;
+  min-width: 0;
+}
+.fv-section {
+  border-top: 1px solid var(--c-border);
+  padding-top: 28px;
+  min-width: 0;
+}
+.fv-heading,
+.fv-modal-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.fv-heading h3 {
+  font:
+    700 clamp(28px, 3vw, 42px)/1.1 "Big Shoulders Display Variable",
+    sans-serif;
+  margin: 0 0 8px;
+}
+.fv-heading p,
+.fv-modal-heading p,
+.fv-sample {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  margin: 8px 0;
+}
+.fv-heading button {
+  flex: none;
+  min-height: 44px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.fv-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+.fv-court {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.fv-court text {
+  fill: var(--c-text-muted);
+  font:
+    12px "Atkinson Hyperlegible Next Variable",
+    sans-serif;
+  letter-spacing: 1.5px;
+}
+.fv-base {
+  fill: var(--c-surface-2);
+  stroke: var(--c-court-line);
+  stroke-width: 1.8;
+}
+.fv-near {
+  fill: var(--c-accent-soft);
+  opacity: 0.5;
+}
+.fv-lines {
+  stroke: var(--c-court-line);
+  stroke-width: 1.4;
+  fill: none;
+}
+.fv-net {
+  stroke: var(--c-text-subtle);
+  stroke-width: 1;
+  opacity: 0.45;
+  fill: none;
+}
+.fv-tape {
+  stroke: var(--c-text-2);
+  stroke-width: 3;
+  fill: none;
+}
+.fv-post {
+  stroke: var(--c-text-subtle);
+  stroke-width: 4;
+  stroke-linecap: round;
+  fill: none;
+}
+.fv-trajectory,
+.fv-arrow {
+  stroke: var(--c-gold-strong);
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fv-trajectory {
+  stroke-width: 4;
+  stroke-dasharray: 6 6;
+  animation: fv-flow 2.8s linear infinite;
+}
+@keyframes fv-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+.fv-ball {
+  fill: var(--c-gold-strong);
+  stroke: var(--c-gold-border);
+  stroke-width: 1.4;
+}
+.fv-facts {
+  display: grid;
+  gap: 22px;
+  margin: 20px 0;
+  min-width: 0;
+}
+.fv-facts dt {
+  color: var(--c-text-muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.fv-facts dd {
+  font-size: clamp(18px, 2vw, 25px);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.fv-facts small,
+.fv-note {
+  display: block;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 7px;
+}
+.fv-note {
+  margin: 0;
+  max-width: 85ch;
+}
+.fv-dialog {
+  margin: auto;
+  inset: 0;
+  width: min(1080px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 32px;
+  background: var(--c-surface-1);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+}
+.fv-dialog::backdrop {
+  background: var(--c-scrim);
+}
+.fv-modal-heading {
+  align-items: flex-start;
+}
+.fv-results {
+  margin-top: 28px;
+}
+.fv-results > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  font-weight: 700;
+}
+.fv-modal-heading h2 {
+  font:
+    700 clamp(26px, 3vw, 36px)/1.1 "Big Shoulders Display Variable",
+    sans-serif;
+  margin: 0;
+}
+.fv-modal-heading button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.fv-explanation {
+  margin: 24px 0 32px;
+  max-width: 75ch;
+  color: var(--c-text-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.fv-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+}
+.fv-distribution {
+  min-width: 0;
+  border-top: 1px solid var(--c-border);
+  padding-top: 20px;
+}
+.fv-distribution h3 {
+  font-size: 20px;
+  margin: 0;
+}
+.fv-pie {
+  width: min(260px, 100%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  margin: 24px auto;
+}
+.fv-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.fv-legend li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  font-size: 14px;
+}
+.fv-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-top: 4px;
+  flex: none;
+}
+.fv-legend strong {
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+.fv-legend small {
+  display: block;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 3px;
+}
+.fv-route {
+  animation: fv-route-in 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.fv-dialog[open] {
+  animation: fv-detail-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes fv-route-in {
+  from {
+    opacity: 0.25;
+    stroke-dashoffset: 24;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fv-detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 650px) {
+  .fv-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .fv-facts {
+    margin: 8px 0 24px;
+    gap: 18px;
+  }
+  .fv-dialog {
+    padding: 20px;
+  }
+  .fv-charts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .fv-heading {
+    gap: 10px;
+  }
+  .fv-heading .ui-btn {
+    padding: 8px 12px;
+  }
+  .fv-modal-heading button span {
+    display: none;
+  }
+  .fv-explanation {
+    font-size: 14px;
+  }
+  .fv-section {
+    padding-top: 24px;
+  }
+  .fv-pie {
+    width: min(240px, 100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fv-trajectory,
+  .fv-route,
+  .fv-dialog[open] {
+    animation: none;
+  }
+}
+
+.open-portal .cr .ui-btn {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border-color: var(--c-border-control);
+}
+.open-portal .cr .ui-btn:hover {
+  background: var(--c-accent-soft);
+  border-color: var(--c-accent);
+}
+.open-portal .fv-facts small {
+  color: var(--c-text-muted);
+}

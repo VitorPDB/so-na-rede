@@ -306,3 +306,70 @@ test("direção de ataque permanece após backup e desfazer, sem alterar nota", 
     publicSnapshot(m).players[0].stats.rating,
   );
 });
+
+test("atlas usa os mesmos dados locais e publicados, sem inventar tendência em empate", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { FoundationAtlas } = await import("./FoundationAtlas");
+  const rows: SkillEvent[] = ["line", "cross"].map((direction) => ({
+    ...event(),
+    skill: "attack",
+    assessment: {
+      ...normalAssessment(),
+      criteria: {
+        attackDirection: direction as "line" | "cross",
+        attackBlockers: "double",
+        attackType: "power",
+      },
+    },
+  }));
+  const cube = criteriaPublication(rows, ["p1"]);
+  const local = renderToStaticMarkup(
+    createElement(FoundationAtlas, {
+      skill: "attack",
+      period: "Teste",
+      distribution: (skill, key) =>
+        criterionDistribution(
+          rows.filter((e) => e.skill === skill),
+          key,
+        ),
+    }),
+  );
+  const published = renderToStaticMarkup(
+    createElement(FoundationAtlas, {
+      skill: "attack",
+      period: "Teste",
+      distribution: (skill, key) => distributionFromCube(cube.team, key, skill),
+    }),
+  );
+  assert.equal(local, published);
+  assert.match(local, /Paralela \/ Diagonal/);
+  assert.match(local, /empate/);
+  assert.doesNotMatch(local, /class="fv-trajectory"/);
+  assert.equal((local.match(/fv-opponent/g) ?? []).length, 2);
+});
+
+test("atlas vazio não inventa bloqueio ou direção; com marcação a paralela é reta", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { FoundationAtlas } = await import("./FoundationAtlas");
+  const empty = renderToStaticMarkup(
+    createElement(FoundationAtlas, {
+      skill: "attack",
+      period: "Teste",
+      distribution: (_, key) => criterionDistribution([], key),
+    }),
+  );
+  assert.match(empty, /Sem informação/);
+  assert.doesNotMatch(empty, /fv-opponent|class="fv-trajectory"/);
+  const { FoundationCourt } = await import("./FoundationCourt");
+  const line = renderToStaticMarkup(
+    createElement(FoundationCourt, {
+      skill: "attack",
+      blockers: 0,
+      direction: "line",
+    }),
+  );
+  assert.match(line, /M188 170 L230 112/);
+  assert.doesNotMatch(line, /fv-opponent/);
+});

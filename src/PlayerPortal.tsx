@@ -513,60 +513,15 @@ export default function PlayerPortal() {
               {tab === "Fundamentos" && (
                 <section>
                   <h2>Entenda cada fundamento</h2>
-                  {recap.metrics.map((m) => (
-                    <section className="foundation-detail" key={m.skill}>
-                      <h3>
-                        <SkillIcon skill={m.skill} size={26} /> {m.label}
-                      </h3>
-                      <p>
-                        {m.count} ações · {Math.round(m.quality * 100)}% de
-                        qualidade média
-                      </p>
-                      <div
-                        className="stack"
-                        aria-label={`${m.successes} positivas, ${Math.max(0, m.count - m.successes - m.errors)} outras, ${m.errors} erros`}
-                      >
-                        <i style={{ flex: m.successes }} />
-                        <i
-                          style={{
-                            flex: Math.max(0, m.count - m.successes - m.errors),
-                          }}
-                        />
-                        <i style={{ flex: m.errors }} />
-                      </div>
-                      <div className="legend">
-                        <span>
-                          <i />
-                          {m.successes} positivas
-                        </span>
-                        <span>
-                          <i />
-                          {Math.max(0, m.count - m.successes - m.errors)} outras
-                          / neutras
-                        </span>
-                        <span>
-                          <i />
-                          {m.errors} erros
-                        </span>
-                      </div>
-                    </section>
-                  ))}
-                  <section className="latest">
-                    <h3>Direção mais usada no ataque</h3>
-                    <p>
-                      {direction.known
-                        ? direction.leaders
-                            .map((r) => `${r.label} (${r.count})`)
-                            .join(" · ")
-                        : "Sem direção registrada. A comissão pode marcar a direção nas próximas ações."}
-                    </p>
-                    <small>
-                      {direction.known} de {attack?.count ?? 0} ataques com
-                      direção marcada. Empates são exibidos juntos.
-                    </small>
-                  </section>
                   <CriteriaReport
-                    title="Detalhes técnicos"
+                    title="Fundamentos"
+                    period={
+                      scope === "match"
+                        ? "Partida selecionada"
+                        : scope === "recent"
+                          ? "Partidas recentes"
+                          : "Carreira"
+                    }
                     players={roster}
                     events={undefined}
                     aggregateData={{
@@ -586,6 +541,64 @@ export default function PlayerPortal() {
                     }}
                     fixedPlayer={id}
                   />
+                  <details className="fv-results">
+                    <summary>Resultados e qualidade por fundamento</summary>
+                    {recap.metrics.map((m) => (
+                      <section className="foundation-detail" key={m.skill}>
+                        <h3>
+                          <SkillIcon skill={m.skill} size={26} /> {m.label}
+                        </h3>
+                        <p>
+                          {m.count} ações · {Math.round(m.quality * 100)}% de
+                          qualidade média
+                        </p>
+                        <div
+                          className="stack"
+                          aria-label={`${m.successes} positivas, ${Math.max(0, m.count - m.successes - m.errors)} outras, ${m.errors} erros`}
+                        >
+                          <i style={{ flex: m.successes }} />
+                          <i
+                            style={{
+                              flex: Math.max(
+                                0,
+                                m.count - m.successes - m.errors,
+                              ),
+                            }}
+                          />
+                          <i style={{ flex: m.errors }} />
+                        </div>
+                        <div className="legend">
+                          <span>
+                            <i />
+                            {m.successes} positivas
+                          </span>
+                          <span>
+                            <i />
+                            {Math.max(0, m.count - m.successes - m.errors)}{" "}
+                            outras / neutras
+                          </span>
+                          <span>
+                            <i />
+                            {m.errors} erros
+                          </span>
+                        </div>
+                      </section>
+                    ))}
+                    <section className="latest">
+                      <h3>Direção mais usada no ataque</h3>
+                      <p>
+                        {direction.known
+                          ? direction.leaders
+                              .map((r) => `${r.label} (${r.count})`)
+                              .join(" · ")
+                          : "Sem direção registrada. A comissão pode marcar a direção nas próximas ações."}
+                      </p>
+                      <small>
+                        {direction.known} de {attack?.count ?? 0} ataques com
+                        direção marcada. Empates são exibidos juntos.
+                      </small>
+                    </section>
+                  </details>
                 </section>
               )}
               {tab === "Partidas" && (
