@@ -732,6 +732,8 @@ export default function App() {
         : "Ponto deles · sem fundamento";
     if (c.type === "sub")
       return `${player(c.outgoing).name} → ${player(c.incoming).name}`;
+    if (c.type === "selectLibero")
+      return `Líbero da partida: ${player(c.playerId)?.name ?? ""}`;
     if (c.type === "autoLibero")
       return `Líbero automático ${c.enabled ? "ativado" : "desativado"}`;
     if (c.type === "libero")
@@ -879,6 +881,7 @@ export default function App() {
       initialLineup: starting.lineup,
       initialRoles: starting.roles,
       initialAutoLibero: s.autoLibero,
+      initialLiberoId: s.designatedLiberoId,
       defenseMap: match.defenseMap,
       formations: match.formations,
       ratingProfiles: match.ratingProfiles,
@@ -1280,11 +1283,18 @@ export default function App() {
             match={match}
             state={s}
             offlineReady={offlineReady}
+            onSelectLibero={(playerId) =>
+              act(
+                { type: "selectLibero", playerId },
+                "Líbero da partida atualizado",
+              )
+            }
             onChange={commit}
             onPrepareDraft={() => initFormationDraft(true)}
             onStart={() => setPage("live")}
             renderFormation={(onDone) => (
               <FormationEditor
+                designatedLiberoId={s.designatedLiberoId}
                 match={match}
                 draft={draft}
                 previewP={previewP}
@@ -1514,7 +1524,7 @@ export default function App() {
                   onClick={() => {
                     const p = player(subIn);
                     act(
-                      p.libero
+                      p.id === s.designatedLiberoId
                         ? { type: "libero", playerId: p.id, replaced: selected }
                         : { type: "sub", incoming: p.id, outgoing: selected },
                       "Troca registrada",
@@ -1546,6 +1556,7 @@ export default function App() {
             )}
             {panel === "formation" && (
               <FormationEditor
+                designatedLiberoId={s.designatedLiberoId}
                 match={match}
                 draft={draft}
                 previewP={previewP}

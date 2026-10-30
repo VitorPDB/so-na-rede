@@ -69,6 +69,7 @@ export function replayDetailed(
     initialRoles: draft.roles,
     initialServer: draft.server,
     initialAutoLibero: source.initialAutoLibero,
+    initialLiberoId: source.initialLiberoId,
     formations: source.formations,
     defenseMap: source.defenseMap,
     opponentTeams: source.opponentTeams,
@@ -86,6 +87,7 @@ export function replayDetailed(
     previous.source.middleCoverage === source.middleCoverage &&
     previous.source.middleBackrowWeights === source.middleBackrowWeights &&
     previous.source.initialAutoLibero === source.initialAutoLibero &&
+    previous.source.initialLiberoId === source.initialLiberoId &&
     previous.draft.id === draft.id &&
     previous.draft.date === draft.date &&
     previous.draft.opponent === draft.opponent &&
@@ -190,6 +192,7 @@ export function validDetailedDraft(
     }
     if (c.type === "point") return side(c.winner);
     if (c.type === "timeout") return side(c.side);
+    if (c.type === "selectLibero") return player(c.playerId);
     if (c.type === "autoLibero") return typeof c.enabled === "boolean";
     if (c.type === "sub") return player(c.incoming) && player(c.outgoing);
     if (c.type === "libero")

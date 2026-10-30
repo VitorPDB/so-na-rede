@@ -80,14 +80,23 @@ export function CourtCard({
               aria-label={`${p.name}, zona ${z}${serving ? ", sacador" : ""}`}
             >
               <span className="court-zone">Z{z}</span>
-              <Jersey number={p.number} libero={p.libero} />
+              <Jersey
+                number={p.number}
+                libero={p.id === s.designatedLiberoId}
+              />
               {serving && (
                 <span className="court-serve" title="Sacador">
                   <Volleyball size={13} aria-hidden="true" />
                 </span>
               )}
               <strong>{p.name}</strong>
-              <small>{roleLabels[p.libero ? "libero" : s.roles[z - 1]]}</small>
+              <small>
+                {
+                  roleLabels[
+                    p.id === s.designatedLiberoId ? "libero" : s.roles[z - 1]
+                  ]
+                }
+              </small>
             </button>
           );
         })}
@@ -131,10 +140,13 @@ export function CourtCard({
               >
                 <Photo
                   player={p}
-                  className={"bench-photo" + (p.libero ? " libero" : "")}
+                  className={
+                    "bench-photo" +
+                    (p.id === s.designatedLiberoId ? " libero" : "")
+                  }
                 />
                 <span>{p.name.split(" ")[0]}</span>
-                {p.libero && <b className="ui-tag">L</b>}
+                {p.id === s.designatedLiberoId && <b className="ui-tag">L</b>}
               </button>
             ))}
           </div>

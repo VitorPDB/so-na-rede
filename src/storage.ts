@@ -399,6 +399,8 @@ export function parseMatch(raw: string): Match {
       data.weights[k] > 100
     )
       invalid();
+  if (data.initialLiberoId !== undefined && !ids.has(data.initialLiberoId))
+    invalid();
   const validLineup = (lineup: string[]) =>
     Array.isArray(lineup) &&
     lineup.length === 6 &&
@@ -475,11 +477,13 @@ export function parseMatch(raw: string): Match {
         "sub",
         "libero",
         "autoLibero",
+        "selectLibero",
         "restartSet",
       ].includes(c.type)
     )
       invalid();
     if (c.type === "timeout" && !["ours", "theirs"].includes(c.side)) invalid();
+    if (c.type === "selectLibero" && !ids.has(c.playerId)) invalid();
     if (c.type === "autoLibero" && typeof c.enabled !== "boolean") invalid();
     if (
       (c.type === "setup" || c.type === "nextSet") &&

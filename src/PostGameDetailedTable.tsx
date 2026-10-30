@@ -54,6 +54,7 @@ export function PostGameDetailed({
     match.middleCoverage,
     match.middleBackrowWeights,
     match.initialAutoLibero,
+    match.initialLiberoId,
   ]);
   const state = project(replay.match);
   const save = (next: typeof draft) => {
@@ -91,9 +92,11 @@ export function PostGameDetailed({
         ? { type }
         : {
             type,
-            playerId: match.players.find((p) => p.libero)?.id,
+            playerId: state.designatedLiberoId,
             replaced: state.lineup[4],
           };
+    if (type === "selectLibero")
+      return { type, playerId: state.designatedLiberoId ?? "" };
     if (type === "autoLibero") return { type, enabled: !state.autoLibero };
     if (type === "restartSet") return { type };
     return {
@@ -344,6 +347,7 @@ export function PostGameDetailed({
                           ["sub", "Substituição"],
                           ["libero", "Líbero entra/sai"],
                           ["autoLibero", "Líbero automático"],
+                          ["selectLibero", "Escolha do líbero"],
                           ["nextSet", "Início do próximo set"],
                           ["restartSet", "Reiniciar este set"],
                         ].map(([id, label]) => (
@@ -647,6 +651,28 @@ export function PostGameDetailed({
                           </CardSelect>
                         </label>
                       )}
+                      {c.type === "selectLibero" && (
+                        <label>
+                          Líbero da partida
+                          <select
+                            value={c.playerId}
+                            onChange={(e) =>
+                              update(index, { ...c, playerId: e.target.value })
+                            }
+                          >
+                            {match.players
+                              .filter(
+                                (p) =>
+                                  p.libero || p.positions.includes("Líbero"),
+                              )
+                              .map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                      )}
                       {c.type === "autoLibero" && (
                         <label>
                           Troca automática
@@ -901,6 +927,7 @@ export function PostGameDetailed({
                         initialRoles: match.initialRoles,
                         initialServer: match.initialServer,
                         initialAutoLibero: match.initialAutoLibero,
+                        initialLiberoId: match.initialLiberoId,
                         bestOf: match.bestOf,
                         opponent: match.opponent,
                         audit: match.audit,

@@ -15,6 +15,7 @@ const ZONES: Zone[] = [4, 3, 2, 5, 6, 1];
 
 export type FormationEditorProps = {
   match: Match;
+  designatedLiberoId?: string;
   draft: { lineup: string[]; roles: Role[] };
   previewP: Zone;
   zone: Zone;
@@ -40,7 +41,9 @@ export type FormationEditorProps = {
 export function FormationEditor(props: FormationEditorProps) {
   const { match, draft, previewP, zone } = props;
   const player = (id: string) => match.players.find((p) => p.id === id)!;
-  const roster = match.players.filter((p) => !p.libero);
+  const roster = match.players.filter(
+    (p) => !p.libero && p.id !== props.designatedLiberoId,
+  );
   const formations = match.formations ?? [];
   const inZone = player(draft.lineup[zone - 1]);
 

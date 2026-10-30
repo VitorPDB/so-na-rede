@@ -1,4 +1,5 @@
 import test from "node:test";
+import { normalAssessment } from "./assessment";
 import assert from "node:assert/strict";
 import { append, correct, project, rotate, stats, undo } from "./engine";
 import {
@@ -1386,4 +1387,47 @@ test("opponent logo library survives backup and follows team name without leakin
       }),
     ),
   );
+});
+
+
+test("líbero secundário da partida faz trocas livres e preserva função dos lances anteriores", () => {
+  let match = makeNewMatch();
+  match.players.find((p) => p.id === "p8")!.positions.push("Líbero");
+  match = append(match, { type: "sub", incoming: "p8", outgoing: "p6" });
+  match = append(match, { type: "event", event: { playerId: "p8", skill: "defense", result: "simple_good", assessment: normalAssessment() } });
+  match = append(match, { type: "point", winner: "theirs" });
+  match = append(match, { type: "sub", incoming: "p6", outgoing: "p8" });
+  const originalRole = project(match).events[0].role;
+  match = append(match, { type: "selectLibero", playerId: "p8" });
+  const before = project(match);
+  match = append(match, { type: "libero", playerId: "p8", replaced: before.lineup[4] });
+  assert.equal(project(match).substitutions, before.substitutions);
+  match = append(match, { type: "event", event: { playerId: "p8", skill: "defense", result: "simple_good", assessment: normalAssessment() } });
+  assert.equal(project(match).events[0].role, originalRole);
+  assert.notEqual(originalRole, "libero");
+  assert.equal(project(match).events[1].role, "libero");
+  assert.equal(project(match).events[1].ratingContext?.role, "libero");
+  assert.equal(JSON.stringify(project(parseMatch(JSON.stringify(match)))), JSON.stringify(project(match)));
+  assert.equal(match.players.find((p) => p.id === "p8")!.libero, false);
+  assert.throws(() => append(match, { type: "selectLibero", playerId: "p10" }), /rally|Retire/);
+});
+
+test("seleção do líbero valida tag e banco e dirige a entrada automática", () => {
+  let match = makeNewMatch();
+  match.players.find((p) => p.id === "p8")!.positions.push("Líbero");
+  match.players.find((p) => p.id === "p2")!.positions.push("Líbero");
+  assert.throws(() => append(match, { type: "selectLibero", playerId: "p9" }), /tag Líbero/);
+  assert.throws(() => append(match, { type: "selectLibero", playerId: "p2" }), /banco/);
+  match = append(match, { type: "selectLibero", playerId: "p8" });
+  assert.equal(project(undo(match)).designatedLiberoId, "p10");
+  assert.throws(() => append(match, { type: "sub", incoming: "p8", outgoing: "p6" }), /troca de líbero/);
+  assert.throws(() => append(match, { type: "setup", lineup: match.initialLineup.map((id) => id === "p6" ? "p8" : id), server: "ours" }), /sem líbero/);
+  match = append(match, { type: "setup", lineup: [...match.initialLineup.slice(2), ...match.initialLineup.slice(0, 2)], roles: [...p1Roles.slice(2), ...p1Roles.slice(0, 2)], server: "ours" });
+  match = append(match, { type: "autoLibero", enabled: true });
+  match = append(match, { type: "point", winner: "theirs" });
+  assert.equal(project(match).libero?.playerId, "p8");
+  assert.equal(project(match).substitutions, 0);
+  match = append(match, { type: "restartSet" });
+  assert.equal(project(match).designatedLiberoId, "p8");
+  assert.equal(project(match).libero, undefined);
 });

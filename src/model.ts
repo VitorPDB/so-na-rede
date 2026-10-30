@@ -275,6 +275,7 @@ export type Command =
   | { type: "sub"; outgoing: string; incoming: string }
   | { type: "libero"; playerId?: string; replaced?: string }
   | { type: "autoLibero"; enabled: boolean }
+  | { type: "selectLibero"; playerId: string }
   | { type: "nextSet"; lineup: string[]; server: Side; roles?: Role[] }
   | { type: "setup"; lineup: string[]; server: Side; roles?: Role[] };
 export interface Context {
@@ -312,6 +313,7 @@ export interface Match {
     initialRoles?: Role[];
     initialServer: Side;
     initialAutoLibero?: boolean;
+    initialLiberoId?: string;
     bestOf: 3 | 5;
     opponent: string;
     audit: AuditEntry[];
@@ -335,6 +337,7 @@ export interface Match {
   history?: ArchivedGame[];
   initialServer: Side;
   initialAutoLibero?: boolean;
+  initialLiberoId?: string;
   audit: AuditEntry[];
   weights: Weights;
 }
@@ -391,6 +394,7 @@ export interface Projection {
   roles: Role[];
   libero?: { playerId: string; replaced: string };
   autoLibero: boolean;
+  designatedLiberoId?: string;
   completed: SetSummary[];
   setFinished: boolean;
   finished: boolean;

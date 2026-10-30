@@ -64,10 +64,19 @@ function MiniCourt({ match, state }: { match: Match; state: Projection }) {
             <span className="court-zone">Z{z}</span>
             {p && (
               <>
-                <Jersey number={p.number} libero={p.libero} />
+                <Jersey
+                  number={p.number}
+                  libero={p.id === state.designatedLiberoId}
+                />
                 <strong>{p.name}</strong>
                 <small>
-                  {roleLabels[p.libero ? "libero" : state.roles[z - 1]]}
+                  {
+                    roleLabels[
+                      p.id === state.designatedLiberoId
+                        ? "libero"
+                        : state.roles[z - 1]
+                    ]
+                  }
                 </small>
               </>
             )}
@@ -84,6 +93,7 @@ export function Preparation({
   offlineReady,
   onChange,
   onPrepareDraft,
+  onSelectLibero,
   renderFormation,
   onStart,
 }: {
@@ -92,6 +102,7 @@ export function Preparation({
   offlineReady: boolean;
   onChange: (match: Match) => boolean;
   onPrepareDraft: () => void;
+  onSelectLibero: (playerId: string) => void;
   renderFormation: (onDone: () => void) => ReactNode;
   onStart: () => void;
 }) {
@@ -113,7 +124,7 @@ export function Preparation({
     false,
   ];
   const setter = state.roles.indexOf("setter") + 1;
-  const formatLocked = match.audit.length > 0;
+  const formatLocked = match.audit.some((e) => e.command && e.command.type !== "selectLibero");
 
   const checks = [
     {
@@ -176,6 +187,40 @@ export function Preparation({
           );
         })}
       </ol>
+      <section className="lv-card prep-card" aria-label="Líbero da partida">
+        <label className="fe-field">
+          <strong>Líbero da partida</strong>
+          <select
+            className="ui-input"
+            value={state.designatedLiberoId ?? ""}
+            disabled={state.finished || state.setFinished || !!state.libero}
+            onChange={(e) => onSelectLibero(e.target.value)}
+          >
+            <option value="" disabled>
+              Selecione um líbero
+            </option>
+            {match.players
+              .filter((p) => p.libero || p.positions.includes("Líbero"))
+              .map((p) => (
+                <option
+                  key={p.id}
+                  value={p.id}
+                  disabled={state.lineup.includes(p.id)}
+                >
+                  #{p.number} · {p.name}
+                  {state.lineup.includes(p.id) ? " · em quadra" : ""}
+                </option>
+              ))}
+          </select>
+        </label>
+        <p className="prep-help">
+          Jogadores com a tag Líbero no elenco. A escolha vale para esta
+          partida, incluindo trocas livres e entrada automática. O escolhido
+          deve estar no banco.
+          {state.libero &&
+            " Retire o líbero da quadra antes de mudar a escolha."}
+        </p>
+      </section>
       <details className="ui-card video-preparation">
         <summary>Vídeos · transmissão e gravações da partida</summary>
         <MatchVideoEditor

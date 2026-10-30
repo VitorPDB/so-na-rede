@@ -89,6 +89,8 @@ export function project(match: Match): Projection {
     sets: [0, 0],
     server: match.initialServer,
     autoLibero: match.initialAutoLibero ?? false,
+    designatedLiberoId:
+      match.initialLiberoId ?? match.players.find((p) => p.libero)?.id,
     rotation: 1,
     lineup: [...match.initialLineup],
     roles: [
@@ -169,7 +171,7 @@ export function project(match: Match): Projection {
       state.completed.push({ set: state.set, score: [...state.score], winner });
       state.finished = Math.max(...state.sets) >= Math.ceil(match.bestOf / 2);
     }
-    const libero = match.players.find((p) => p.libero);
+    const libero = match.players.find((p) => p.id === state.designatedLiberoId);
     if (
       middleLostServe &&
       state.autoLibero &&
@@ -230,6 +232,11 @@ export function project(match: Match): Projection {
         score: [...state.score],
         command: c,
       });
+    }
+    if (c.type === "selectLibero") {
+      state.designatedLiberoId = c.playerId;
+      if (!state.events.some((e) => e.set === state.set) && state.rally === 1)
+        setStart.designatedLiberoId = c.playerId;
     }
     if (c.type === "autoLibero") {
       state.autoLibero = c.enabled;
@@ -293,7 +300,11 @@ export function validate(
   const validLineup = (ids: string[]) =>
     ids.length === 6 &&
     new Set(ids).size === 6 &&
-    ids.every((id) => match.players.some((p) => p.id === id && !p.libero));
+    ids.every((id) =>
+      match.players.some(
+        (p) => p.id === id && !p.libero && p.id !== state.designatedLiberoId,
+      ),
+    );
   if (c.type === "setup" || c.type === "nextSet") {
     if (
       c.roles &&
@@ -332,11 +343,27 @@ export function validate(
       return "Limite de dois pedidos de tempo por time neste set atingido.";
     return;
   }
+  if (c.type === "selectLibero") {
+    const candidate = match.players.find((p) => p.id === c.playerId);
+    if (
+      !candidate ||
+      !(candidate.libero || candidate.positions.includes("Líbero"))
+    )
+      return "Selecione um jogador com a tag Líbero no elenco.";
+    if (rallyOpen) return "Encerre o rally antes de escolher o líbero.";
+    if (state.libero)
+      return "Retire o líbero da quadra antes de mudar a escolha.";
+    if (state.lineup.includes(c.playerId))
+      return "Coloque esse jogador no banco antes de escolhê-lo como líbero.";
+    if (state.lastLiberoRally === state.rally)
+      return "Complete um rally antes de mudar o líbero.";
+    return;
+  }
   if (c.type === "autoLibero") {
     if (typeof c.enabled !== "boolean") return "Opção de líbero inválida.";
     if (rallyOpen)
       return "Encerre o rally antes de alterar o líbero automático.";
-    if (c.enabled && !match.players.some((p) => p.libero))
+    if (c.enabled && !state.designatedLiberoId)
       return "Cadastre um líbero antes de ativar.";
     if (
       !c.enabled &&
@@ -359,7 +386,7 @@ export function validate(
         c.event.assessment?.group === "triple") &&
       c.event.participants?.some(
         (p) =>
-          match.players.find((x) => x.id === p.playerId)?.libero ||
+          p.playerId === state.designatedLiberoId ||
           ![2, 3, 4].includes(state.lineup.indexOf(p.playerId) + 1),
       )
     )
@@ -376,7 +403,7 @@ export function validate(
       c.event.assessment?.tags.some(
         (t) => t === "attack_pipe" || t === "attack_back_one",
       ) &&
-      (match.players.find((p) => p.id === c.event.playerId)?.libero ||
+      (c.event.playerId === state.designatedLiberoId ||
         ![1, 5, 6].includes(state.lineup.indexOf(c.event.playerId!) + 1))
     )
       return "Ataque do fundo deve ser atribuído a um jogador do fundo, sem ser o líbero.";
@@ -405,7 +432,7 @@ export function validate(
       c.event.skill === "block" &&
       !resultOf(c.event).error &&
       ([1, 5, 6].includes(state.lineup.indexOf(c.event.playerId!) + 1) ||
-        match.players.find((p) => p.id === c.event.playerId)?.libero)
+        c.event.playerId === state.designatedLiberoId)
     )
       return "Bloqueio efetivo deve ser atribuído a um atleta da rede (zonas 2, 3 ou 4).";
   }
@@ -419,7 +446,9 @@ export function validate(
     )
       return "Escolha um atleta da quadra e um do banco.";
     if (
+      c.incoming === state.designatedLiberoId ||
       match.players.find((p) => p.id === c.incoming)?.libero ||
+      c.outgoing === state.designatedLiberoId ||
       match.players.find((p) => p.id === c.outgoing)?.libero
     )
       return "Use a troca de líbero para atletas nessa função.";
@@ -445,7 +474,11 @@ export function validate(
       const zone = state.lineup.indexOf(c.replaced ?? "") + 1;
       if (![1, 5, 6].includes(zone) || (zone === 1 && state.server === "ours"))
         return "O líbero entra somente no fundo e não pode sacar.";
-      if (!match.players.some((p) => p.id === c.playerId && p.libero))
+      if (
+        !c.playerId ||
+        c.playerId !== state.designatedLiberoId ||
+        state.lineup.includes(c.playerId)
+      )
         return "Selecione um líbero do elenco.";
     }
   }
