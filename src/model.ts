@@ -225,6 +225,9 @@ export interface SkillEvent {
   winner?: Side;
 }
 export interface AssessmentCriteria {
+  defenseAttempt?: "attempted" | "absent";
+  attackOutcome?: "blocked";
+  setPlacement?: "away";
   ballConstraint?: "normal" | "forced";
   freeReason?: "forced" | "choice";
   blockQuality?:
@@ -245,7 +248,16 @@ export interface AssessmentCriteria {
   serveType?: "underhand" | "float" | "jump" | "targeted";
   gameMoment?: "normal" | "decisive" | "after-timeout" | "error-streak";
   incomingSet?:
-    "A" | "B" | "C" | "good" | "poor" | "low" | "short" | "high_bad" | "error";
+    | "A"
+    | "B"
+    | "C"
+    | "good"
+    | "poor"
+    | "low"
+    | "short"
+    | "high_bad"
+    | "away"
+    | "error";
   setType?:
     | "chute"
     | "meter"
@@ -302,6 +314,7 @@ export interface Weights {
   errors: number;
 }
 export interface Match {
+  funnyMoments?: import("./videoMoments").VideoMoment[];
   socialHighlightPlayerId?: string;
   matchDate?: string;
   videos?: MatchVideo[];

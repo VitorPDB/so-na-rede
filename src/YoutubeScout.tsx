@@ -14,6 +14,8 @@ export type VideoCapture = () => Pick<
 export function YoutubeScout({
   video,
   onMark,
+  onFunny,
+  markLabel = "Marcar fundamento · 2 s antes",
   captureRef,
   disabled = false,
   positionKey,
@@ -21,6 +23,8 @@ export function YoutubeScout({
 }: {
   video: MatchVideo;
   onMark?: (stamp: ReturnType<VideoCapture>) => void;
+  onFunny?: (stamp: ReturnType<VideoCapture>) => void;
+  markLabel?: string;
   captureRef?: RefObject<VideoCapture | undefined>;
   disabled?: boolean;
   positionKey?: string;
@@ -124,11 +128,27 @@ export function YoutubeScout({
       {!compact && (
         <p className="ui-note">
           {ready
-            ? "Ao começar uma ação, o horário é capturado e o vídeo pausa. Escolha fundamento e jogador; depois continue o vídeo."
+            ? "Ao começar uma ação, marcamos 2 segundos antes do clique e o vídeo pausa. Escolha fundamento e jogador; depois continue o vídeo."
             : "Carregando player do YouTube…"}
         </p>
       )}
       <div className="video-review-actions">
+        {onFunny && (
+          <button
+            className="ui-btn"
+            disabled={!ready || disabled}
+            onClick={() => {
+              try {
+                onFunny(capture());
+                setError("");
+              } catch (e) {
+                setError((e as Error).message);
+              }
+            }}
+          >
+            Momento engraçado
+          </button>
+        )}
         {onMark && (
           <button
             className="ui-btn"
@@ -142,7 +162,7 @@ export function YoutubeScout({
               }
             }}
           >
-            Marcar ação neste instante
+            {markLabel}
           </button>
         )}
         <button

@@ -24,11 +24,11 @@ test("captura o relógio antes de pausar e não usa o horário de confirmação"
   const stamp = captureYoutubeMoment(p, "abcdefghijk");
   assert.equal(paused, true);
   assert.deepEqual(stamp, {
-    videoTimestampMs: 754125,
+    videoTimestampMs: 752125,
     videoSource: "youtube:abcdefghijk",
   });
   time = 900;
-  assert.equal(stamp.videoTimestampMs, 754125);
+  assert.equal(stamp.videoTimestampMs, 752125);
 });
 test("não marca vídeo errado, player sem reprodução, carregando ou horário inválido", () => {
   for (const state of [-1, 0, 3, 5])
@@ -52,4 +52,19 @@ test("não marca vídeo errado, player sem reprodução, carregando ou horário 
     ).videoTimestampMs,
     0,
   );
+});
+
+test("captura dois segundos antes sem ultrapassar o início", () => {
+  for (const [time, expected] of [
+    [0, 0],
+    [1.5, 0],
+    [2, 0],
+    [2.125, 125],
+    [10, 8000],
+  ])
+    assert.equal(
+      captureYoutubeMoment(fake({ getCurrentTime: () => time }), "abcdefghijk")
+        .videoTimestampMs,
+      expected,
+    );
 });

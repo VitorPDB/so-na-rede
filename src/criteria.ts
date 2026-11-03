@@ -23,6 +23,7 @@ export const incomingSetOptions = {
   low: "Baixa",
   short: "Curta",
   high_bad: "Alta · inadequada",
+  away: "Afastada da rede",
   error: "Erro direto",
 };
 export const faultOptions = {
@@ -38,6 +39,27 @@ export const criteriaFields: {
   skills: Skill[];
   options: Record<string, string>;
 }[] = [
+  {
+    key: "defenseAttempt",
+    label: "Tentativa de defesa",
+    hint: "Não foi: tinha condição, mas não tentou defender.",
+    skills: ["defense"],
+    options: { attempted: "Tentou defender", absent: "Não foi" },
+  },
+  {
+    key: "attackOutcome",
+    label: "O que aconteceu com o ataque?",
+    hint: "Bloqueado não encerra o ponto sozinho; escolha Gafe ou Ponto deles conforme o resultado.",
+    skills: ["attack"],
+    options: { blocked: "Bloqueado" },
+  },
+  {
+    key: "setPlacement",
+    label: "Levantamento ruim",
+    hint: "Bola levantada longe da rede.",
+    skills: ["set"],
+    options: { away: "Afastada da rede" },
+  },
   {
     key: "attackDirection",
     label: "Direção do ataque",
@@ -85,7 +107,7 @@ export const criteriaFields: {
       direction: "Fechou a direção, sem toque",
       used: "Usado / explorado",
       late: "Atrasado",
-      absent: "Não bloqueou tendo condição",
+      absent: "Não foi · tinha condição de bloquear",
       gap: "Buraco / mãos mal posicionadas",
       unrated: "Sem oportunidade real",
     },
@@ -304,7 +326,9 @@ export function effectiveDifficulty(event: SkillEvent) {
   const selectedType = c?.setType;
   const badIncoming =
     incoming === "C" ||
-    ["poor", "low", "short", "high_bad", "error"].includes(incoming ?? "");
+    ["poor", "low", "short", "high_bad", "away", "error"].includes(
+      incoming ?? "",
+    );
   if (
     a.setDifficultyVersion === 1 &&
     selectedType &&

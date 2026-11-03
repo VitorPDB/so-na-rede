@@ -116,7 +116,10 @@ export function usePublication(match: Match) {
             snapshot,
             source.socialHighlightPlayerId,
             source.matchDate,
-            videoMoments(project(source).events),
+            [
+              ...videoMoments(project(source).events),
+              ...(source.funnyMoments ?? []),
+            ],
             source.players.map(({ photo: _photo, ...p }) => p),
           ]);
         const media = publicMedia(source),
@@ -126,9 +129,10 @@ export function usePublication(match: Match) {
         pending = {
           snapshot,
           cards: publicationCards(source),
-          moments: videoMoments(project(source).events).filter((m) =>
-            m.videoSource?.startsWith("youtube:"),
-          ),
+          moments: [
+            ...videoMoments(project(source).events),
+            ...(source.funnyMoments ?? []),
+          ].filter((m) => m.videoSource?.startsWith("youtube:")),
           serial,
           mediaSerial,
           media: mediaSerial === mediaSent.current ? null : media,

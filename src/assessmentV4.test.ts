@@ -205,3 +205,54 @@ test("Bom/Gafe limita qualidades da própria execução sem limitar a bola receb
   assert.equal(assessmentError(set), undefined);
   assert(assessed(set).quality > 0.75);
 });
+
+import { addFunnyMoment } from "./funnyMomentData";
+import { gameSnapshot } from "./career";
+import { validPublicSnapshot } from "./publicValidation";
+import { publicSnapshot } from "./publicSnapshot";
+test("novos detalhes sobrevivem ao backup e contrato público sem pontos extras", () => {
+  for (const [skill, criteria] of [
+    ["defense", { defenseAttempt: "absent" }],
+    ["block", { blockQuality: "absent" }],
+    ["attack", { attackOutcome: "blocked", incomingSet: "away" }],
+    ["set", { setPlacement: "away" }],
+  ] as const) {
+    const e = event(skill, "simple_gafe");
+    e.assessment!.criteria = criteria;
+    assert.equal(assessmentError(e), undefined);
+    const m = append(newMatch(), { type: "event", event: e });
+    const restored = parseMatch(JSON.stringify(m));
+    assert.deepEqual(project(restored).score, [0, 0]);
+    assert.deepEqual(
+      project(restored).events[0].assessment!.criteria,
+      criteria,
+    );
+    assert.equal(validPublicSnapshot(publicSnapshot(restored)), true);
+  }
+});
+test("momento engraçado persiste e arquiva sem alterar placar, ações ou notas", () => {
+  const m = newMatch();
+  const before = project(m);
+  const next = addFunnyMoment(m, {
+    videoTimestampMs: 8125,
+    videoSource: "youtube:abcdefghijk",
+  });
+  const restored = parseMatch(JSON.stringify(next));
+  assert.deepEqual(project(restored), before);
+  assert.equal(restored.funnyMoments?.length, 1);
+  assert.equal(
+    gameSnapshot(restored).videoMoments?.[0].label,
+    "Momento engraçado",
+  );
+  assert.throws(() =>
+    addFunnyMoment(m, { videoTimestampMs: -1, videoSource: "x" }),
+  );
+  assert.throws(() =>
+    parseMatch(
+      JSON.stringify({
+        ...next,
+        funnyMoments: [{ ...next.funnyMoments![0], videoTimestampMs: -1 }],
+      }),
+    ),
+  );
+});

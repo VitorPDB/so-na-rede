@@ -85,6 +85,18 @@ export function parseMatch(raw: string): Match {
   };
   if (!validVideos(data?.videos)) invalid();
   if (
+    data?.funnyMoments !== undefined &&
+    (!validVideoMoments(data.funnyMoments) ||
+      data.funnyMoments.some(
+        (m) =>
+          m.label !== "Momento engraçado" ||
+          m.skill !== undefined ||
+          m.playerIds.length > 0 ||
+          !m.videoSource,
+      ))
+  )
+    invalid();
+  if (
     data?.socialHighlightPlayerId !== undefined &&
     (typeof data.socialHighlightPlayerId !== "string" ||
       !data.players?.some((p) => p.id === data.socialHighlightPlayerId))

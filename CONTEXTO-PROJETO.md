@@ -1,12 +1,12 @@
 # Só na Rede — contexto para continuar em outra conversa
 
-Atualizado em **17/10/2026**, após conferir o código e o Git locais.
+Atualizado em **31/10/2026**, após conferir código, documentação e Git locais. Último deploy confirmado nesta conversa: **29/10/2026**, commit `184c9e3`, produção READY na Vercel.
 
 Este arquivo registra decisões, implementação e propostas. **Proposta não significa funcionalidade implementada nem autorização para executá-la.** Na nova conversa, leia este contexto, confira os arquivos atuais e siga o próximo pedido do Vitor. Não recomece o projeto nem implemente todo o backlog automaticamente.
 
 ## 1. Projeto, usuário e ambiente
 
-- Usuário: Vitor. Conversa em português brasileiro, direta e informal; prefere explicações simples e comandos prontos para copiar.
+- Usuário: Vitor. Conversa em português brasileiro, direta e informal; prefere respostas breves, explicações simples e comandos prontos para copiar.
 - Aplicativo do time amador intermediário de vôlei indoor **Só na Rede**, destinado à comissão técnica e com página pública para familiares/fãs.
 - Repositório: `https://github.com/VitorPDB/so-na-rede.git`.
 - Pasta: `C:\Users\vitor\OneDrive\Documentos\ChatGPT\app volei`.
@@ -26,7 +26,7 @@ Este arquivo registra decisões, implementação e propostas. **Proposta não si
 - Site: `https://so-na-rede.vercel.app`.
 - Comissão: `https://so-na-rede.vercel.app/?view=commission`.
 - Fãs: `https://so-na-rede.vercel.app/?view=public`.
-- Preview local usado: `http://localhost:4173/?view=commission`; não presumir que o processo continuará rodando.
+- Preview local mais recente: `http://127.0.0.1:4176/?view=commission`; não presumir que o processo continuará rodando.
 - Demonstração pública: `/?view=public&demo=1`.
 - Rotas são query parameters de uma SPA. Com cloud configurado, o acesso sem `view=commission` abre o público.
 
@@ -45,21 +45,39 @@ npm run preview -- --port 4173
 
 Em sessões anteriores, Node/esbuild/Playwright e alterações em `.git` exigiram execução com permissão ampliada. Não mascarar falhas de ferramenta como sucesso. Vite Preview sozinho não instala os headers da Vercel.
 
-## 3. Estado do Git
+## 3. Estado do Git e publicação
 
-- Branch atual verificada: **main**.
-- Último commit local: **f3f309b** — `Adiciona infracoes por fundamento e ataque passou de graca`.
-- Anteriores:
-  - `efbe026`: largadinha do levantador e Tirou da cartola.
-  - `db0866d`: tipos de levantamento, qualidades e contexto automático.
-  - `c0776e7`: bloqueio, ataque e passe automático.
-  - `169ffe4`: merge da identidade visual e segurança.
-  - `2ee921d`: identidade visual e segurança.
-  - `b701f5a`: seletores em cartões.
-- Antes de criar este contexto, não havia alterações de código pendentes. Havia quatro JPGs não rastreados do usuário: `modal-simplificado.jpg`, `notas-contextuais-preview.jpg`, `pos-jogo-preview.jpg`, `rebrand-preview.jpg`. **Não apagar nem incluir automaticamente em commits.**
-- Commits f3f309b e efbe026 foram criados pelo assistente a pedido do usuário. O usuário recebeu `git push origin main`; não presumir que um push ocorreu só por existir commit local.
-- Vitor inicialmente quis branches separadas para mudanças de notas. Mais recentemente preferiu commitar diretamente na main. Conferir estado e pedido atual antes de criar branch.
-- Quando pede comandos, entregar blocos separados e incluir o `cd` completo. Se pede para fazer o commit, pode executar o commit local dos arquivos pertinentes, sem incluir screenshots. Não confundir commit com push/deploy.
+- Branch verificada: **main**, HEAD `184c9e3b8b3b227b322c8c019dc8cd4d2ec3250e` — `Permite selecionar o libero da partida pelas tags do elenco`.
+- Commit e push realizados a pedido do usuário em 29/10. A referência local `origin/main` coincide com HEAD em 31/10; não foi feito novo fetch nesta revisão documental.
+- Deploy Git de produção confirmado como READY, com o mesmo SHA e aliases atribuídos: `dpl_Cc396q6mJLzTSVqtuYBZAVVX2UEd`, domínio `https://so-na-rede.vercel.app`. Projeto Vercel `so-na-rede` (`prj_Tn82xRebq8kRyzs27y4LoXD1XGqb`), time `so-na-rede` (`team_VneHRHB9ulmmfjjE6Z4ECNxb`). Não foi necessário redeploy manual duplicado: o push iniciou a publicação.
+- Commits anteriores relevantes, todos ancestrais de HEAD:
+  - `dd5c9d8`: miniquadras, bonecos, fundamentos e trajetórias.
+  - `d8a0282`: IndexedDB e redução de duplicação de fotos/históricos.
+  - `9b5c54b`: retomada da publicação após transferência entre aparelhos.
+  - `93acea4`: foto do card, toggle de craque e quota.
+  - `d59682c`: troca integral de contexto histórico e filtro de publicações parciais.
+  - `cd967da`: portal público sem PIN e direção do ataque.
+  - `cc02252`: seleção de partidas e destaque manual dourado.
+  - `69dce19` / `5ae929c`: Reels/cards e scouting fullscreen/posição do vídeo.
+  - `eed6580`: continuidade privada entre aparelhos.
+- **Código local não commitado: tentativa de corrigir Samsung Internet, cancelada pelo usuário porque no Chrome funciona.** Arquivos: `src/FoundationCourt.tsx` (SVGs internos substituídos por grupos com transform), `src/styles/foundation-atlas.css` (cores/opacidade/color-scheme) e `src/criteriaStats.test.ts` (asserções relacionadas). Esses ajustes NÃO foram incluídos em `184c9e3` nem publicados. Não concluir a tarefa cancelada, descartar ou incluir esses diffs em outro commit automaticamente.
+- Quatro JPGs do usuário seguem não rastreados: `modal-simplificado.jpg`, `notas-contextuais-preview.jpg`, `pos-jogo-preview.jpg`, `rebrand-preview.jpg`. Não apagar nem incluir automaticamente.
+- A atualização deste arquivo em 31/10 é somente documental, ainda sem commit/push. Não há pedido novo de implementação em aberto; aguardar o próximo pedido.
+- Vitor passou a preferir main. Conferir o pedido atual antes de criar branch. Commit, push e deploy são etapas distintas; confirmar o SHA/ambiente publicado. Se pedir comandos, incluir o `cd` completo e comandos prontos para copiar.
+
+## Estado funcional atual — leitura rápida antes do histórico
+
+- **Jogadores:** `/?view=player` é público e não pede senha. Por autorização explícita, qualquer pessoa pode consultar todas as estatísticas publicadas. Código/SQL antigo de PIN é legado, não deve ser reintroduzido. Auditoria, credenciais e partidas privadas não se tornam públicas.
+- **Comissão/histórico:** selecionar uma partida finalizada substitui TODO o contexto visível (placar, elenco, análise, perfis, vídeos); modo consulta somente leitura com retorno à original. Não permite consultar outra enquanto a original não terminou. Partidas/fontes integrais ficam preservadas; históricos antigos sem fonte exigem recuperação de backup, sem inventar eventos.
+- **Histórico público:** oculta parciais antigas, mantendo finalizados e a parcial da transmissão atual. Não agrupa jogos diferentes só por terem mesmo adversário/data e não apaga os registros de origem.
+- **Continuidade:** implementada e já utilizada pelo usuário entre aparelhos. Mesma conta da comissão, partida completa, revisão e transferência explícita do dispositivo editor; partidas diferentes podem ser editadas simultaneamente. Não há merge simultâneo da mesma partida. Publicar e salvar na conta são operações diferentes.
+- **Persistência:** IndexedDB principal, fotos deduplicadas por hash, fontes históricas sob demanda, fila ordenada e controle de conflito. JSON exportado/sincronizado continua completo. Auditoria de desfazer não foi compactada/apagada. Ver ARMAZENAMENTO.md.
+- **Scouting:** modal com vídeo próximo dos controles; fundamento → qualidade (Bom/Gafe/+1 nós/+1 eles) → especificações/jogador. Timestamp capturado ao iniciar a marcação. Trocar abas guarda a posição do vídeo na sessão, não sincroniza o relógio entre aparelhos.
+- **Vídeos/Reels:** trechos delimitados do vídeo original no modal; celular navega por deslize, PC por botões. Não gera MP4 nem reconhece automaticamente jogadores/ações. Reels têm seção pública própria, lazy loading e deep links; perfis mantêm seus lances filtrados.
+- **Cards:** PNG feed/story com foto do jogador, número separado à esquerda, precisão de ataque, salvadas difíceis quando não há ace; template específico de líbero. Destaque da partida manual, um por jogo, toggle no perfil da comissão e tema predominantemente dourado com roxo/preto. Precisão = (ataques − erros diretos)/ataques; bolas mantidas entram. A seleção de líbero por partida não deve ser confundida com reclassificação global do cadastro/template.
+- **Fundamentos visuais:** nas estatísticas da comissão e jogadores, seis fundamentos com miniquadras e botão Expandir, pizzas e amostras. Tipo de ataque, bloqueio enfrentado, tempo e passada são distribuições independentes; a ilustração não prova combinações. Trajetórias de ataque retas na paralela/diagonais; meio pode curvar. Levantamento usa direção registrada; recepção é ilustrativa. Só o tracejado amarelo se move suavemente; seta e área de queda ficam paradas. Preservar poses/posições aprovadas e ausência de pés.
+- **Última entrega:** Preparação → Líbero da partida lista jogadores com tag Líbero, inclusive secundária. Escolha auditável por partida; trocas livres/automáticas e indicação na quadra seguem o escolhido, sem consumir substituições comuns nem reescrever funções de lances anteriores. Candidato precisa estar no banco, rally encerrado e nenhum líbero ativo em quadra. Não requer SQL novo.
+- **Banco remoto:** código publicado não prova que cada migração foi aplicada. O usuário relatou uso real de publicação/transferência; não reexecutar SQLs ou recriar credenciais por precaução. Última entrega não alterou Supabase. Consulte PORTAL-PUBLICO.md, CONTINUIDADE.md e migrations pertinentes somente se houver demanda/erro concreto.
 
 ## 4. Time e regras confirmadas
 
@@ -78,6 +96,7 @@ São **10 jogadores**, não 12. Posições abaixo estão em ordem de frequência
 | Pedro | 06 | Ponteiro, Oposto |
 | Liam | 01 | Líbero exclusivo |
 
+- A tabela é o elenco padrão do código, não uma leitura do cadastro atual do usuário. Tags podem ter sido alteradas nas partidas; o usuário adicionou Líbero a um jogador de linha. Liam é o líbero principal padrão, mas outro atleta com a tag pode ser escolhido na preparação.
 - Indoor 6x6 com líbero; sistema 5–1.
 - Melhor de cinco por padrão; sets até 25, quinto até 15, diferença de dois.
 - **P1 significa levantador na zona 1**, P2 na zona 2 etc. Não confundir a numeração P com a ordem temporal dos side-outs.
@@ -184,23 +203,23 @@ Isso foi informado ao usuário como prioridade de revisão, não corrigido. Os t
 
 ### Dados locais
 
-- `storage.ts`: partida em `so-na-rede:match:v1`, cópia redundante localStorage e validação de importação.
-- `matchBackup.ts`: IndexedDB `so-na-rede-recovery`, cópias latest/previous.
-- Salvar localmente é a barreira antes de atualizar a UI. Não trocar isso por efeito React assíncrono que possa perder a última ação no reload.
-- Falhas de cópia opcional não invalidam salvamento principal; dados ilegíveis não devem ser apagados/resetados silenciosamente.
-- Proteção contra sobrescrita de outra aba.
-- Esses mecanismos estão no mesmo dispositivo/origem. Limpar os dados do navegador ou perder o aparelho continua sendo risco. Mudar localhost → domínio hospedado não migra armazenamento; exportar/importar JSON.
+- Persistência principal em IndexedDB `so-na-rede-matches-v2`: documentos versionados, atual/anterior, imagens compartilhadas por hash e histórico integral carregado sob demanda. `localStorage` guarda preferências/vínculos pequenos/caches limitados; antigos registros `so-na-rede:match:v1` são origem de migração/recuperação.
+- Interface otimista com fila ordenada de gravação; publicação/sincronização aguardam persistência confirmada. Falhas mantêm dados pendentes exportáveis e não podem ser anunciadas como salvamento concluído.
+- Migração relê/verifica conteúdo antes de liberar armazenamento antigo. Conflitos entre abas impedem sobrescrita silenciosa. Versões sem referência são coletadas preservando atual/anterior e históricos/fotos referenciados; eventos desfeitos continuam no audit log.
+- Cópias de transferência são deduplicadas por conteúdo. JSON exportado e payload remoto reconstroem toda a partida, sem referências locais externas.
+- `matchBackup.ts` mantém recuperação/cópias locais. Limpar dados do navegador ou perder o aparelho continua sendo risco; localhost e domínio publicado são origens distintas.
+- Medição sintética documentada: 71,4% menos conteúdo serializado incluindo checkpoint, não uma promessa de redução de RAM nem medição do celular real. Ver ARMAZENAMENTO.md.
 
 ### Cloud atual
 
-- Auth serve para publicar; não há login obrigatório ao entrar em toda a página da comissão.
+- Auth serve para publicar e acessar continuidade privada por conta; não é bloqueio geral dos dados já carregados localmente na comissão.
 - Sessão da comissão usa sessionStorage; público não persiste sessão autenticada. `detectSessionInUrl=false`.
 - Só usuários de `scout_editors` publicam. `can_publish()` confirma autorização da UI; RLS/RPC são a fronteira real.
 - Tabelas principais: `live_public`, `live_media`, `public_matches`; espectadores só leem os dados publicados e jogos encerrados no histórico.
 - RPC `publish_live`: revisão esperada, request UUID idempotente e serialização para impedir sobrescrita de aba antiga. `update_match_videos` altera anexos de jogos antigos.
 - Envio tenta atualizar a cada ~1,5 s; Realtime + recuperação por polling no público.
 - **PublicSnapshot é DTO público explícito, não o Match privado.** Não contém auditoria/configurações/importações. Fotos e logo são mídia separada.
-- **Não existe sincronização da partida privada completa entre PC/celular/tablet.** Login e publicação não implementam isso sozinhos.
+- **Existe sincronização privada completa** via módulo de continuidade e `supabase/match-sync.sql`, separada da publicação; revisão/posse por partida e conta. Ver CONTINUIDADE.md. A retomada da publicação após devolver a posse ao aparelho original foi corrigida em `9b5c54b`.
 
 ### Segurança implementada e limites
 
@@ -250,19 +269,9 @@ Proposta explicada ao usuário:
 - Se não há dados, não inventar jogador/fundamento/contexto nem dar nota zero por ausência de registro.
 - Ainda não há fila de complementação implementada. O pós-jogo atual não resolve sozinho essa operação sobre rallies já publicados.
 
-### B. Continuar a partida em outro aparelho
+### B. Continuidade entre aparelhos — entregue
 
-Pedido/ideia: começar no PC e terminar no celular; pedir login ao abrir a comissão e apresentar o jogo salvo.
-
-Proposta:
-
-- Autenticação de entrada para acesso à área privada sincronizada e lista/retomada da partida.
-- Salvar **Match privado completo**, auditoria e pendências no Supabase, separado dos DTOs de fãs e com RLS de comissão.
-- Manter marcação offline no aparelho que já carregou a partida. Não perder dados por sessão expirada/sem internet.
-- Um dispositivo editor por vez inicialmente; ação Continuar neste aparelho, com revisão/transferência de posse. Evitar merge silencioso de dois editores offline.
-- Mostrar última sincronização e pendências de envio. Só dados já sincronizados podem aparecer no segundo aparelho.
-- Não expor a partida privada pela URL de fãs; login da transmissão atual não equivale a backup privado.
-- Ainda não há implementação nem SQL para esse novo armazenamento/controle de dispositivo.
+Não é mais backlog: implementada em `eed6580`, com correção de retomada em `9b5c54b`. Ver estado funcional atual e CONTINUIDADE.md. Não criar um segundo sistema de sincronização por interpretar propostas antigas como pendência.
 
 ### C. Perfis analíticos situacionais
 
@@ -294,11 +303,11 @@ Resposta/proposta já apresentada:
 - Alinhar dificuldade mostrada e nota, com explicação do cálculo.
 - Fila de revisão de rallies com dados faltantes.
 - Modo treino isolado da comissão; já existe demo dos fãs, não um sandbox completo da comissão.
-- Backup privado remoto/restauração.
+- Backup privado remoto/restauração: já entregue pela continuidade; não permanece pendente.
 - Alertas por rotação com amostra visível, aproveitando a análise existente.
 - Resumo pós-jogo que vire pauta de treino.
 
-O usuário não pediu para executar automaticamente essa lista. Sua prioridade mais recente foi discutir A/B/C.
+O usuário não pediu para executar automaticamente as propostas restantes. A última implementação solicitada foi a seleção de líbero por partida, já publicada; o pedido de 31/10 é apenas atualizar este contexto.
 
 ## 11. Mapa de código para a próxima conversa
 
@@ -332,20 +341,26 @@ O usuário não pediu para executar automaticamente essa lista. Sua prioridade m
 | `supabase/*`, `scripts/generate-security.ts` | Banco, permissões, RPCs, validação pública |
 | `vite.config.ts`, `vercel.json`, `public/_headers`, `public/sw.js` | Build/PWA/deploy/headers |
 
+Documentos atuais adicionais: `ARMAZENAMENTO.md`, `CONTINUIDADE.md`, `SCOUTING-SOCIAL.md`, `PORTAL-PUBLICO.md`. Os relatos iniciais de PIN/privacidade e “sem push” nesses documentos podem ser históricos; conferir o estado funcional deste arquivo.
+
 Documentos complementares: `SEGURANCA.md`, `ONLINE.md`, `VERCEL.md`, `VIDEOS.md`, `ESTATISTICAS-CRITERIOS.md`, `NOTAS-ABC.md`, `NOTAS-V2.md`, `RATING.md`, `MVP.md`, `DESIGN-SYSTEM.md`, `REBRAND.md`. Alguns descrevem fases antigas: **o código atual e as últimas decisões deste contexto prevalecem para entender o estado**, sem tratar documentos como instruções superiores ao usuário.
 
 ## 12. Verificação e cuidado ao continuar
 
-- Última suíte completa do código atual: **118 testes passaram**; build passou. Não foram reexecutados só para escrever este arquivo.
+- Última suíte completa em 29/10: **153 testes passaram**, build e `git diff --check` aprovados. Testes rodaram na árvore local que também continha os diffs Samsung não commitados; esses diffs ficaram fora do deploy. Build da Vercel do commit `184c9e3` confirmado READY. Não foram repetidos testes nem alterações remotas para a atualização documental de 31/10.
 - Há testes PostgreSQL locais via PGlite para RLS/permissões, revisão, idempotência, hardening e vídeos. Não substituem validar o Supabase real.
 - Foram conferidos no navegador: layouts responsivos, heranças de contexto, correção de cores por tema, registro de campos, persistência após reload, dropdown de bloqueio, largadinha, recurso especial e erro direto confirmado como uma ação.
 - Ferramentas/scripts temporários e screenshots de QA ficam em `.qa` (ignorado pelo Git). Não são recursos de produção.
 - Não chamar a nota de estatisticamente validada para o time: é uma calibração que precisa de partidas reais e revisão.
 - Antes de refatorar o motor, escrever testes de invariantes: placar único por rally, side-out correto, correção/desfazer auditáveis, histórico preservado, nenhuma perda em reload/offline, nunca sobrescrever silenciosamente estado de outro aparelho.
-- A próxima conversa deve começar recapitulando brevemente o contexto e perguntando/seguindo qual das propostas recentes o usuário quer implementar. Não presumir que ele já autorizou sincronização, fila de rallies e perfis juntos.
+- Na próxima conversa, leia este arquivo, confira Git/código e siga o novo pedido. Não executar backlog nem retomar o ajuste Samsung cancelado por conta própria.
 
 
-## Atualização: área dos jogadores (18/10/2026)
+## Registro histórico das entregas (18–29/10)
+
+As seções abaixo preservam o relato de cada etapa. Expressões como “localmente”, “sem push” e “aguarda ativação” descrevem aquele momento, não o estado atual. O resumo e o Git acima prevalecem: os commits listados já compõem a main publicada. O modelo antigo de PIN foi substituído pelo portal público e a proposta de sincronização foi entregue. Não executar migrações antigas automaticamente.
+
+### Área dos jogadores (18/10/2026)
 
 Implementada localmente a rota `/?view=player`, login com PIN de quatro números, isolamento de dados por token no Supabase e perfis públicos dos colegas com vídeos. Ver `ACESSO-JOGADORES.md`. PINs e SQL de ativação estão em `.qa`, fora do Git/build. Migração e publicação online ainda não executadas: login real requer ativar o SQL e configurar Supabase. Publicação da comissão agora usa `publish_player_live`; aplicar a migração antes do deploy. A nova migração retira precisão e detalhes técnicos das tabelas públicas, preservando-os em tabelas privadas. Senhas são hashes BCrypt, não texto reversível. Não confundir implementação/testes locais com ativação em produção.
 
@@ -414,3 +429,25 @@ Aplicação autorizada nas páginas da comissão e dos jogadores, em todos os se
 
 ## Líbero escolhido por partida — 29/10/2026
 Preparação agora permite selecionar atletas com tag Líbero, inclusive secundária. A escolha é um comando auditável selectLibero; mantém a função principal do elenco e os papéis dos eventos anteriores. Projection.designatedLiberoId orienta entradas automáticas, trocas livres, validações e indicação visual na quadra/banco. Legado assume o líbero principal. Alteração exige candidato no banco, rally encerrado e nenhum líbero em quadra. Inicialização de cópias/replay suporta initialLiberoId; backup/importação e editor pós-jogo aceitam o novo comando. Sem SQL novo. Alterações locais do ajuste Samsung anteriormente cancelado continuam separadas nos três arquivos FoundationCourt.tsx, criteriaStats.test.ts e foundation-atlas.css; não incluir automaticamente em commit desta funcionalidade.
+
+
+## Encerramento para o próximo chat — 31/10/2026
+
+A entrega de líbero foi commitada, enviada e publicada com sucesso em 29/10 (`184c9e3`). Nenhuma migração SQL foi necessária. No navegador isolado, um ponteiro com tag secundária Líbero apareceu e pôde ser selecionado; testes cobrem entrada automática, trocas livres, regras, undo/reinício, JSON e manutenção da função histórica. Não foi alterada a partida real do usuário na validação. Preview sintético: `.qa/libero.html`; outros previews aprovados: `.qa/atlas-fundamentos/index.html` e `.qa/atlas-integrado.html`. A pasta `.qa` é ignorada e não entra em produção; não presumir servidor rodando.
+
+Pendências reais: investigar a inconsistência `magic`/dificuldade nas notas antes de qualquer recalibração; propostas de análises situacionais/revisão de rallies conforme novo pedido. Não há autorização para iniciar essas propostas agora. O bug Samsung Internet foi deixado de lado pelo usuário (“no chrome ta suave ent fds”); seus três diffs locais continuam intocados e fora da produção. O usuário pode produzir bonecos melhores no futuro, mas não entregou substitutos nesta etapa.
+
+Esta atualização alterou apenas CONTEXTO-PROJETO.md; não fez commit, push, redeploy ou alterações em dados de partidas.
+
+## Alterações locais — 02/11/2026
+
+Pedido desta conversa: defesa/bloqueio “Não foi” (tinha condição, mas não tentou), ataque “Bloqueado”, levantamento “Afastada da rede”, captura do vídeo 2 segundos antes do clique e marcações “Momento engraçado” sem efeito no placar/notas.
+
+- Defesa: critério defenseAttempt (Tentou defender / Não foi), em Contexto do lance; anotação separada da qualidade escolhida, sem penalidade adicional. Bloqueio reutiliza blockQuality=absent, renomeado para “Não foi · tinha condição de bloquear”, preservando o cálculo existente.
+- Ataque: attackOutcome=blocked, separado de tipo/direção e do resultado do ponto. Não encerra rally automaticamente.
+- Levantamento: setPlacement=away para registrar bola afastada; incomingSet=away no ataque segue a dificuldade contextual das outras bolas ruins.
+- Vídeo YouTube/local: captura em max(0, instante − 2 segundos), sem deslocar registros antigos.
+- funnyMoments na partida: marcações independentes, preservadas no backup/sincronização/histórico. Botão no vídeo ao vivo/fullscreen; painel Pós-jogo permite marcar, rever e remover. YouTube acompanha publicação/Reels, arquivos locais exigem selecionar novamente o original. Não há geração de MP4. Não entram na auditoria de fundamentos nem nas notas.
+- Contrato público regenerado em supabase/security-schema.sql; aplicar arquivo completo antes de publicar estas novas opções. Nenhum SQL remoto, commit, push ou deploy realizado nesta tarefa.
+- Validação: 156 testes passaram; build aprovado. Navegador isolado conferiu opções, captura simulada em 12,125 s → 10,125 s e persistência após reload. Dados reais não foram usados. Os três diffs Samsung pré-existentes continuam separados.
+- Escopo desta entrega foi a lista específica de 02/11. Bola de cheque e a revisão ampla dos textos do relatório anterior ainda não foram aplicadas.

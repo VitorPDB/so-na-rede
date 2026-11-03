@@ -16,7 +16,10 @@ export function gameSnapshot(match: Match): ArchivedGame {
   const state = project(match);
   return {
     partnerships: matchHighlights(state.events).partnerships,
-    videoMoments: videoMoments(state.events),
+    videoMoments: [
+      ...videoMoments(state.events),
+      ...(match.funnyMoments ?? []),
+    ],
     ...(match.videos !== undefined ? { videos: match.videos } : {}),
     id: match.id,
     date: match.matchDate

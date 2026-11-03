@@ -21,6 +21,7 @@ export function MobileScout({
   video,
   pending,
   onRecord,
+  onFunny,
   onSelect,
   onCancel,
   onClose,
@@ -39,6 +40,7 @@ export function MobileScout({
     stamp: ReturnType<VideoCapture>,
   ) => void;
   onSelect: (id: string, details?: SkillEvent) => void;
+  onFunny: (stamp: ReturnType<VideoCapture>) => void;
   onCancel: () => void;
   onClose: () => void;
   onUndo: () => boolean;
@@ -95,6 +97,8 @@ export function MobileScout({
           <YoutubeScout
             video={video}
             captureRef={capture}
+            onFunny={onFunny}
+            disabled={!!pending || !!skill}
             compact
             positionKey={videoPositionKey(
               match.id,

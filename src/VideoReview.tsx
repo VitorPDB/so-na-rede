@@ -10,11 +10,19 @@ export function VideoReview({
   marks,
   videos = [],
   disabled = false,
+  markLabel = "Marcar fundamento · 2 s antes",
 }: {
   onMark: (stamp: Pick<SkillEvent, "videoTimestampMs" | "videoSource">) => void;
-  marks: { id: string; label: string; event: SkillEvent }[];
+  marks: {
+    id: string;
+    label: string;
+    event: Pick<SkillEvent, "videoTimestampMs" | "videoSource"> & {
+      skill?: SkillEvent["skill"];
+    };
+  }[];
   videos?: MatchVideo[];
   disabled?: boolean;
+  markLabel?: string;
 }) {
   const video = useRef<HTMLVideoElement>(null);
   const [file, setFile] = useState<File>();
@@ -31,7 +39,11 @@ export function VideoReview({
     setUrl(next);
     return () => URL.revokeObjectURL(next);
   }, [file]);
-  const seek = (event: SkillEvent) => {
+  const seek = (
+    event: Pick<SkillEvent, "videoTimestampMs" | "videoSource"> & {
+      skill?: SkillEvent["skill"];
+    },
+  ) => {
     const youtubeId = youtubeSourceId(event.videoSource);
     if (youtubeId) {
       setYoutubeMoment({
@@ -76,6 +88,7 @@ export function VideoReview({
               key={chosen.id}
               video={chosen}
               onMark={onMark}
+              markLabel={markLabel}
               disabled={disabled}
             />
           )}
@@ -146,14 +159,14 @@ export function VideoReview({
                   video.current.pause();
                   onMark({
                     videoTimestampMs: Math.round(
-                      video.current.currentTime * 1000,
+                      Math.max(0, video.current.currentTime * 1000 - 2000),
                     ),
                     videoSource: source,
                   });
                 }
               }}
             >
-              Marcar ação neste instante
+              {markLabel}
             </button>
           </div>
         </>
@@ -169,7 +182,7 @@ export function VideoReview({
               key={m.id}
               onClick={() => seek(m.event)}
             >
-              <SkillIcon skill={m.event.skill} /> {m.label} ·{" "}
+              {m.event.skill && <SkillIcon skill={m.event.skill} />} {m.label} ·{" "}
               {Math.floor(m.event.videoTimestampMs! / 60000)}:
               {String(
                 Math.floor(m.event.videoTimestampMs! / 1000) % 60,

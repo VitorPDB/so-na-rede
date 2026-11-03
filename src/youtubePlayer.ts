@@ -64,7 +64,7 @@ export function captureYoutubeMoment(player: YoutubePlayer, videoId: string) {
   if (!Number.isFinite(seconds) || seconds < 0)
     throw new Error("Horário do vídeo indisponível. Tente novamente.");
   const stamp = {
-    videoTimestampMs: Math.round(seconds * 1000),
+    videoTimestampMs: Math.max(0, Math.round(seconds * 1000) - 2000),
     videoSource: `youtube:${videoId}`,
   };
   player.pauseVideo();

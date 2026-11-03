@@ -1,3 +1,4 @@
+import { FunnyMoments } from "./FunnyMoments";
 import { useState } from "react";
 import { RallyReview } from "./RallyReview";
 import type { Match } from "./model";
@@ -48,6 +49,7 @@ export function PostGameView(props: {
       ) : (
         <PostGameTotals match={props.match} onChange={props.onChange} />
       )}
+      <FunnyMoments match={props.match} onChange={props.onChange} />
     </>
   );
 }

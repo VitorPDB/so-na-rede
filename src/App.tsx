@@ -1,5 +1,6 @@
 import { analysisWorkspace, completeArchivedMatch } from "./analysisWorkspace";
 import { CommissionMatches } from "./CommissionMatches";
+import { addFunnyMoment } from "./funnyMomentData";
 import { MobileScout } from "./MobileScout";
 import { videoPositionKey } from "./videoPosition";
 import { MatchContinuity, useMatchContinuity } from "./MatchContinuity";
@@ -1218,6 +1219,10 @@ export default function App() {
                         scoutVideo.startSeconds,
                       )}
                       captureRef={scoutCapture}
+                      onFunny={(stamp) => {
+                        if (commit(addFunnyMoment(match, stamp)))
+                          setFeedback({ message: "Momento engraçado salvo." });
+                      }}
                       disabled={!!pendingAction}
                     />
                   )}
@@ -1765,6 +1770,10 @@ export default function App() {
             video={scoutVideo}
             pending={pendingAction}
             onRecord={record}
+            onFunny={(stamp) => {
+              if (commit(addFunnyMoment(match, stamp)))
+                setFeedback({ message: "Momento engraçado salvo." });
+            }}
             onSelect={assignAction}
             onCancel={() => setPendingAction(undefined)}
             onClose={() => {
