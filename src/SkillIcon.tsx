@@ -48,6 +48,9 @@ const figures: Record<string, ReactNode> = {
     </>
   ),
 };
+export function SkillFigure({ skill }: { skill: string }) {
+  return <>{figures[skill]}</>;
+}
 export function skillForLabel(label: string): string | undefined {
   const names: Record<string, string> = {
     Bloqueio: "block",

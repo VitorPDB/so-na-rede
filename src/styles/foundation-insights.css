@@ -1,0 +1,66 @@
+.fv-stickman {
+  color: var(--c-accent);
+}
+.fv-stickman .ball {
+  stroke: #f5b800;
+  fill: var(--c-bg);
+  stroke-width: 2.5;
+}
+.fv-stickman .detail {
+  stroke-width: 1.5;
+  opacity: 0.65;
+}
+.fv-stickman.fv-opponent {
+  color: #00b8d9;
+}
+.fv-stickman.fv-opponent .ball,
+.fv-stickman.fv-opponent .detail {
+  display: none;
+}
+.fv-facts dd {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.fv-percent {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.fv-chart-switch {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+.fv-chart-switch [aria-pressed="true"] {
+  border-color: var(--c-text);
+  box-shadow: inset 0 -2px var(--c-text);
+}
+.fv-category {
+  flex: 1;
+  min-width: 0;
+}
+.fv-bar-track {
+  width: 100%;
+  height: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--c-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.fv-legend .fv-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: 0;
+}
+.fv-legend strong {
+  min-width: 76px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.fv-distribution {
+  min-width: 0;
+}
+.fv-pie {
+  border: 2px solid var(--c-border);
+}

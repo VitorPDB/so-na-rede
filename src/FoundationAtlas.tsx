@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowUpRight, X } from "lucide-react";
 import { skills, type Skill } from "./model";
 import { analysisFields, type criterionDistribution } from "./criteriaStats";
-import { FoundationCourt } from "./FoundationCourt";
+import { StickmanCourt } from "./StickmanCourt";
 import { ModalDrawer } from "./ModalDrawer";
 
 type Distribution = ReturnType<typeof criterionDistribution>;
@@ -16,25 +16,31 @@ const order: Foundation[] = [
   "defense",
 ];
 const summaries: Record<Foundation, string[]> = {
-  attack: ["attackType", "attackBlockers", "attackDirection"],
+  attack: [
+    "attackType",
+    "attackDirection",
+    "approach",
+    "setType",
+    "incomingSet",
+  ],
   serve: ["serveType", "execution", "difficulty"],
   reception: ["passQuality", "receivedServe", "technique"],
-  set: ["technique", "setDirection", "ballConstraint"],
+  set: ["setDirection", "incomingSet", "incomingPass", "setType"],
   block: ["group", "blockQuality", "difficulty"],
   defense: ["passQuality", "incomingBall", "technique"],
 };
 const colors = [
-  "var(--c-accent)",
-  "var(--c-info)",
-  "var(--c-gold)",
-  "#8f75b5",
-  "#62a18e",
-  "#bb7d86",
-  "#719bb5",
-  "#b39362",
-  "#7f8a5b",
-  "#af789f",
-  "#879197",
+  "#00b8d9",
+  "#ff7043",
+  "#f5c400",
+  "#2684ff",
+  "#e83e8c",
+  "#00ad7c",
+  "#845ef7",
+  "#bd7100",
+  "#cc3344",
+  "#397d75",
+  "#777777",
 ];
 const label = (d: Distribution) =>
   d.key === "setType"
@@ -50,14 +56,19 @@ const leading = (d: Distribution) =>
     : "Sem informação";
 
 function DistributionChart({ data }: { data: Distribution }) {
+  const [mode, setMode] = useState<"pie" | "bars">(
+    data.rows.filter((r) => r.count > 0).length <= 4 ? "pie" : "bars",
+  );
+  const color = (id: string) =>
+    colors[data.rows.findIndex((r) => r.id === id) % colors.length];
   const rows = data.rows
     .filter((r) => r.count > 0)
     .sort((a, b) => b.count - a.count);
   let offset = 0;
-  const slices = rows.map((r, i) => {
+  const slices = rows.map((r) => {
     const start = offset;
     offset += r.percent;
-    return `${colors[i % colors.length]} ${start}% ${offset}%`;
+    return `${color(r.id)} ${start}% ${offset}%`;
   });
   return (
     <section className="fv-distribution" aria-label={label(data)}>
@@ -68,19 +79,50 @@ function DistributionChart({ data }: { data: Distribution }) {
       {data.known ? (
         <>
           <div
-            className="fv-pie"
-            aria-hidden="true"
-            style={{ background: `conic-gradient(${slices.join(",")})` }}
-          />
+            className="fv-chart-switch"
+            role="group"
+            aria-label={`Formato: ${label(data)}`}
+          >
+            <button
+              type="button"
+              className="ui-btn ui-btn--secondary"
+              aria-pressed={mode === "pie"}
+              onClick={() => setMode("pie")}
+            >
+              Pizza
+            </button>
+            <button
+              type="button"
+              className="ui-btn ui-btn--secondary"
+              aria-pressed={mode === "bars"}
+              onClick={() => setMode("bars")}
+            >
+              Barras
+            </button>
+          </div>
+          {mode === "pie" && (
+            <div
+              className="fv-pie"
+              aria-hidden="true"
+              style={{ background: `conic-gradient(${slices.join(",")})` }}
+            />
+          )}
           <ul className="fv-legend">
-            {rows.map((r, i) => (
+            {rows.map((r) => (
               <li key={r.id}>
-                <i
-                  style={{ background: colors[i % colors.length] }}
-                  aria-hidden="true"
-                />
-                <div>
+                <i style={{ background: color(r.id) }} aria-hidden="true" />
+                <div className="fv-category">
                   <span>{r.label}</span>
+                  {mode === "bars" && (
+                    <div className="fv-bar-track" aria-hidden="true">
+                      <i
+                        style={{
+                          width: `${r.percent}%`,
+                          background: color(r.id),
+                        }}
+                      />
+                    </div>
+                  )}
                   <small>
                     {r.rating === null
                       ? "Sem execuções avaliáveis"
@@ -122,7 +164,9 @@ export function FoundationAtlas({
   const [expanded, setExpanded] = useState<Foundation | null>(null);
   const visible = order.filter((s) => skill === "all" || skill === s);
   const selectedFields = expanded
-    ? analysisFields.filter((f) => f.skills.includes(expanded))
+    ? analysisFields.filter(
+        (f) => f.skills.includes(expanded) && f.key !== "setPlacement",
+      )
     : [];
   const priority = [
     "attackType",
@@ -173,26 +217,74 @@ export function FoundationAtlas({
               <button
                 className="ui-btn ui-btn--secondary"
                 onClick={() => setExpanded(s)}
-                aria-label={`Expandir ${skills[s].label}`}
+                aria-label={`Ver detalhes de ${skills[s].label}`}
               >
-                Expandir <ArrowUpRight size={18} />
+                Ver detalhes <ArrowUpRight size={18} />
               </button>
             </header>
             <div className="fv-layout">
-              <FoundationCourt
-                skill={s}
-                blockers={blockers}
-                direction={route}
-              />
+              <StickmanCourt skill={s} blockers={blockers} direction={route} />
               <dl className="fv-facts">
+                {(s === "set" || s === "defense" || s === "reception") &&
+                  (() => {
+                    const d = distribution(
+                      s,
+                      s === "set" ? "incomingSet" : "passQuality",
+                    );
+                    const ids =
+                      s === "set"
+                        ? [
+                            "low",
+                            "short",
+                            "away",
+                            "high_bad",
+                            "poor",
+                            "C",
+                            "error",
+                          ]
+                        : ["C", "error"];
+                    const count = d.rows
+                      .filter((r) => ids.includes(r.id))
+                      .reduce((sum, r) => sum + r.count, 0);
+                    return (
+                      <div>
+                        <dt>
+                          {s === "set"
+                            ? "Levantamentos ruins ou errados"
+                            : s === "defense"
+                              ? "Defesas ruins ou erradas"
+                              : "Recepções ruins ou erradas"}
+                        </dt>
+                        <dd>
+                          {d.known
+                            ? `${Math.round((100 * count) / d.known)}%`
+                            : "Sem informação"}
+                        </dd>
+                        <small>
+                          {count} de {d.known} informadas · {d.missing} sem
+                          detalhe
+                        </small>
+                      </div>
+                    );
+                  })()}
                 {summaries[s].map((key) => {
                   const d = distribution(s, key);
                   return (
                     <div key={key}>
                       <dt>{label(d)}</dt>
-                      <dd>{leading(d)}</dd>
+                      <dd>
+                        {leading(d)}
+                        {d.leaders.length === 1 && (
+                          <strong className="fv-percent">
+                            {d.leaders[0].percent.toFixed(0)}%
+                          </strong>
+                        )}
+                      </dd>
                       <small>
-                        {d.known} informadas · {d.missing} sem detalhe
+                        {d.leaders.length === 1
+                          ? `${d.leaders[0].count} de ${d.known}`
+                          : `${d.known} informadas`}{" "}
+                        · {d.missing} sem detalhe
                         {d.leaders.length > 1 ? " · empate" : ""}
                       </small>
                     </div>

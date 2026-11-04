@@ -51,6 +51,12 @@ function valueFor(e: SkillEvent, key: string): string | undefined {
     const value = a.criteria[field.key];
     if (value) return value;
   }
+  if (
+    key === "incomingSet" &&
+    e.skill === "set" &&
+    a?.criteria?.setPlacement === "away"
+  )
+    return "away";
   if (key === "passQuality") {
     if (e.result === "simple_A") return "A";
     if (e.result === "simple_B") return "B";
@@ -212,7 +218,18 @@ export function distributionFromCube(
   const selected = cube.filter(
     (c) => c.key === key && (skill === "all" || c.skill === skill),
   );
-  const total = selected.reduce((n, c) => n + c.total, 0);
+  const field = analysisFields.find((f) => f.key === key)!;
+  const total = Math.max(
+    selected.reduce((n, c) => n + c.total, 0),
+    cube
+      .filter(
+        (c) =>
+          c.key === "difficulty" &&
+          field.skills.includes(c.skill) &&
+          (skill === "all" || c.skill === skill),
+      )
+      .reduce((n, c) => n + c.total, 0),
+  );
   const sums = base.rows.map((r) => {
     const matching = selected.flatMap((c) =>
       c.rows.filter((row) => row.id === r.id),

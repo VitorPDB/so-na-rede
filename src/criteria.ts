@@ -179,7 +179,7 @@ export const criteriaFields: {
     key: "incomingSet",
     label: "Qualidade do levantamento",
     hint: "Contextualiza a dificuldade do ataque",
-    skills: ["attack"],
+    skills: ["attack", "set"],
     options: {
       A: "A · confortável",
       B: "B · exige ajuste",

@@ -35,6 +35,7 @@ export function CriteriaFields({
         .filter(
           (f) =>
             f.skills.includes(skill) &&
+            f.key !== "setPlacement" &&
             (!hideAttackDirection || f.key !== "attackDirection") &&
             (f.key !== "freeReason" || value.attackType === "free") &&
             (!hidePass || f.key !== "passQuality") &&
@@ -49,11 +50,19 @@ export function CriteriaFields({
             <div className="criterion-field" key={field.key}>
               <AssessmentSelect
                 label={
-                  field.key === "setType" && skill === "set"
-                    ? "Tipo de levantamento"
-                    : field.label
+                  field.key === "incomingSet" && skill === "set"
+                    ? "Qualidade do levantamento entregue"
+                    : field.key === "setType" && skill === "set"
+                      ? "Tipo de levantamento"
+                      : field.label
                 }
-                value={value[field.key] ?? ""}
+                value={
+                  value[field.key] ??
+                  (field.key === "incomingSet" && skill === "set"
+                    ? value.setPlacement
+                    : "") ??
+                  ""
+                }
                 selectedLabel={
                   (field.key === "incomingSet" &&
                     value.incomingSet &&
@@ -96,6 +105,8 @@ export function CriteriaFields({
                 hint={field.hint}
                 onChange={(selected) => {
                   const next = { ...value };
+                  if (field.key === "incomingSet" && skill === "set")
+                    delete next.setPlacement;
                   if (field.key === "attackType" && selected !== "free")
                     delete next.freeReason;
                   if (selected) Object.assign(next, { [field.key]: selected });
